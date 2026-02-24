@@ -1,0 +1,106 @@
+/* Design system: variantes primario, secundario, terciario, danger; tamaños sm, md, lg (rejilla 8px) */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  border: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), box-shadow var(--transition-fast);
+  min-height: 44px; /* touch target */
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Tamaños */
+.sm {
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.md {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-base);
+}
+
+.lg {
+  min-height: 48px;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-lg);
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* Variante primario */
+.primario {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.primario:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.primario:active:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+/* Secundario (outline) */
+.secundario {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+}
+
+.secundario:hover:not(:disabled) {
+  background-color: var(--color-gray-50);
+}
+
+/* Terciario (ghost) */
+.terciario {
+  background-color: transparent;
+  color: var(--color-gray-700);
+}
+
+.terciario:hover:not(:disabled) {
+  background-color: var(--color-gray-100);
+}
+
+/* Danger */
+.danger {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.iconLeft,
+.iconRight {
+  display: inline-flex;
+  align-items: center;
+}
+
+.iconLeft {
+  margin-right: var(--space-1);
+}
+
+.iconRight {
+  margin-left: var(--space-1);
+}

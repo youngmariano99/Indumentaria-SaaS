@@ -1,0 +1,72 @@
+.wrapper {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+@media (min-width: 900px) {
+  .wrapper {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+  }
+}
+
+/* Columna izquierda: fondo claro, formulario */
+.left {
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  order: 1;
+}
+
+.leftInner {
+  width: 100%;
+  max-width: 400px;
+}
+
+@media (min-width: 900px) {
+  .left {
+    padding: var(--space-8) var(--space-10);
+  }
+}
+
+/* Columna derecha: fondo marca, contenido dinámico */
+.right {
+  background: linear-gradient(
+    160deg,
+    var(--color-base-dark) 0%,
+    var(--color-gray-800) 50%,
+    #1e3a5f 100%
+  );
+  position: relative;
+  overflow: hidden;
+  order: 2;
+  min-height: 320px;
+}
+
+@media (min-width: 900px) {
+  .right {
+    min-height: auto;
+  }
+}
+
+/* Animación: contenido derecho entra de derecha a izquierda al cambiar a registro */
+.rightAnimated {
+  animation: slideInFromRight var(--transition-normal) ease-out;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
