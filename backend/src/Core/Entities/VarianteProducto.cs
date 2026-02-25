@@ -13,4 +13,5 @@ public class VarianteProducto : BaseEntity, IMustHaveTenant
     
     public string SKU { get; set; } = string.Empty; // Código de barras
     public decimal? PrecioOverride { get; set; } // Opcional: sobreescribe PrecioBase
+    public decimal PrecioCosto { get; set; } // Costo unitario para cálculo de profit
 }

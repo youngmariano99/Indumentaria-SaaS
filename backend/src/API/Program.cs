@@ -10,6 +10,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Core.Interfaces.Auth;
 using Infrastructure.Auth;
+using MediatR;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,19 @@ builder.Services.AddScoped<AuditInterceptor>();
 builder.Services.AddScoped<TenantSessionInterceptor>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+// 1.5. Configuración de MediatR y FluentValidation (CQRS)
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName!.StartsWith("Application")).ToArray());
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Application.Behaviors.ValidationBehavior<,>));
+});
+
+builder.Services.AddValidatorsFromAssembly(
+    AppDomain.CurrentDomain.GetAssemblies().First(a => a.FullName!.StartsWith("Application"))
+);
+
+// Mapeo automático de Controllers
+builder.Services.AddControllers();
 
 // 2. Configuración de Autenticación y JWT
 var jwtStruct = builder.Configuration.GetSection("JwtSettings");
@@ -52,9 +67,13 @@ builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
 {
     var auditInterceptor = sp.GetRequiredService<AuditInterceptor>();
     var sessionInterceptor = sp.GetRequiredService<TenantSessionInterceptor>();
-    options.UseNpgsql(connectionString)
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseNpgsql(connectionString!)
            .AddInterceptors(auditInterceptor, sessionInterceptor);
 });
+
+// Exponer la interfaz IApplicationDbContext para los Comandos/Consultas (CQRS)
+builder.Services.AddScoped<Application.Common.Interfaces.IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
 var app = builder.Build();
 
@@ -69,6 +88,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantResolverMiddleware>();
 
+app.MapControllers(); // Registrar los endpoints de los controllers
 app.UseHttpsRedirection();
 
 var summaries = new[]

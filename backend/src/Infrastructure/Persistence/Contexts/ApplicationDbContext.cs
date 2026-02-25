@@ -9,6 +9,8 @@ using Core.Entities.Base;
 using Core.Interfaces;
 using Infrastructure.Persistence.Interceptors;
 
+using Application.Common.Interfaces;
+
 namespace Infrastructure.Persistence.Contexts;
 
 public class TenantSessionInterceptor : DbConnectionInterceptor
@@ -55,7 +57,7 @@ public class TenantSessionInterceptor : DbConnectionInterceptor
     }
 }
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     private readonly ITenantResolver _tenantResolver;
 
