@@ -50,17 +50,27 @@ Para facilitar el rastreo y la auditoría "de punta a punta", la documentación 
 
 Tags Requeridos: #Modulo_Nombre, #Importancia_Critica, #Area_Backend, #Nivel_Seguridad.
 
-Estructura de Carpetas:
+Estructura de Carpetas Sugerida:
 
+- **/arquitectura**: Aquí va todo lo relacionado a cómo está estructurado el proyecto a nivel técnico (patrones, configuración base, diagrama de componentes, RLS, seguridad global, etc.).
 
-/docs/fiscal: Todo lo referente a ARCA y cumplimiento legal.
+- **/desarrollo**: Documentación sobre los Sprints, esta Guía de Desarrollo para IAs, convenciones de código y normativas sobre cómo debe trabajar el equipo en el día a día.
 
+- **/fiscal**: Todo lo referente a la integración con ARCA, cumplimiento legal, facturación electrónica (WSFE, FCE) y manejo de contingencias ante AFIP.
 
+- **/bitacora-back**: Contiene el historial de todas las funcionalidades nuevas del Back-End, errores críticos solucionados y decisiones técnicas.
+  - **/bitacora-back/features**: Para registrar nuevas funcionalidades desarrolladas (Ej: `YYYY-MM-DD_HHMM_Feature_PuntoDeVenta.md`).
+  - **/bitacora-back/fixes**: Para registrar correcciones de errores o bugs solucionados (Ej: `YYYY-MM-DD_HHMM_Fix_BugDeStock.md`).
 
-/docs/operaciones: Stock por matriz, locales y ventas.
+- **/bitacora-front**: El mismo concepto que en el backend, pero enfocado en las vistas de React, integración de API, corrección de bugs visuales y flujos offline-first.
+  - **/bitacora-front/features**: Para registrar nuevas funcionalidades visuales o flujos (Ej: `YYYY-MM-DD_HHMM_Feature_LoginScreen.md`).
+  - **/bitacora-front/fixes**: Para registrar correcciones de diseño o errores en la UI (Ej: `YYYY-MM-DD_HHMM_Fix_ZIndexModal.md`).
+  
+> **Importante sobre Nomenclatura en Bitácoras**: Siempre mantener el prefijo `Feature_` o `Fix_` en el nombre del archivo, además de guardarlo en su subcarpeta correspondiente.
 
+- **/negocio-modelo**: Documentación relacionada a las reglas de facturación SaaS, modelos de suscripción, módulos de pago (planes Fudo), y cualquier definición más orientada al producto comercial que al código.
 
-/docs/arquitectura: Multi-tenancy, RLS y seguridad global.
+- **/operaciones**: Lógica y operatoria de los locales, transferencias entre sucursales, control de stock por matriz (talle/color) y procesos de venta directa POS.
 
 5. Estándares de Seguridad y "Misión Crítica"
 
