@@ -16,15 +16,15 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 2: Infraestructura, Persistencia y Multi-tenancy
-**Fechas Estimadas:** Del 25/02/2026 al 03/03/2026
+## Sprint 2: Infraestructura, Persistencia y Multi-tenancy (Completado)
+**Fecha de Finalización:** 25/02/2026
 **Objetivo:** Conectar el Backend de .NET a PostgreSQL garantizando la invulnerabilidad de los datos entre inquilinos.
 
-*   [ ] Configurar `ApplicationDbContext` (Entity Framework Core) con PostgreSQL.
-*   [ ] Implementar **Global Query Filters** automáticos mapeados a `IMustHaveTenant`.
-*   [ ] Implementar Middleware en la `API` (`TenantResolverMiddleware`) para capturar el Tenant del JWT actual.
-*   [ ] Activar Row Level Security (RLS) directamente desde migraciones PostgreSQL.
-*   [ ] Implementar interceptor para `LogAuditoria` en EF (grabado automático de cambios en JSONB).
+*   [x] Configurar `ApplicationDbContext` (Entity Framework Core) con PostgreSQL.
+*   [x] Implementar **Global Query Filters** automáticos mapeados a `IMustHaveTenant`.
+*   [x] Implementar Middleware en la `API` (`TenantResolverMiddleware`) para capturar el Tenant del JWT actual (Simulado vía Header temporalmente).
+*   [x] Activar Row Level Security (RLS) directamente desde migraciones PostgreSQL.
+*   [x] Implementar interceptor para `LogAuditoria` en EF (grabado automático de cambios en JSONB).
 
 ---
 
@@ -47,6 +47,7 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 *   [ ] **Frontend:** Configuración de Base de Datos Local (RxDB o WatermelonDB) para guardar precios, productos y clientes sin red.
 *   [ ] **Frontend:** Generación y encolamiento de tickets transitorios (Background Worker + SyncManager).
 *   [ ] **Frontend (Autenticación):** Acceso rápido seguro vía PIN para Alta Rotación (`PinCodeHash`).
+*   [ ] **Backend (Refactor JWT):** Reemplazar el Header temporal `X-Tenant-Id` del `TenantResolverMiddleware` (creado en Sprint 2) por la lectura oficial de los Claims del JWT para resolver el Tenant de forma segura.
 
 ---
 

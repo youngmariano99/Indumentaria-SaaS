@@ -1,0 +1,8 @@
+﻿C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Infrastructure\Persistence\Contexts\ApplicationDbContext.cs(70,36): error CS1061: "LogAuditoria" no contiene una definici├│n para "RequestJson" ni un m├®todo de extensi├│n accesible "RequestJson" que acepte un primer argumento del tipo "LogAuditoria" (┬┐falta alguna directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Infrastructure\Infrastructure.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Infrastructure\Persistence\Contexts\ApplicationDbContext.cs(71,36): error CS1061: "LogAuditoria" no contiene una definici├│n para "ResponseJson" ni un m├®todo de extensi├│n accesible "ResponseJson" que acepte un primer argumento del tipo "LogAuditoria" (┬┐falta alguna directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Infrastructure\Infrastructure.csproj]
+
+ERROR al compilar.
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:02.69

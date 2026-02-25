@@ -1,0 +1,325 @@
+﻿Build started...
+Build succeeded.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (68ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND
+          c.relname='__EFMigrationsHistory'
+)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND
+          c.relname='__EFMigrationsHistory'
+)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_class c
+    JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace
+    WHERE n.nspname='public' AND
+          c.relname='__EFMigrationsHistory'
+)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT "MigrationId", "ProductVersion"
+      FROM "__EFMigrationsHistory"
+      ORDER BY "MigrationId";
+info: Microsoft.EntityFrameworkCore.Migrations[20402]
+      Applying migration '20260225122830_InitialMigration'.
+Applying migration '20260225122830_InitialMigration'.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "BilleterasVirtuales" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "CustomerId" uuid NOT NULL,
+          "SaldoActual" numeric NOT NULL,
+          CONSTRAINT "PK_BilleterasVirtuales" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "CertificadosDigitales" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "KeyVaultReference" text NOT NULL,
+          "ExpirationDate" timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_CertificadosDigitales" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Clientes" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "Documento" text NOT NULL,
+          "Nombre" text NOT NULL,
+          "Email" text NOT NULL,
+          "PreferenciasJson" text NOT NULL,
+          CONSTRAINT "PK_Clientes" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Comprobantes" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "StoreId" uuid NOT NULL,
+          "Tipo" text NOT NULL,
+          "Estado" integer NOT NULL,
+          "CAE" text,
+          "VencimientoCAE" timestamp with time zone,
+          "TotalNeto" numeric NOT NULL,
+          "TotalIva" numeric NOT NULL,
+          "Total" numeric NOT NULL,
+          CONSTRAINT "PK_Comprobantes" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Inquilinos" (
+          "Id" uuid NOT NULL,
+          "NombreComercial" text NOT NULL,
+          "CUIT" text NOT NULL,
+          "ConfiguracionRegional" text NOT NULL,
+          "FechaCreacion" timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_Inquilinos" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Inventarios" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "StoreId" uuid NOT NULL,
+          "ProductVariantId" uuid NOT NULL,
+          "StockActual" integer NOT NULL,
+          "StockMinimo" integer NOT NULL,
+          CONSTRAINT "PK_Inventarios" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "LogsAuditoria" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "UserId" uuid NOT NULL,
+          "TableName" text NOT NULL,
+          "PrimaryKey" text,
+          "Action" text NOT NULL,
+          "OldValues" jsonb,
+          "NewValues" jsonb,
+          "IpAddress" text NOT NULL,
+          "Timestamp" timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_LogsAuditoria" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "LogsFiscales" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "InvoiceId" uuid NOT NULL,
+          "Accion" integer NOT NULL,
+          "RequestJson" jsonb,
+          "ResponseJson" jsonb,
+          "Exitoso" boolean NOT NULL,
+          "Timestamp" timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_LogsFiscales" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "ModulosSuscripcion" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "ModuloKey" integer NOT NULL,
+          "IsActive" boolean NOT NULL,
+          "ValidUntil" timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_ModulosSuscripcion" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Productos" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "Nombre" text NOT NULL,
+          "Descripcion" text NOT NULL,
+          "PrecioBase" numeric NOT NULL,
+          "CategoriaId" uuid NOT NULL,
+          "Temporada" text NOT NULL,
+          CONSTRAINT "PK_Productos" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Sucursales" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "Nombre" text NOT NULL,
+          "Direccion" text NOT NULL,
+          "EsDepositoCentral" boolean NOT NULL,
+          CONSTRAINT "PK_Sucursales" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "TelemetriasUso" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "Metrica" integer NOT NULL,
+          "Cantidad" integer NOT NULL,
+          "Mes" integer NOT NULL,
+          "A├▒o" integer NOT NULL,
+          CONSTRAINT "PK_TelemetriasUso" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "TransaccionesBilleteras" (
+          "Id" uuid NOT NULL,
+          "BilleteraVirtualId" uuid NOT NULL,
+          "Monto" numeric NOT NULL,
+          "Tipo" integer NOT NULL,
+          "ComprobanteId" uuid,
+          "FechaHora" timestamp with time zone NOT NULL,
+          CONSTRAINT "PK_TransaccionesBilleteras" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "Usuarios" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "Nombre" text NOT NULL,
+          "Email" text NOT NULL,
+          "PasswordHash" text NOT NULL,
+          "PinCodeHash" text,
+          "Rol" integer NOT NULL,
+          CONSTRAINT "PK_Usuarios" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "VariantesProducto" (
+          "Id" uuid NOT NULL,
+          "TenantId" uuid NOT NULL,
+          "ProductId" uuid NOT NULL,
+          "Talle" text NOT NULL,
+          "Color" text NOT NULL,
+          "SKU" text NOT NULL,
+          "PrecioOverride" numeric,
+          CONSTRAINT "PK_VariantesProducto" PRIMARY KEY ("Id")
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE TABLE "ItemsComprobante" (
+          "Id" uuid NOT NULL,
+          "ComprobanteId" uuid NOT NULL,
+          "VarianteProductoId" uuid NOT NULL,
+          "Cantidad" integer NOT NULL,
+          "PrecioUnitario" numeric NOT NULL,
+          "IvaAlicuota" numeric NOT NULL,
+          CONSTRAINT "PK_ItemsComprobante" PRIMARY KEY ("Id"),
+          CONSTRAINT "FK_ItemsComprobante_Comprobantes_ComprobanteId" FOREIGN KEY ("ComprobanteId") REFERENCES "Comprobantes" ("Id") ON DELETE CASCADE
+      );
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX "IX_ItemsComprobante_ComprobanteId" ON "ItemsComprobante" ("ComprobanteId");
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      CREATE INDEX "IX_Usuarios_TenantId" ON "Usuarios" ("TenantId");
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "BilleterasVirtuales" ENABLE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "BilleterasVirtuales" FORCE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                          CREATE POLICY tenant_isolation_policy ON "BilleterasVirtuales"
+                          USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "CertificadosDigitales" ENABLE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "CertificadosDigitales" FORCE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                          CREATE POLICY tenant_isolation_policy ON "CertificadosDigitales"
+                          USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "Clientes" ENABLE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "Clientes" FORCE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                          CREATE POLICY tenant_isolation_policy ON "Clientes"
+                          USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "Comprobantes" ENABLE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "Comprobantes" FORCE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                          CREATE POLICY tenant_isolation_policy ON "Comprobantes"
+                          USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "Inventarios" ENABLE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "Inventarios" FORCE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                          CREATE POLICY tenant_isolation_policy ON "Inventarios"
+                          USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "ItemsComprobante" ENABLE ROW LEVEL SECURITY;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      ALTER TABLE "ItemsComprobante" FORCE ROW LEVEL SECURITY;
+fail: Microsoft.EntityFrameworkCore.Database.Command[20102]
+      Failed executing DbCommand (33ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      
+                          CREATE POLICY tenant_isolation_policy ON "ItemsComprobante"
+                          USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+Failed executing DbCommand (33ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+
+                    CREATE POLICY tenant_isolation_policy ON "ItemsComprobante"
+                    USING ("TenantId" = current_setting('app.current_tenant', true)::uuid);
+Npgsql.PostgresException (0x80004005): 42703: no existe la columna ┬½TenantId┬╗
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult()
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery()
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQuery(RelationalCommandParameterObject parameterObject)
+   at Microsoft.EntityFrameworkCore.Migrations.MigrationCommand.ExecuteNonQuery(IRelationalConnection connection, IReadOnlyDictionary`2 parameterValues)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQuery(IEnumerable`1 migrationCommands, IRelationalConnection connection)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.Migrate(String targetMigration)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.Migrate(String targetMigration)
+   at Microsoft.EntityFrameworkCore.Design.Internal.MigrationsOperations.UpdateDatabase(String targetMigration, String connectionString, String contextType)
+   at Microsoft.EntityFrameworkCore.Design.OperationExecutor.UpdateDatabaseImpl(String targetMigration, String connectionString, String contextType)
+   at Microsoft.EntityFrameworkCore.Design.OperationExecutor.UpdateDatabase.<>c__DisplayClass0_0.<.ctor>b__0()
+   at Microsoft.EntityFrameworkCore.Design.OperationExecutor.OperationBase.Execute(Action action)
+  Exception data:
+    Severity: ERROR
+    SqlState: 42703
+    MessageText: no existe la columna ┬½TenantId┬╗
+    File: parse_relation.c
+    Line: 3827
+    Routine: errorMissingColumn
+42703: no existe la columna ┬½TenantId┬╗

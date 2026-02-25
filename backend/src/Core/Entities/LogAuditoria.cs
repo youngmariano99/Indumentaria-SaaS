@@ -1,17 +1,21 @@
+using System;
 using Core.Entities.Base;
-using Core.Interfaces;
 
 namespace Core.Entities;
 
 public class LogAuditoria : BaseEntity, IMustHaveTenant
 {
     public Guid TenantId { get; set; }
-    public Guid? UsuarioId { get; set; }
-    public string NombreTabla { get; set; } = string.Empty;
-    public string ClavePrimaria { get; set; } = string.Empty;
-    public string Accion { get; set; } = string.Empty;
-    public string ValoresAntiguosJson { get; set; } = string.Empty;
-    public string ValoresNuevosJson { get; set; } = string.Empty;
-    public string DireccionIp { get; set; } = string.Empty;
-    public DateTime FechaHora { get; set; } = DateTime.UtcNow;
+    public Guid UserId { get; set; }
+    
+    public string TableName { get; set; } = string.Empty;
+    public string? PrimaryKey { get; set; }
+    
+    public string Action { get; set; } = string.Empty; // Insert, Update, Delete
+    
+    public string? OldValues { get; set; } // JSONB
+    public string? NewValues { get; set; } // JSONB
+    
+    public string IpAddress { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
 }

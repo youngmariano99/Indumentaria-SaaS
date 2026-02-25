@@ -44,6 +44,11 @@ Impacto en Multi-tenancy: ¿Cómo afecta el aislamiento de datos o los permisos 
 
 
 Detalle Técnico: Cambios en la DB (PostgreSQL) o nuevas dependencias de .NET Core.
+48: 
+49: Componente Didáctico (Nuevo): Al final del documento, es OBLIGATORIO agregar un bloque llamado "## Explicación Didáctica".
+50:    - Objetivo: Explicar "qué hace" el código nuevo utilizando analogías simples (ej: "El Middleware actúa como un portero de edificio...").
+51:    - Audiencia: Developers Junior o el propio usuario en el futuro.
+52:    - Contenido: Desglosar los archivos clave creados y su función en lenguaje natural, evitando tecnicismos excesivos sin perder rigor.
 
 4. Organización y Filtrado de Información
 Para facilitar el rastreo y la auditoría "de punta a punta", la documentación debe organizarse por tags o metadatos al inicio de cada archivo:
