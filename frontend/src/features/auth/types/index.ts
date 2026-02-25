@@ -1,0 +1,23 @@
+export interface LoginRequest {
+    subdominio: string;
+    email: string;
+    password: string;
+}
+
+export interface LoginResponse {
+    token: string;
+    userId: string;
+    nombre: string;
+    tenantId: string;
+    rol: number;
+}
+
+export interface AuthState {
+    token: string | null;
+    user: {
+        userId: string;
+        nombre: string;
+        tenantId: string;
+        rol: number;
+    } | null;
+}

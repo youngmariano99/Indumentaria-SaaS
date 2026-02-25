@@ -16,18 +16,22 @@ public class TenantResolverMiddleware
 
     public async Task InvokeAsync(HttpContext context, ITenantResolver tenantResolver)
     {
-        // 1. Intentamos leer el header temporal pactado para el Sprint 2
-        var tenantHeader = context.Request.Headers["X-Tenant-Id"].ToString();
+        // 1. Intentamos leer el TenantId directamente desde los Claims del JWT (Prioridad principal)
+        var tenantClaim = context.User.FindFirst("tenantid")?.Value;
 
-        // Si existe y es un Guid válido, lo seteamos en el resolver de la petición actual (Scope)
-        if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantId))
+        if (!string.IsNullOrEmpty(tenantClaim) && Guid.TryParse(tenantClaim, out var tenantIdFromClaim))
         {
-            tenantResolver.SetTenantId(tenantId);
+            tenantResolver.SetTenantId(tenantIdFromClaim);
         }
-
-        // Importante: El Sprint 4 de Refactor JWT deberá reemplazar esta sección para
-        // leer el tenantId directamente desde los Claims:
-        // var claim = context.User.FindFirst("tenant_id");
+        else
+        {
+            // 2. Fallback temporal por si se sigue usando Swagger o endpoints sin Auth que envían el Header
+            var tenantHeader = context.Request.Headers["X-Tenant-Id"].ToString();
+            if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantIdFromHeader))
+            {
+                tenantResolver.SetTenantId(tenantIdFromHeader);
+            }
+        }
 
         await _next(context);
     }

@@ -28,6 +28,17 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
+## Sprint 2.1: Identidad y Accesos (Completado)
+**Fecha de Finalización:** 25/02/2026
+**Objetivo:** Implementar un sistema de Login seguro que emita Tokens JWT con Claims de Tenant, permitiendo que la auditoría y el RLS funcionen con usuarios reales.
+
+*   [x] **Core:** Definir Entidades `Usuario`, `Rol` y actualizar `Inquilino` con `Subdominio`.
+*   [x] **Infraestructura:** Implementar servicio de Hash de contraseñas (BCrypt).
+*   [x] **Infraestructura:** Implementar `JwtTokenGenerator` para emitir tokens firmados (inyectando claims de `tenantid`).
+*   [x] **API:** Endpoints de `Auth/Login` y `Auth/Register` (Solo para Admin temporal).
+*   [x] **Middleware:** Refactorizar `TenantResolverMiddleware` para leer `TenantId` desde los Claims del JWT y hacer enforcing del RLS.
+*   [x] **Frontend:** Pantalla de Login en React con abstracción automática del subdominio de la URL y Store en Zustand.
+
 ## Sprint 3: Catálogo, Matriz de Stock y "El Corazón" del Negocio
 **Fechas Estimadas:** Del 04/03/2026 al 15/03/2026
 **Objetivo:** Evitar el "inventario fantasma" implementando la estructura Producto y Variante.
@@ -47,7 +58,6 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 *   [ ] **Frontend:** Configuración de Base de Datos Local (RxDB o WatermelonDB) para guardar precios, productos y clientes sin red.
 *   [ ] **Frontend:** Generación y encolamiento de tickets transitorios (Background Worker + SyncManager).
 *   [ ] **Frontend (Autenticación):** Acceso rápido seguro vía PIN para Alta Rotación (`PinCodeHash`).
-*   [ ] **Backend (Refactor JWT):** Reemplazar el Header temporal `X-Tenant-Id` del `TenantResolverMiddleware` (creado en Sprint 2) por la lectura oficial de los Claims del JWT para resolver el Tenant de forma segura.
 
 ---
 

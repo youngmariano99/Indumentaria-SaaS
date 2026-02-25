@@ -1,22 +1,47 @@
+import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthLayout } from "../components/layout/AuthLayout";
-import { LoginPage } from "../features/auth/LoginPage";
+import { LoginScreen } from "../features/auth/components/LoginScreen";
 import { RegisterPage } from "../features/auth/RegisterPage";
-import { HomePlaceholder } from "../features/auth/HomePlaceholder";
+import { useAuthStore } from "../features/auth/store/authStore";
+
+// Componente Wrapper para proteger rutas
+const RequireAuth = ({ children }: { children: React.ReactNode }) => {
+  const isValid = useAuthStore((state) => state.checkTokenValidity());
+
+  if (!isValid) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
 
 /**
- * Rutas públicas por ahora (auth no conectado al backend).
- * Más adelante se añadirá protección de rutas y redirección según sesión.
+ * Rutas con protección activada.
  */
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <HomePlaceholder />,
+    element: <Navigate to="/login" replace />,
+  },
+  {
+    path: "/pos", // "El Home" del sistema
+    element: (
+      <RequireAuth>
+        <div className="p-8">
+          <h1 className="text-3xl font-bold">Punto de Venta (Protegido)</h1>
+          <button
+            onClick={() => { useAuthStore.getState().logout(); window.location.href = '/login'; }}
+            className="mt-4 bg-red-500 text-white px-4 py-2 rounded">
+            Cerrar Sesión
+          </button>
+        </div>
+      </RequireAuth>
+    ),
   },
   {
     path: "/login",
-    element: <AuthLayout />,
-    children: [{ index: true, element: <LoginPage /> }],
+    element: <LoginScreen />,
   },
   {
     path: "/registro",

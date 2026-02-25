@@ -43,13 +43,13 @@ External Services: Integración con ARCA y pasarelas de pago.
 
 API: Controladores y autenticación mediante JWT.
 
-4. Estrategias de Seguridad
+4. Estrategias de Seguridad y Multi-tenancy
 
 Soberanía de Certificados: Almacenar las claves privadas cifradas en un Azure Key Vault o HSM, separando la lógica de firma de la de negocio.
 
+Row Level Security (RLS): Habilitar RLS en PostgreSQL para garantizar que un tenant nunca acceda a los datos de otro, reconociendo el TenantId inyectado en el JWT.
 
-Row Level Security (RLS): Habilitar RLS en PostgreSQL para garantizar que un tenant nunca acceda a los datos de otro, incluso si hay un error en la capa de aplicación.
-
+Estrategia de Login (Subdominios): Se utiliza un modelo de subdominios (`zara.tusaas.com`) para identificar al tenant previo al login. Esto facilita la experiencia Mobile-First en PWA, ya que el empleado solo debe recordar su Email y Password.
 
 Auditoría con JSONB: Registrar cada request y response XML de ARCA en columnas JSONB para peritajes fiscales.
 

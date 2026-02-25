@@ -1,0 +1,17 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  Application.UnitTests -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\Application.UnitTests\bin\Debug\net9.0\Application.UnitTests.dll
+  API.IntegrationTests -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\bin\Debug\net9.0\API.IntegrationTests.dll
+  Core.UnitTests -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\Core.UnitTests\bin\Debug\net9.0\Core.UnitTests.dll
+  Core -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\bin\Debug\net9.0\Core.dll
+  Application -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\bin\Debug\net9.0\Application.dll
+  Infrastructure -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Infrastructure\bin\Debug\net9.0\Infrastructure.dll
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\API\Program.cs(8,43): error CS0234: El tipo o el nombre del espacio de nombres 'JwtBearer' no existe en el espacio de nombres 'Microsoft.AspNetCore.Authentication' (┬┐falta alguna referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\API\API.csproj]
+
+ERROR al compilar.
+
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\API\Program.cs(8,43): error CS0234: El tipo o el nombre del espacio de nombres 'JwtBearer' no existe en el espacio de nombres 'Microsoft.AspNetCore.Authentication' (┬┐falta alguna referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\API\API.csproj]
+    0 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:03.20
