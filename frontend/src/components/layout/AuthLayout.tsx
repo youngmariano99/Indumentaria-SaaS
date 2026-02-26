@@ -5,9 +5,9 @@ import styles from "./AuthLayout.module.css";
 
 /**
  * Layout tipo Clay: dos columnas.
- * Izquierda: formulario (login o registro).
- * Derecha: iconos de funcionalidades (login) o ilustración estadísticas (registro).
- * Al ir a registro, el panel derecho anima entrada de derecha a izquierda.
+ * Login: formulario IZQUIERDA, dibujos/esquemas DERECHA.
+ * Registro: al hacer clic en "Registrarse", animación derecha→izquierda:
+ *   dibujos/esquemas pasan a la IZQUIERDA, formulario de registro queda a la DERECHA.
  */
 export function AuthLayout() {
   const location = useLocation();
@@ -15,17 +15,30 @@ export function AuthLayout() {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.left}>
-        <div className={styles.leftInner}>
-          <Outlet />
+      <div
+        key={location.pathname}
+        className={styles.animatedView}
+        data-register={isRegister ? "true" : undefined}
+      >
+        {/* Columna 1: login = form (blanco) | registro = panel (oscuro) */}
+        <div className={isRegister ? styles.panelCol : styles.formCol}>
+          {isRegister ? (
+            <AuthRightRegister />
+          ) : (
+            <div className={styles.formInner}>
+              <Outlet />
+            </div>
+          )}
         </div>
-      </div>
-      <div className={styles.right}>
-        <div
-          key={isRegister ? "register" : "login"}
-          className={styles.rightAnimated}
-        >
-          {isRegister ? <AuthRightRegister /> : <AuthRightLogin />}
+        {/* Columna 2: login = panel (oscuro) | registro = form (blanco) */}
+        <div className={isRegister ? styles.formCol : styles.panelCol}>
+          {isRegister ? (
+            <div className={styles.formInner}>
+              <Outlet />
+            </div>
+          ) : (
+            <AuthRightLogin />
+          )}
         </div>
       </div>
     </div>

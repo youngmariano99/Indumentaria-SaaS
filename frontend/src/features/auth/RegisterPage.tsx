@@ -53,7 +53,7 @@ export function RegisterPage() {
       <div className={styles.brand}>
         <h1 className={styles.logo}>POS Indumentaria</h1>
         <p className={styles.logoDesc}>
-          Punto de venta para retail de indumentaria.
+          Punto de venta para locales de ropa. Empezá en minutos.
         </p>
       </div>
 

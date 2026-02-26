@@ -1,35 +1,23 @@
 import styles from "./AuthRightPanels.module.css";
 
 /**
- * Panel derecho en registro: ilustración abstracta con cuadros/estadísticas.
- * Identidad visual: geométrico, monocromático, primario + grises.
+ * Panel registro: mensaje de gracias y refuerzo de que somos los indicados. Fondo blanco.
  */
 export function AuthRightRegister() {
   return (
     <div className={styles.panel}>
-      <p className={styles.trusted}>Tu negocio, en números</p>
-      <h2 className={styles.panelTitle}>Empezá a vender con datos claros</h2>
-      <p className={styles.panelDesc}>
-        Dashboard, reportes y métricas desde el primer día.
+      <p className={styles.trusted}>Bienvenido</p>
+      <h2 className={styles.thankYouTitle}>Gracias por unirte a nosotros</h2>
+      <p className={styles.thankYouDesc}>
+        Elegiste la herramienta pensada para retail de indumentaria: stock por
+        talle y color, caja y facturación en un solo lugar. Vas a poder vender,
+        reponer y facturar sin complicarte.
       </p>
-      <div className={styles.statsIllustration} aria-hidden>
-        <div className={styles.chartBars}>
-          {[40, 65, 45, 80, 55, 70].map((h, i) => (
-            <div
-              key={i}
-              className={styles.bar}
-              style={{ height: `${h}%` }}
-            />
-          ))}
-        </div>
-        <div className={styles.chartLine} />
-        <div className={styles.chartBoxes}>
-          <div className={styles.miniBox} />
-          <div className={styles.miniBox} />
-          <div className={styles.miniBox} />
-        </div>
-      </div>
-      <p className={styles.agency}>Desarrollado por tu agencia</p>
+      <div className={styles.panelLine} aria-hidden />
+      <p className={styles.thankYouCta}>
+        Estás en buenas manos. Completá el formulario y empezá cuando quieras.
+      </p>
+      <p className={styles.agency}>Desarrollado por Appy Studios</p>
     </div>
   );
 }
