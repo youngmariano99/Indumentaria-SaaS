@@ -43,10 +43,21 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 **Fechas Estimadas:** Del 04/03/2026 al 15/03/2026
 **Objetivo:** Evitar el "inventario fantasma" implementando la estructura Producto y Variante.
 
-*   [ ] **Backend:** Casos de uso (Mediator Commands/Queries) para Carga rápida de Productos y sus variantes (Talle/Color).
-*   [ ] **Backend:** Reglas de validación pura con FluentValidation.
-*   [ ] **API:** Endpoints REST asegurados para catálogos.
+*   [x] **Backend:** Casos de uso (Mediator Commands/Queries) para Carga rápida de Productos y sus variantes (Talle/Color).
+*   [x] **Backend:** Reglas de validación pura con FluentValidation.
+*   [x] **API:** Endpoints REST asegurados para catálogos.
 *   [ ] **Frontend:** Componente de carga visual matricial ("Bulk Import"). Formularios optimizados de React Hook Form.
+
+---
+
+## Sprint 3.1: Testing Automatizado del Backend (Integration & Unit) (Completado)
+**Fechas Estimadas:** Del 16/03/2026 al 20/03/2026
+**Objetivo:** Establecer una malla de seguridad con tests automáticos para los módulos críticos (Autenticación y Catálogo) asegurando que futuras modificaciones no rompan lo existente.
+
+*   [x] **Infraestructura de Tests:** Configurar `WebApplicationFactory` con base de datos en memoria o Testcontainers para pruebas de integración reales sin ensuciar la BD principal.
+*   [x] **Tests de Dominio (Unit):** Validar comportamientos puros de las entidades `Core`.
+*   [x] **Tests de Integración (API):** Casos de prueba para endpoints críticos (`POST /api/auth/login`, `POST /api/productos/matrix`). Uso de `xUnit` y `FluentAssertions`.
+*   [x] **Limpieza y Orden:** Estructurar la carpeta `/tests` manteniendo una nomenclatura estricta y clara (`FeatureTests/Modulo...`).
 
 ---
 

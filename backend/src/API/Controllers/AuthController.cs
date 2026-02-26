@@ -14,21 +14,31 @@ public class AuthController : ControllerBase
     private readonly ApplicationDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly FluentValidation.IValidator<LoginRequest> _validator;
 
     public AuthController(
         ApplicationDbContext dbContext, 
         IPasswordHasher passwordHasher, 
-        IJwtTokenGenerator jwtTokenGenerator)
+        IJwtTokenGenerator jwtTokenGenerator,
+        FluentValidation.IValidator<LoginRequest> validator)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _validator = validator;
     }
 
     [HttpPost("login")]
     [AllowAnonymous] // El login es público
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
+        var validationResult = await _validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors.Select(e => new { Propiedad = e.PropertyName, Error = e.ErrorMessage });
+            return BadRequest(new { mensaje = "Errores de validación", detalles = errors });
+        }
+
         // 1. Buscamos al Inquilino por su subdominio (ej: "zara" en zara.tusaas.com)
         var inquilino = await _dbContext.Inquilinos
             .FirstOrDefaultAsync(i => i.Subdominio == request.Subdominio);

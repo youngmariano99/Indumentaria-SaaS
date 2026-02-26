@@ -84,6 +84,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // 4. Middlewares Personalizados y de Seguridad
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantResolverMiddleware>();
@@ -116,3 +117,6 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+// Requerido por WebApplicationFactory para Tests de Integración
+public partial class Program { }

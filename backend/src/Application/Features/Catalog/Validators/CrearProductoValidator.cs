@@ -55,3 +55,12 @@ public class CrearProductoValidator : AbstractValidator<CrearProductoDto>
             .WithMessage("La matriz contiene variantes duplicadas (Mismo Talle y Color).");
     }
 }
+
+public class CrearProductoConVariantesCommandValidator : AbstractValidator<Application.Features.Catalog.Commands.CrearProductoConVariantesCommand>
+{
+    public CrearProductoConVariantesCommandValidator()
+    {
+        RuleFor(cmd => cmd.Payload)
+            .SetValidator(new CrearProductoValidator());
+    }
+}

@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="ec2a5c7b-c4fa-449c-b401-cb5a4ac459d7" name="mari_@MARIANOY 2026-02-26 11:33:18" runUser="MARIANOY\mari_" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-02-26T11:33:18.1397661-03:00" queuing="2026-02-26T11:33:18.1397667-03:00" start="2026-02-26T11:33:15.7510126-03:00" finish="2026-02-26T11:33:19.2309065-03:00" />
+  <TestSettings name="default" id="4e3406d8-d67d-4cc6-81fd-ad0b0e761bf9">
+    <Deployment runDeploymentRoot="mari__MARIANOY_2026-02-26_11_33_18" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="55e7ce6d-66b8-4e60-8570-10d2afb1249f" testId="cbefdc41-7a87-a8fc-30e6-cc8ca60f9fb4" testName="API.IntegrationTests.Features.Auth.AuthTests.Login_SinEmailOClave_DebeDevolverBadRequest" computerName="MARIANOY" duration="00:00:00.0154180" startTime="2026-02-26T11:33:19.1072069-03:00" endTime="2026-02-26T11:33:19.1072072-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="55e7ce6d-66b8-4e60-8570-10d2afb1249f">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.Unauthorized {value: 401}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)&#xD;
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)&#xD;
+   at API.IntegrationTests.Features.Auth.AuthTests.Login_SinEmailOClave_DebeDevolverBadRequest() in C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\Features\Auth\AuthTests.cs:line 49&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="cca70557-4edf-4504-8ae6-7d53e22e5b5e" testId="e6e6a2a9-d786-4682-d169-7a3333b324d4" testName="API.IntegrationTests.Features.Catalog.CatalogTests.CrearProductoMatrix_ConPrecioCero_DebeRebotarPorReglaDeNegocio_BadRequest400" computerName="MARIANOY" duration="00:00:01.6542657" startTime="2026-02-26T11:33:18.6165424-03:00" endTime="2026-02-26T11:33:18.6165433-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cca70557-4edf-4504-8ae6-7d53e22e5b5e">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.Unauthorized {value: 401}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)&#xD;
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)&#xD;
+   at API.IntegrationTests.Features.Catalog.CatalogTests.CrearProductoMatrix_ConPrecioCero_DebeRebotarPorReglaDeNegocio_BadRequest400() in C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\Features\Catalog\CatalogTests.cs:line 38&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d5febb22-3e6a-4984-8fb0-3dc57a5af1f9" testId="86012f7a-c565-1eb2-a46f-52ff697dc6aa" testName="API.IntegrationTests.Features.Auth.AuthTests.Login_ConCredencialesInvalidas_DebeDevolverUnauthorized" computerName="MARIANOY" duration="00:00:00.4628587" startTime="2026-02-26T11:33:19.0865983-03:00" endTime="2026-02-26T11:33:19.0865988-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d5febb22-3e6a-4984-8fb0-3dc57a5af1f9" />
+    <UnitTestResult executionId="12c80d84-f601-462b-bfee-e7fd88673b96" testId="ee1ba343-0121-471f-9bab-e73f4a89d013" testName="API.IntegrationTests.UnitTest1.Test1" computerName="MARIANOY" duration="00:00:00.0052605" startTime="2026-02-26T11:33:16.9575760-03:00" endTime="2026-02-26T11:33:16.9575970-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="12c80d84-f601-462b-bfee-e7fd88673b96" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="API.IntegrationTests.Features.Auth.AuthTests.Login_ConCredencialesInvalidas_DebeDevolverUnauthorized" storage="c:\users\mari_\onedrive\escritorio\indumentaria-saas\backend\tests\api.integrationtests\bin\debug\net9.0\api.integrationtests.dll" id="86012f7a-c565-1eb2-a46f-52ff697dc6aa">
+      <Execution id="d5febb22-3e6a-4984-8fb0-3dc57a5af1f9" />
+      <TestMethod codeBase="C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\bin\Debug\net9.0\API.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="API.IntegrationTests.Features.Auth.AuthTests" name="Login_ConCredencialesInvalidas_DebeDevolverUnauthorized" />
+    </UnitTest>
+    <UnitTest name="API.IntegrationTests.Features.Catalog.CatalogTests.CrearProductoMatrix_ConPrecioCero_DebeRebotarPorReglaDeNegocio_BadRequest400" storage="c:\users\mari_\onedrive\escritorio\indumentaria-saas\backend\tests\api.integrationtests\bin\debug\net9.0\api.integrationtests.dll" id="e6e6a2a9-d786-4682-d169-7a3333b324d4">
+      <Execution id="cca70557-4edf-4504-8ae6-7d53e22e5b5e" />
+      <TestMethod codeBase="C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\bin\Debug\net9.0\API.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="API.IntegrationTests.Features.Catalog.CatalogTests" name="CrearProductoMatrix_ConPrecioCero_DebeRebotarPorReglaDeNegocio_BadRequest400" />
+    </UnitTest>
+    <UnitTest name="API.IntegrationTests.UnitTest1.Test1" storage="c:\users\mari_\onedrive\escritorio\indumentaria-saas\backend\tests\api.integrationtests\bin\debug\net9.0\api.integrationtests.dll" id="ee1ba343-0121-471f-9bab-e73f4a89d013">
+      <Execution id="12c80d84-f601-462b-bfee-e7fd88673b96" />
+      <TestMethod codeBase="C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\bin\Debug\net9.0\API.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="API.IntegrationTests.UnitTest1" name="Test1" />
+    </UnitTest>
+    <UnitTest name="API.IntegrationTests.Features.Auth.AuthTests.Login_SinEmailOClave_DebeDevolverBadRequest" storage="c:\users\mari_\onedrive\escritorio\indumentaria-saas\backend\tests\api.integrationtests\bin\debug\net9.0\api.integrationtests.dll" id="cbefdc41-7a87-a8fc-30e6-cc8ca60f9fb4">
+      <Execution id="55e7ce6d-66b8-4e60-8570-10d2afb1249f" />
+      <TestMethod codeBase="C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\bin\Debug\net9.0\API.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="API.IntegrationTests.Features.Auth.AuthTests" name="Login_SinEmailOClave_DebeDevolverBadRequest" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="cbefdc41-7a87-a8fc-30e6-cc8ca60f9fb4" executionId="55e7ce6d-66b8-4e60-8570-10d2afb1249f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e6e6a2a9-d786-4682-d169-7a3333b324d4" executionId="cca70557-4edf-4504-8ae6-7d53e22e5b5e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86012f7a-c565-1eb2-a46f-52ff697dc6aa" executionId="d5febb22-3e6a-4984-8fb0-3dc57a5af1f9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee1ba343-0121-471f-9bab-e73f4a89d013" executionId="12c80d84-f601-462b-bfee-e7fd88673b96" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Resultados sin formato de lista" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="Todos los resultados cargados" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="4" executed="4" passed="2" failed="2" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 9.0.6)&#xD;
+[xUnit.net 00:00:00.18]   Discovering: API.IntegrationTests&#xD;
+[xUnit.net 00:00:00.23]   Discovered:  API.IntegrationTests&#xD;
+[xUnit.net 00:00:00.24]   Starting:    API.IntegrationTests&#xD;
+info: Microsoft.EntityFrameworkCore.Update[30100]&#xD;
+      Saved 0 entities to in-memory store.&#xD;
+     Warning:&#xD;
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and&#xD;
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for&#xD;
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.&#xD;
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.&#xD;
+     A paid commercial license supports the development and continued increasing support of&#xD;
+     Fluent Assertions users under both commercial and community licenses. Help us&#xD;
+     keep Fluent Assertions at the forefront of unit testing.&#xD;
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/&#xD;
+[xUnit.net 00:00:01.97]       Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.Unauthorized {value: 401}.&#xD;
+[xUnit.net 00:00:01.97]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)&#xD;
+[xUnit.net 00:00:01.97]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:00:01.97]         C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\Features\Catalog\CatalogTests.cs(38,0): at API.IntegrationTests.Features.Catalog.CatalogTests.CrearProductoMatrix_ConPrecioCero_DebeRebotarPorReglaDeNegocio_BadRequest400()&#xD;
+[xUnit.net 00:00:01.97]         --- End of stack trace from previous location ---&#xD;
+warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]&#xD;
+      Failed to determine the https port for redirect.&#xD;
+[xUnit.net 00:00:02.46]       Expected response.StatusCode to be HttpStatusCode.BadRequest {value: 400}, but found HttpStatusCode.Unauthorized {value: 401}.&#xD;
+[xUnit.net 00:00:02.46]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)&#xD;
+[xUnit.net 00:00:02.46]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)&#xD;
+[xUnit.net 00:00:02.46]         C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\API.IntegrationTests\Features\Auth\AuthTests.cs(49,0): at API.IntegrationTests.Features.Auth.AuthTests.Login_SinEmailOClave_DebeDevolverBadRequest()&#xD;
+[xUnit.net 00:00:02.46]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.47]   Finished:    API.IntegrationTests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="MARIANOY" outcome="Error" timestamp="2026-02-26T11:33:18.6099992-03:00">
+        <Text>[xUnit.net 00:00:01.96]     API.IntegrationTests.Features.Catalog.CatalogTests.CrearProductoMatrix_ConPrecioCero_DebeRebotarPorReglaDeNegocio_BadRequest400 [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="MARIANOY" outcome="Error" timestamp="2026-02-26T11:33:19.1053814-03:00">
+        <Text>[xUnit.net 00:00:02.46]     API.IntegrationTests.Features.Auth.AuthTests.Login_SinEmailOClave_DebeDevolverBadRequest [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
