@@ -3,7 +3,7 @@ import { useAuthStore } from '../features/auth/store/authStore';
 
 // URL Base dinámica dependiendo del entorno.
 // Idealmente esto viene de import.meta.env.VITE_API_URL
-const BASE_URL = 'http://localhost:5240/api';
+const BASE_URL = 'http://localhost:5063/api';
 
 export const apiClient = axios.create({
     baseURL: BASE_URL,

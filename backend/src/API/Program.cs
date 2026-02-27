@@ -36,6 +36,21 @@ builder.Services.AddValidatorsFromAssemblyContaining<Application.Features.Auth.V
 // Mapeo automático de Controllers
 builder.Services.AddControllers();
 
+// CORS: permitir peticiones desde el frontend durante desarrollo
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:5173",  // Vite dev server
+                "http://localhost:5174",  // fallback port
+                "http://localhost:3000"   // create-react-app fallback
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 // 2. Configuración de Autenticación y JWT
 var jwtStruct = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtStruct["Secret"] ?? throw new InvalidOperationException("Jwt Secret no configurado");
@@ -82,6 +97,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // 4. Middlewares Personalizados y de Seguridad
+app.UseCors("FrontendDev");         // ← CORS primero, antes de Auth
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
