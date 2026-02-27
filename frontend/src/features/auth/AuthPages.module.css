@@ -99,3 +99,54 @@
 .footerLink:hover {
   text-decoration: underline;
 }
+
+/* Toast éxito: flotante, entra de izquierda a derecha, se va a los ~3 s */
+.successToast {
+  position: fixed;
+  top: var(--space-6);
+  left: 50%;
+  transform: translate(-50%, 0) translateX(-100vw);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-success);
+  background: rgba(5, 150, 105, 0.12);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  animation: successToastIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  max-width: min(90vw, 360px);
+  box-sizing: border-box;
+}
+
+.successToastIcon {
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.successToastLeaving {
+  opacity: 0;
+  transform: translate(-50%, 0) translateX(1rem);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .successToast {
+    animation: none;
+    transform: translate(-50%, 0);
+  }
+  .successToastLeaving {
+    transition: opacity 0.25s ease;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes successToastIn {
+  to {
+    transform: translate(-50%, 0) translateX(0);
+  }
+}

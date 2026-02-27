@@ -17,6 +17,7 @@ export const LoginScreen = () => {
   const [subdominio, setSubdominio] = useState("");
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [toastLeaving, setToastLeaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const loginAuth = useAuthStore((state) => state.login);
@@ -39,8 +40,25 @@ export const LoginScreen = () => {
     const state = location.state as { mensaje?: string } | null;
     if (state?.mensaje) {
       setSuccessMsg(state.mensaje);
+      setToastLeaving(false);
     }
   }, [location.state]);
+
+  // Toast flotante: auto-cerrar a los 3 s con fade-out breve
+  useEffect(() => {
+    if (!successMsg) return;
+    const hideAt = 2700;
+    const clearAt = 3000;
+    const t1 = window.setTimeout(() => setToastLeaving(true), hideAt);
+    const t2 = window.setTimeout(() => {
+      setSuccessMsg(null);
+      setToastLeaving(false);
+    }, clearAt);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [successMsg]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +83,17 @@ export const LoginScreen = () => {
 
   return (
     <>
+      {successMsg && (
+        <div
+          className={`${styles.successToast} ${toastLeaving ? styles.successToastLeaving : ""}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className={styles.successToastIcon}>✓</span>
+          {successMsg}
+        </div>
+      )}
+
       <div className={styles.brand}>
         <p className={styles.logo}>POS Indumentaria</p>
         <p className={styles.logoDesc}>
@@ -91,12 +120,6 @@ export const LoginScreen = () => {
             iconLeft={<Tag size={20} />}
             disabled={isLoading}
           />
-        )}
-
-        {successMsg && (
-          <p className={styles.subtitle} role="status" style={{ color: "#16a34a", fontWeight: 600 }}>
-            ✓ {successMsg}
-          </p>
         )}
 
         <Input
