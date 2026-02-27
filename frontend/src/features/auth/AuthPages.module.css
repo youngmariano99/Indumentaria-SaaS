@@ -1,5 +1,7 @@
+/* Formulario: tamaño anterior (compacto), sin barra de scroll */
+
 .brand {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-4);
 }
 
 .logo {
@@ -14,16 +16,16 @@
   font-size: var(--text-sm);
   color: var(--color-gray-600);
   margin: 0;
-  line-height: var(--leading-normal);
+  line-height: 1.4;
 }
 
 .header {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .title {
   font-family: var(--font-heading);
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   font-weight: 700;
   color: var(--color-gray-900);
   margin: 0 0 var(--space-2);
@@ -33,13 +35,13 @@
   font-size: var(--text-sm);
   color: var(--color-gray-600);
   margin: 0;
-  line-height: var(--leading-normal);
+  line-height: 1.4;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 .formError {
@@ -53,14 +55,18 @@
 }
 
 .forgotWrap {
-  margin-top: calc(-1 * var(--space-2));
-  margin-bottom: var(--space-1);
+  margin-top: calc(-1 * var(--space-1));
+  margin-bottom: 0;
 }
 
 .forgotLink {
+  display: inline-block;
   font-size: var(--text-sm);
   color: var(--color-primary);
   font-weight: 500;
+  padding: var(--space-1) 0;
+  line-height: 1.4;
+  box-sizing: border-box;
 }
 
 .forgotLink:hover {
@@ -75,14 +81,19 @@
 }
 
 .footer {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
   font-size: var(--text-sm);
   color: var(--color-gray-600);
 }
 
 .footerLink {
+  display: inline-block;
   font-weight: 600;
   color: var(--color-primary);
+  padding: var(--space-1) var(--space-2);
+  line-height: 1.4;
+  box-sizing: border-box;
+  margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-2));
 }
 
 .footerLink:hover {
