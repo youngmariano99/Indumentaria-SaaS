@@ -66,7 +66,7 @@ export const LoginScreen = () => {
   return (
     <>
       <div className={styles.brand}>
-        <h1 className={styles.logo}>POS Indumentaria</h1>
+        <p className={styles.logo}>POS Indumentaria</p>
         <p className={styles.logoDesc}>
           Punto de venta para locales de ropa. Stock por talle y color,
           facturación y reportes.
@@ -74,7 +74,7 @@ export const LoginScreen = () => {
       </div>
 
       <header className={styles.header}>
-        <h2 className={styles.title}>Bienvenido de nuevo</h2>
+        <h1 className={styles.title}>Bienvenido de nuevo</h1>
         <p className={styles.subtitle}>
           Ingresá a tu cuenta para gestionar tu punto de venta.
         </p>

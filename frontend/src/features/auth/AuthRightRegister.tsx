@@ -9,9 +9,10 @@ export function AuthRightRegister() {
       <p className={styles.trusted}>Bienvenido</p>
       <h2 className={styles.thankYouTitle}>Gracias por unirte a nosotros</h2>
       <p className={styles.thankYouDesc}>
-        Elegiste la herramienta pensada para retail de indumentaria: stock por
-        talle y color, caja y facturación en un solo lugar. Vas a poder vender,
-        reponer y facturar sin complicarte.
+        Elegiste el Saas pensado para tu negocio!
+        <br />
+        Vas a poder vender, gestionar
+        y facturar sin complicarte.
       </p>
       <div className={styles.panelLine} aria-hidden />
       <p className={styles.thankYouCta}>

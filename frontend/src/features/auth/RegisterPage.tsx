@@ -68,16 +68,16 @@ export function RegisterPage() {
   return (
     <>
       <div className={styles.brand}>
-        <h1 className={styles.logo}>POS Indumentaria</h1>
+        <p className={styles.logo}>POS Indumentaria</p>
         <p className={styles.logoDesc}>
           Punto de venta para locales de ropa. Empezá en minutos.
         </p>
       </div>
 
       <header className={styles.header}>
-        <h2 className={styles.title}>Crear cuenta</h2>
+        <h1 className={styles.title}>Crear cuenta</h1>
         <p className={styles.subtitle}>
-          Registrá tu negocio para empezar a usar el POS.
+          Registrá tu negocio para empezar a usar el Saas.
         </p>
       </header>
 
