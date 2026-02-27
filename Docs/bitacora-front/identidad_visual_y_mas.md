@@ -27,9 +27,13 @@ El sistema es un **punto de venta retail moderno, profesional y orientado a la m
 
 ### 2.1 Paleta base
 
+> Actualizado para alinear login y dashboard sobre fondos claros.
+
 | Rol              | Hex       | Uso principal |
 |------------------|-----------|----------------|
-| **Base oscura**  | `#111827` | Fondos principales, modo oscuro, contenedores. |
+| **Base clara**   | `#f9fafb` | Fondo general de la app (login, dashboard). |
+| **Superficie**   | `#ffffff` | Cards, modales y paneles en foreground. |
+| **Base oscura**  | `#111827` | Texto de alto contraste, posibles vistas en modo oscuro futuro. |
 | **Primario**     | `#2563eb` | CTAs, enlaces, estados activos, acentos de marca. |
 
 ### 2.2 Escala de grises (soporte)
@@ -63,6 +67,20 @@ Escala de claro a oscuro para texto, bordes, fondos secundarios y estados:
 - **Regla 60-30-10:** Aproximadamente 60% color dominante (base/fondo), 30% color secundario (grises/superficies), 10% color de acento (primario y semánticos).
 - **Accesibilidad:** Cumplir WCAG 2.1 nivel AA como mínimo. Contraste texto/fondo ≥ 4.5:1 (texto normal), ≥ 3:1 (texto grande). Revisar primario y semánticos sobre fondos claros y oscuros.
 - **Contraste:** No usar primario como único indicador de información; combinar con icono o texto. Evitar primario sobre base oscura sin ajuste de luminosidad si el contraste no es suficiente.
+
+### 2.5 Paleta aplicada a dashboard y vistas analíticas
+
+En el **dashboard** y pantallas de catálogo/nuevo producto se aplica una variante clara de la paleta:
+
+- **Fondo general:** `Gray 50` (`#f9fafb`).
+- **Cards y paneles:** `Superficie` (`#ffffff`) con borde `Gray 200`.
+- **Texto principal:** `Gray 900` para títulos, `Gray 700/600` para texto secundario.
+- **Acentos y gráficos:** Primario `#2563eb` y su variante de foco `#3b82f6`, usados en:
+  - Barras de progreso.
+  - Líneas y áreas de gráficos.
+  - Badges y contadores activos.
+- **Chips y etiquetas:** Fondos con primario en baja opacidad (ej. `rgba(37, 99, 235, 0.08)`) y texto en primario.
+- **Feedback:** Success y Error en tonos suaves (`rgba` con los hex de semánticos) para alerts y toasts.
 
 ---
 

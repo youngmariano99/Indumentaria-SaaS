@@ -49,27 +49,104 @@ const modulosDisponibles = [
   {
     id: "tienda-online",
     nombre: "Tienda online",
-    descripcion: "Tu catálogo en la web, ventas 24/7 y carrito integrado.",
-    precio: "Próximamente",
+    beneficioCorto: "Expandí tu negocio al mundo online.",
+    descripcion:
+      "Publicá tu catálogo, recibí pedidos 24/7 y conectá el stock con tu local físico.",
+    precio: "$15.900 / mes",
+    adquiridos: 23,
+    destacado: true,
+    features: [
+      "Catálogo online siempre actualizado",
+      "Carrito de compras simple",
+      "Sincronización de stock con el POS",
+    ],
   },
   {
     id: "reportes-avanzados",
     nombre: "Reportes avanzados",
-    descripcion: "Exportación Excel, gráficos por período y comparativas.",
-    precio: "Próximamente",
+    beneficioCorto: "Tomá decisiones con números claros.",
+    descripcion:
+      "Exportá a Excel, mirá comparativas por período y entendé qué locales y productos rinden mejor.",
+    precio: "$7.900 / mes",
+    adquiridos: 14,
+    destacado: false,
+    features: [
+      "Reportes listos para contabilidad",
+      "Comparativas por rango de fechas",
+      "Exportación a Excel y CSV",
+    ],
   },
   {
     id: "multi-sucursal",
     nombre: "Multi-sucursal",
-    descripcion: "Varias tiendas, stock por sede y reportes consolidados.",
-    precio: "Próximamente",
+    beneficioCorto: "Controlá varias tiendas desde un solo lugar.",
+    descripcion:
+      "Centralizá el stock, las ventas y la caja de cada sucursal sin perder el detalle.",
+    precio: "$20.900 / mes",
+    adquiridos: 9,
+    destacado: false,
+    features: [
+      "Stock por sucursal y stock consolidado",
+      "Precios y promociones por tienda",
+      "Reporte de ventas por sucursal",
+    ],
+  },
+  {
+    id: "qr-barras",
+    nombre: "Lectura con QR y códigos de barras",
+    beneficioCorto: "Obtene la información de tus productos mas rapido.",
+    descripcion:
+      "Sumá lectura con QR y código de barras en un mismo flujo, sin complicarte.",
+    precio: "$4.900 / mes",
+    adquiridos: 31,
+    destacado: false,
+    features: [
+      "Lectura de código de barras en el POS",
+      "Lectura con QR",
+      "Menos errores de tipeo en caja y mayor disponibilidad de productos",
+    ],
+  },
+  {
+    id: "facturacion-arca",
+    nombre: "Facturación Arca",
+    beneficioCorto: "Facturá en regla sin salir del sistema.",
+    descripcion:
+      "Emití comprobantes con Arca directo desde el POS y llevá el historial de facturas ordenado.",
+    precio: "$10.500 / mes",
+    adquiridos: 17,
+    destacado: false,
+    features: [
+      "Emisión de facturas desde el POS",
+      "Historial de comprobantes centralizado",
+      "Datos listos para tu contador",
+    ],
+  },
+  {
+    id: "catalogo-asistido",
+    nombre: "Control de catálogo asistido",
+    beneficioCorto: "Tené tu catálogo siempre ordenado y al día.",
+    descripcion:
+      "Detectá productos sin stock, stock bajo todo en un ChatBot.",
+    precio: "$5.900 / mes",
+    adquiridos: 11,
+    destacado: false,
+    features: [
+      "Alertas de productos sin stock",
+      "Avisos de stock bajo configurable",
+      "Resumen de productos nuevos para revisar",
+    ],
   },
 ];
 
 type Contexto = "saas" | "tienda";
 
 export function DashboardPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+    return window.innerWidth > 768;
+  });
   const [contexto, setContexto] = useState<Contexto>("saas");
   const [hoveredDayIndex, setHoveredDayIndex] = useState<number | null>(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
@@ -95,6 +172,7 @@ export function DashboardPage() {
 
   const maxSales = Math.max(...salesLast7Days.map((d) => d.value));
   const esTiendaOnline = contexto === "tienda";
+  const diasRestantesMembresia = 30;
 
   return (
     <div className={`${styles.shell} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
@@ -202,6 +280,9 @@ export function DashboardPage() {
                   <span className={styles.userMetricLabel}>Registrados</span>
                   <span className={styles.userMetricValue}>—</span>
                 </div>
+              </div>
+              <div className={styles.userMetricsFootnote}>
+                {diasRestantesMembresia} días de servicio restantes
               </div>
             </div>
 
@@ -605,26 +686,59 @@ export function DashboardPage() {
             <h2 className={styles.modulosSectionTitle}>
               Módulos que podés adquirir
             </h2>
+            <div className={styles.modulosPillGroup} aria-hidden="true">
+              <span className={styles.modulosPill}>Más usado por tiendas como la tuya</span>
+            </div>
             <div className={styles.modulosGrid}>
               {modulosDisponibles.map((mod) => (
-                <div key={mod.id} className={styles.moduloCard}>
+                <div
+                  key={mod.id}
+                  className={`${styles.moduloCard} ${
+                    mod.destacado ? styles.moduloCardFeatured : ""
+                  }`}
+                >
                   <div className={styles.moduloCardHeader}>
                     <h3 className={styles.moduloCardTitle}>{mod.nombre}</h3>
-                    <span className={styles.moduloCardPrecio}>
+                    <span className={styles.moduloCardBadgeRight}>
+                      Módulo
+                    </span>
+                  </div>
+                  <div className={styles.moduloCardPrecioBlock}>
+                    <span className={styles.moduloCardPrecioPrincipal}>
                       {mod.precio}
+                    </span>
+                    <span className={styles.moduloCardPrecioSub}>
+                      {mod.beneficioCorto}
                     </span>
                   </div>
                   <p className={styles.moduloCardDesc}>{mod.descripcion}</p>
+                  <ul className={styles.moduloCardFeatures}>
+                    {mod.features.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ul>
+                  <div className={styles.moduloCardMetaRow}>
+                    <span className={styles.moduloCardCounter}>
+                      {mod.adquiridos.toLocaleString("es-AR")} cuentas ya lo usan
+                    </span>
+                  </div>
                   <button
                     type="button"
-                    className={styles.moduloCardBtn}
-                    disabled
+                    className={
+                      mod.destacado
+                        ? styles.moduloCardBtnPrimary
+                        : styles.moduloCardBtnGhost
+                    }
                   >
-                    Próximamente
+                    Adquirilo ya
                   </button>
                 </div>
               ))}
             </div>
+            <p className={styles.modulosFootnote}>
+              Todos los precios serán en pesos argentinos. No hay costos ocultos ni
+              instalación obligatoria: vas a poder activar cada módulo cuando lo necesites.
+            </p>
           </section>
           </>
           )}
@@ -633,4 +747,3 @@ export function DashboardPage() {
     </div>
   );
 }
-

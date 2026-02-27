@@ -126,7 +126,7 @@
 .label {
     font-size: var(--text-sm);
     font-weight: 500;
-    color: var(--color-gray-300);
+    color: var(--color-gray-600);
 }
 
 .required {
@@ -300,8 +300,8 @@
 }
 
 .talleChip {
-    background-color: rgba(37, 99, 235, 0.2);
-    color: #93c5fd;
+    background-color: rgba(37, 99, 235, 0.08);
+    color: var(--color-primary);
     font-size: var(--text-xs);
     font-weight: 600;
     padding: 3px 10px;
@@ -310,8 +310,8 @@
 }
 
 .colorChip {
-    background-color: rgba(5, 150, 105, 0.2);
-    color: #6ee7b7;
+    background-color: var(--color-gray-100);
+    color: var(--color-gray-700);
     font-size: var(--text-xs);
     font-weight: 600;
     padding: 3px 10px;
