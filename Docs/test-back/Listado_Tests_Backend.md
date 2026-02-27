@@ -34,6 +34,17 @@ El objetivo es tener un control claro de qué partes del sistema están "blindad
 
 ---
 
+## 🛒 Módulo: Punto de Venta (POS)
+
+### Función 1: Cobrar Ticket con Payload Incompleto o Inválido
+- **Qué testea:** Verifica que si el cajero manda un ticket con monto negativo y sin ítems (o con `MetodoPagoId` vacío), el sistema rechace la operación de cobro **antes de tocar la base de datos**.
+- **Posible Resultado Esperado:** `400 Bad Request`.
+- **Endpoint:** `POST /api/ventas/cobrar`
+- **Archivo de Test:** `VentasTests.cs`
+- **Información Importante:** Este test protege la integridad financiera del sistema. El pipeline de validación (MediatR → `CobrarTicketCommandValidator` → `ExceptionHandlingMiddleware`) frena el cobro malformado antes de que el Handler abra una transacción en PostgreSQL. Además valida indirectamente que el `ValidationBehavior` encuentra el validator correcto en el assembly.
+
+---
+
 ## 📝 Procedimiento para actualizar este archivo
 En futuros Sprints (Ej: cuando agreguemos Caja/Facturación, Módulos de Wallet o manejo de Promociones), debemos mantener este documento vivo:
 1. Al crear una nueva prueba (`[Fact]`) en la carpeta `tests/API.IntegrationTests`, abrí este archivo.
@@ -41,3 +52,4 @@ En futuros Sprints (Ej: cuando agreguemos Caja/Facturación, Módulos de Wallet 
 3. Describí breve y textualmente qué tramposilla le estás haciendo al sistema (ej: intentando vender sin stock).
 4. Indicá qué Código HTTP (Resultado) debería dar.
 5. Dejá una nota del Impacto de Negocio (Por qué esta prueba nos salva el día).
+

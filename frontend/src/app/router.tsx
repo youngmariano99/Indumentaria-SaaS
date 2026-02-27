@@ -3,6 +3,8 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AuthLayout } from "../components/layout/AuthLayout";
 import { LoginScreen } from "../features/auth/components/LoginScreen";
 import { RegisterPage } from "../features/auth/RegisterPage";
+import { CatalogoPage } from "../features/catalog/CatalogoPage";
+import { NuevoProductoPage } from "../features/catalog/NuevoProductoPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
 // Componente Wrapper para proteger rutas
@@ -48,6 +50,22 @@ export const router = createBrowserRouter([
     path: "/registro",
     element: <AuthLayout />,
     children: [{ index: true, element: <RegisterPage /> }],
+  },
+  {
+    path: "/catalogo",
+    element: (
+      <RequireAuth>
+        <CatalogoPage />
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/catalogo/nuevo",
+    element: (
+      <RequireAuth>
+        <NuevoProductoPage />
+      </RequireAuth>
+    ),
   },
   {
     path: "*",
