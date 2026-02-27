@@ -1,3 +1,5 @@
+using Core.Enums;
+
 namespace Application.DTOs.Catalog;
 
 /// <summary>Producto con sus variantes para la respuesta del listado del catálogo.</summary>
@@ -8,5 +10,6 @@ public class ProductoConVariantesDto
     public string Descripcion { get; set; } = string.Empty;
     public decimal PrecioBase { get; set; }
     public string Temporada { get; set; } = string.Empty;
+    public TipoProducto TipoProducto { get; set; }
     public List<VarianteResumenDto> Variantes { get; set; } = new();
 }

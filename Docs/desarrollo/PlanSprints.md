@@ -39,14 +39,16 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 *   [x] **Middleware:** Refactorizar `TenantResolverMiddleware` para leer `TenantId` desde los Claims del JWT y hacer enforcing del RLS.
 *   [x] **Frontend:** Pantalla de Login en React con abstracción automática del subdominio de la URL y Store en Zustand.
 
-## Sprint 3: Catálogo, Matriz de Stock y "El Corazón" del Negocio
-**Fechas Estimadas:** Del 04/03/2026 al 15/03/2026
+## Sprint 3: Catálogo, Matriz de Stock y "El Corazón" del Negocio (Completado)
+**Fecha de Finalización:** 27/02/2026
 **Objetivo:** Evitar el "inventario fantasma" implementando la estructura Producto y Variante.
 
 *   [x] **Backend:** Casos de uso (Mediator Commands/Queries) para Carga rápida de Productos y sus variantes (Talle/Color).
 *   [x] **Backend:** Reglas de validación pura con FluentValidation.
-*   [x] **API:** Endpoints REST asegurados para catálogos.
-*   [ ] **Frontend:** Componente de carga visual matricial ("Bulk Import"). Formularios optimizados de React Hook Form.
+*   [x] **API:** Endpoints REST asegurados para catálogos (`POST /api/productos/matrix`, `GET /api/productos`).
+*   [x] **Frontend:** Componente de carga visual matricial con generación reactiva de variantes (Talle × Color → chips).
+*   [x] **Frontend:** Grilla de visualización del catálogo con cards de productos, chips de variantes y barra de estadísticas.
+*   [x] **Integración:** CORS configurado, puerto corregido, Login y Registro conectados al backend real.
 
 ---
 
@@ -58,6 +60,58 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 *   [x] **Tests de Dominio (Unit):** Validar comportamientos puros de las entidades `Core`.
 *   [x] **Tests de Integración (API):** Casos de prueba para endpoints críticos (`POST /api/auth/login`, `POST /api/productos/matrix`). Uso de `xUnit` y `FluentAssertions`.
 *   [x] **Limpieza y Orden:** Estructurar la carpeta `/tests` manteniendo una nomenclatura estricta y clara (`FeatureTests/Modulo...`).
+
+---
+
+## Sprint 3.2 — Parte 1: Tipos, Stock y Configuración por Tenant (Completado)
+**Fecha de Finalización:** 27/02/2026
+**Objetivo:** Solidificar el módulo de catálogo con tipos de producto, stock inicial real, layout compartido y configuración personalizable de talles.
+
+*   [x] **Backend:** Enum `TipoProducto` (Ropa, Calzado, Accesorio, Ropa Interior, Deporte, Ropa de Trabajo).
+*   [x] **Backend:** Campo `TipoProducto` en entidad `Producto`. Migración EF: `AddTipoProductoYStockInicial`.
+*   [x] **Backend + BD:** Stock inicial por variante: al crear variantes, se crean registros en tabla `Inventario` con `StockActual = stockInicial`.
+*   [x] **Backend:** Endpoints `GET /api/ajustes/talles` y `PUT /api/ajustes/talles` para configuración personalizada por tenant. Migración `AddConfiguracionTallesJson`.
+*   [x] **Frontend:** `AppLayout` compartido con sidebar/nav que persiste en todas las rutas protegidas. Router refactorizado con `ProtectedLayout + Outlet`.
+*   [x] **Frontend:** Selector de tipo de producto en el formulario de carga con pre-carga automática de talles según tipo.
+*   [x] **Frontend:** Columna de stock inicial en la tabla matricial de variantes.
+*   [x] **Frontend:** Página `/ajustes` (Configuración) con editor de chips de talles por tipo, persistida en el backend.
+
+---
+
+## Sprint 3.2 — Parte 2: Flexibilidad del Formulario de Carga (Completado)
+**Fecha de Finalización:** 27/02/2026
+**Objetivo:** Hacer el formulario de carga de productos más potente y flexible para cubrir casos reales de indumentaria.
+
+*   [x] **Fix — Layout duplicado:** Eliminado el sidebar embebido en `CatalogoPage.tsx` que quedó del estado anterior al `AppLayout`.
+*   [x] **Temporada opcional:** El campo "Temporada" pasó a ser opcional. Primera opción "Sin temporada asignada" (valor vacío). No bloquea el guardado.
+*   [x] **Eliminar filas de la matriz:** Botón 🗑️ (Trash) en cada fila de la tabla de variantes. Genera la matriz completa Talle × Color y el usuario elimina las combinaciones que no necesita.
+*   [x] **Atributos adicionales por variante:** Nueva sección "Atributos adicionales" con pares Clave/Valor libres (ej: `Uso: F11`, `Material: Cuero`). Se guardan como JSON en `VarianteProducto.AtributosJson`. Se pre-cargan desde la configuración del tenant.
+*   [x] **Backend:** `VarianteProducto.AtributosJson` (columna JSON) e `Inquilino.ConfiguracionAtributosJson`. Migración `AddAtributosJsonYConfiguracionAtributos` aplicada a PostgreSQL.
+*   [x] **Backend:** Endpoints `GET /api/ajustes/atributos` y `PUT /api/ajustes/atributos` para gestionar atributos predefinidos por tipo.
+*   [x] **Frontend:** `ajustesApi` extendido con `obtenerAtributos` / `guardarAtributos`. Los atributos del tipo se pre-cargan al cambiar tipo de producto en el formulario.
+
+---
+
+## Sprint 3.2 — Parte 3: Escalas de Talles Internacionales (Roadmap)
+**Fechas Estimadas:** Post Sprint 4 (POS)
+**Objetivo:** Soporte para productos importados con escalas de talles de otros países.
+
+*   [ ] **Ajustes — País de operación por defecto:** El tenant elige su país base (Argentina, Europa, USA, etc.). Los talles pre-cargados se adaptan a esa escala.
+*   [ ] **Formulario de carga — Escala de talles por producto:** Desplegable por producto para elegir la escala de talles (AR, EU, US, UK, BR). Útil para ropa importada que viene con talles del país de origen.
+*   [ ] **Tabla de conversión:** Mapeo base entre escalas (ej: EU 38 = AR 38 = US 7.5) como referencia visual para el operador. No convierte automáticamente — muestra la equivalencia.
+*   [ ] Referencia: `Docs/indicacionesIA/Talles.md`.
+
+---
+
+## Sprint 3.3: Roadmap Futuro — Catálogo Avanzado (Diferido)
+> Estas funcionalidades requieren migraciones complejas y rediseño profundo. Se implementan luego del POS y solo si hay demanda real de clientes.
+
+*   [ ] **Categorías Jerárquicas con NCM:** Tabla de categorías con código NCM del MERCOSUR para automatizar tributación y comercio exterior.
+*   [ ] **Atributos Dinámicos EAV:** Tablas `DefinicionAtributos` y `MapeoAtributosCategoria` para campos propios por categoría (Copa/Contorno para Ropa Interior, Tipo de Suela para Calzado, etc.).
+*   [ ] **Activación de Atributos por Tenant:** Un local de ropa de oficina ve solo categorías formales; un local deportivo ve Deporte + Athleisure.
+*   [ ] **Metadata de Logística por SKU:** Peso, dimensiones, GTIN/EAN-13, País de Origen, Composición de fibra para integración con e-commerce y aduanas.
+*   [ ] **Packs y Bundles:** Soporte para "Pack SKU Único", "Virtual Bundle" y "Pre-packs Mayoristas" (curvas de talles).
+*   [ ] **Edición y Eliminación de Productos:** Endpoint `PUT /api/productos/{id}` y `DELETE` con baja lógica para preservar historial de ventas.
 
 ---
 

@@ -6,8 +6,10 @@ namespace Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
+    DbSet<Inquilino> Inquilinos { get; }
     DbSet<Producto> Productos { get; }
     DbSet<VarianteProducto> VariantesProducto { get; }
+    DbSet<Inventario> Inventarios { get; }
 
     DatabaseFacade Database { get; }
 

@@ -9,4 +9,5 @@ public class VarianteResumenDto
     public string SKU { get; set; } = string.Empty;
     public decimal PrecioCosto { get; set; }
     public decimal? PrecioOverride { get; set; }
+    public int StockActual { get; set; }  // Viene de la tabla Inventario
 }

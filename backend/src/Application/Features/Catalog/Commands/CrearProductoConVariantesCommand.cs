@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Application.Common.Interfaces;
 using Application.DTOs.Catalog;
 using Core.Entities;
@@ -31,6 +32,7 @@ public class CrearProductoConVariantesCommandHandler : IRequestHandler<CrearProd
 
         try
         {
+            // 1. Crear el producto padre
             var producto = new Producto
             {
                 TenantId = tenantId,
@@ -38,12 +40,14 @@ public class CrearProductoConVariantesCommandHandler : IRequestHandler<CrearProd
                 Descripcion = dto.Descripcion,
                 PrecioBase = dto.PrecioBase,
                 CategoriaId = dto.CategoriaId,
-                Temporada = dto.Temporada
+                Temporada = dto.Temporada,
+                TipoProducto = dto.TipoProducto
             };
 
             await _dbContext.Productos.AddAsync(producto, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
+            // 2. Crear las variantes y sus registros de inventario
             if (dto.Variantes != null && dto.Variantes.Any())
             {
                 var variantes = dto.Variantes.Select(v => new VarianteProducto
@@ -54,10 +58,27 @@ public class CrearProductoConVariantesCommandHandler : IRequestHandler<CrearProd
                     Color = v.Color,
                     SKU = string.IsNullOrWhiteSpace(v.SKU) ? GenerarSkuAutomatico(producto.Id, v.Talle, v.Color) : v.SKU,
                     PrecioCosto = v.PrecioCosto,
-                    PrecioOverride = v.PrecioOverride
+                    PrecioOverride = v.PrecioOverride,
+                    AtributosJson = v.Atributos != null && v.Atributos.Count > 0
+                        ? JsonSerializer.Serialize(v.Atributos)
+                        : "{}"
                 }).ToList();
 
                 await _dbContext.VariantesProducto.AddRangeAsync(variantes, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                // 3. Crear registros de Inventario iniciales (uno por variante)
+                // StoreId usa Guid.Empty como "sucursal global" hasta que exista el módulo de sucursales
+                var inventarios = variantes.Zip(dto.Variantes, (variante, varianteDto) => new Inventario
+                {
+                    TenantId = tenantId,
+                    StoreId = Guid.Empty,           // Sucursal global placeholder
+                    ProductVariantId = variante.Id,
+                    StockActual = varianteDto.StockInicial,
+                    StockMinimo = 0
+                }).ToList();
+
+                await _dbContext.Inventarios.AddRangeAsync(inventarios, cancellationToken);
                 await _dbContext.SaveChangesAsync(cancellationToken);
             }
 
@@ -73,7 +94,6 @@ public class CrearProductoConVariantesCommandHandler : IRequestHandler<CrearProd
 
     private string GenerarSkuAutomatico(Guid productId, string talle, string color)
     {
-        // Ejemplo simple de generador de SKU fallback: Primeras 8 letas de ID + talle + color
         var shortId = productId.ToString()[..8].ToUpperInvariant();
         var shortTalle = talle.Length >= 2 ? talle[..2].ToUpperInvariant() : talle.ToUpperInvariant();
         var shortColor = color.Length >= 3 ? color[..3].ToUpperInvariant() : color.ToUpperInvariant();

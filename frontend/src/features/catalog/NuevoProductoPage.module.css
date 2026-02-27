@@ -390,3 +390,93 @@
     padding-top: var(--space-4);
     border-top: 1px solid var(--color-gray-200);
 }
+
+/* ── Botón eliminar fila de la tabla ──────────────────────────────────────── */
+.tableRow {
+    position: relative;
+}
+
+.deleteRowBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-gray-400);
+    cursor: pointer;
+    padding: 4px 6px;
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+    font-family: var(--font-ui);
+}
+
+.deleteRowBtn:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.2);
+    color: #dc2626;
+}
+
+/* ── Sección de atributos adicionales ────────────────────────────────────── */
+.atributosGrid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.atributoRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.atributoInput {
+    flex: 1;
+    min-width: 120px;
+    background-color: #ffffff;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    color: var(--color-gray-900);
+    font-size: var(--text-sm);
+    padding: 8px 12px;
+    font-family: var(--font-ui);
+    transition: border-color var(--transition-fast);
+}
+
+.atributoInput:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.atributoInput::placeholder {
+    color: var(--color-gray-400);
+}
+
+.atributoSep {
+    font-size: var(--text-lg);
+    color: var(--color-gray-400);
+    font-weight: 300;
+    flex-shrink: 0;
+}
+
+.addAtributoBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 8px 14px;
+    background: var(--color-gray-100);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    color: var(--color-gray-700);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    white-space: nowrap;
+}
+
+.addAtributoBtn:hover {
+    background: var(--color-gray-200);
+}

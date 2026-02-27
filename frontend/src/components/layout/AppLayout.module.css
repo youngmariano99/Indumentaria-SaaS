@@ -1,0 +1,169 @@
+/* AppLayout — Layout compartido para todas las rutas protegidas.
+   Estilos extraídos exactamente de DashboardPage.module.css (sin cambios de diseño).
+*/
+
+.shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 100vh;
+    background: var(--color-gray-50);
+    color: var(--color-gray-900);
+    font-family: var(--font-ui);
+}
+
+@media (max-width: 768px) {
+    .shell {
+        grid-template-columns: 64px 1fr;
+    }
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-3);
+    border-right: 1px solid var(--color-gray-200);
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.shell.sidebarCollapsed {
+    grid-template-columns: 72px 1fr;
+}
+
+.sidebar.sidebarCollapsed {
+    align-items: center;
+    padding-inline: var(--space-2);
+}
+
+.sidebarHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+}
+
+.sidebarLogo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-heading);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-gray-900);
+    text-decoration: none;
+}
+
+.sidebarLogoMark {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-focus));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.sidebarToggle {
+    border: none;
+    background: transparent;
+    padding: 4px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-500);
+    cursor: pointer;
+}
+
+.sidebarToggle:hover {
+    background: var(--color-gray-100);
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 8px 10px;
+    border-radius: 999px;
+    color: var(--color-gray-600);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    font-family: var(--font-ui);
+}
+
+.navItem span {
+    white-space: nowrap;
+}
+
+.navItemIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+}
+
+.navItemIcon svg {
+    display: block;
+}
+
+.navItemActive {
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.navItem:hover {
+    background: var(--color-gray-100);
+    text-decoration: none;
+}
+
+.navFooter {
+    margin-top: auto;
+    font-size: var(--text-xs);
+    color: var(--color-gray-400);
+}
+
+.sidebarCollapsed .sidebarLogo span:last-child,
+.sidebarCollapsed .navItem span:not(.navItemIcon),
+.sidebarCollapsed .navFooter {
+    display: none;
+}
+
+.sidebarCollapsed .navItem {
+    justify-content: center;
+    padding-inline: var(--space-1);
+}
+
+.sidebarCollapsed .navItemIcon svg {
+    font-size: 20px;
+}
+
+/* El contenido de la ruta se renderiza aquí */
+.main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}

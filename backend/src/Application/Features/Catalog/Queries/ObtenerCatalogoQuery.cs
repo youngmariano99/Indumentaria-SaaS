@@ -20,7 +20,7 @@ public class ObtenerCatalogoQueryHandler : IRequestHandler<ObtenerCatalogoQuery,
     {
         // El global query filter del DbContext ya filtra por TenantId automáticamente.
         var productos = await _dbContext.Productos
-            .OrderBy(p => p.Nombre) // Orden alfabético (BaseEntity no tiene CreatedAt)
+            .OrderBy(p => p.Nombre)
             .ToListAsync(cancellationToken);
 
         var productIds = productos.Select(p => p.Id).ToList();
@@ -29,7 +29,19 @@ public class ObtenerCatalogoQueryHandler : IRequestHandler<ObtenerCatalogoQuery,
             .Where(v => productIds.Contains(v.ProductId))
             .ToListAsync(cancellationToken);
 
-        // Construimos el resultado en memoria (evita N+1 queries)
+        var varianteIds = variantes.Select(v => v.Id).ToList();
+
+        // Traer el stock actual de Inventario (StoreId = Guid.Empty = sucursal global)
+        var inventarios = await _dbContext.Inventarios
+            .Where(i => varianteIds.Contains(i.ProductVariantId))
+            .ToListAsync(cancellationToken);
+
+        // Diccionario varianteId → stockActual para búsqueda O(1)
+        var stockPorVariante = inventarios
+            .GroupBy(i => i.ProductVariantId)
+            .ToDictionary(g => g.Key, g => g.Sum(i => i.StockActual));
+
+        // Diccionario productoId → variantes (evita N+1)
         var variantesPorProducto = variantes
             .GroupBy(v => v.ProductId)
             .ToDictionary(g => g.Key, g => g.ToList());
@@ -41,6 +53,7 @@ public class ObtenerCatalogoQueryHandler : IRequestHandler<ObtenerCatalogoQuery,
             Descripcion = p.Descripcion,
             PrecioBase = p.PrecioBase,
             Temporada = p.Temporada,
+            TipoProducto = p.TipoProducto,
             Variantes = variantesPorProducto.TryGetValue(p.Id, out var vars)
                 ? vars.Select(v => new VarianteResumenDto
                 {
@@ -49,7 +62,8 @@ public class ObtenerCatalogoQueryHandler : IRequestHandler<ObtenerCatalogoQuery,
                     Color = v.Color,
                     SKU = v.SKU,
                     PrecioCosto = v.PrecioCosto,
-                    PrecioOverride = v.PrecioOverride
+                    PrecioOverride = v.PrecioOverride,
+                    StockActual = stockPorVariante.TryGetValue(v.Id, out var stock) ? stock : 0
                 }).ToList()
                 : new List<VarianteResumenDto>()
         }).ToList();

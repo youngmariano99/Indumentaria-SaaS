@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260227211745_AddTipoProductoYStockInicial")]
+    partial class AddTipoProductoYStockInicial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,15 +145,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("ConfiguracionAtributosJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("ConfiguracionRegional")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ConfiguracionTallesJson")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -501,10 +496,6 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("AtributosJson")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("Color")
                         .IsRequired()

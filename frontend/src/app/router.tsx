@@ -1,55 +1,28 @@
 import React from "react";
 import { createBrowserRouter, Link, Navigate } from "react-router-dom";
+import { AppLayout } from "../components/layout/AppLayout";
 import { AuthLayout } from "../components/layout/AuthLayout";
 import { LoginScreen } from "../features/auth/components/LoginScreen";
 import { RegisterPage } from "../features/auth/RegisterPage";
 import { CatalogoPage } from "../features/catalog/CatalogoPage";
 import { NuevoProductoPage } from "../features/catalog/NuevoProductoPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { AjustesPage } from "../features/ajustes/AjustesPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
-// Componente Wrapper para proteger rutas
-const RequireAuth = ({ children }: { children: React.ReactNode }) => {
+// Layout protegido: valida auth y renderiza AppLayout con Outlet
+const ProtectedLayout = () => {
   const isValid = useAuthStore((state) => state.checkTokenValidity());
-
-  if (!isValid) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  if (!isValid) return <Navigate to="/login" replace />;
+  return <AppLayout />;
 };
 
-/**
- * Rutas con protección activada.
- */
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/login" replace />,
   },
-  {
-    path: "/pos", // "El Home" del sistema
-    element: (
-      <RequireAuth>
-        <div className="p-8">
-          <h1 className="text-3xl font-bold">Punto de Venta (Protegido)</h1>
-          <button
-            onClick={() => { useAuthStore.getState().logout(); window.location.href = '/login'; }}
-            className="mt-4 bg-red-500 text-white px-4 py-2 rounded">
-            Cerrar Sesión
-          </button>
-        </div>
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/dashboard",
-    element: (
-      <RequireAuth>
-        <DashboardPage />
-      </RequireAuth>
-    ),
-  },
+  // ── Auth (sin sidebar) ───────────────────────────────────────────────────
   {
     path: "/login",
     element: <AuthLayout />,
@@ -60,52 +33,50 @@ export const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [{ index: true, element: <RegisterPage /> }],
   },
+  // ── Rutas protegidas con AppLayout (sidebar compartido) ──────────────────
   {
-    path: "/catalogo",
-    element: (
-      <RequireAuth>
-        <CatalogoPage />
-      </RequireAuth>
-    ),
+    element: <ProtectedLayout />,
+    children: [
+      { path: "/dashboard", element: <DashboardPage /> },
+      { path: "/catalogo", element: <CatalogoPage /> },
+      { path: "/catalogo/nuevo", element: <NuevoProductoPage /> },
+      { path: "/ajustes", element: <AjustesPage /> },
+      {
+        path: "/pos",
+        element: (
+          <div className="p-8">
+            <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-2xl)", marginBottom: "var(--space-4)" }}>
+              Punto de Venta
+            </h1>
+            <p style={{ color: "var(--color-gray-500)" }}>En construcción — Sprint 4.</p>
+          </div>
+        ),
+      },
+      {
+        path: "/clientes/nuevo",
+        element: (
+          <div style={{ padding: "var(--space-6)", maxWidth: 480, margin: "0 auto" }}>
+            <h1 style={{ fontFamily: "var(--font-heading)", marginBottom: "var(--space-2)" }}>Alta de cliente</h1>
+            <p style={{ color: "var(--color-gray-600)", marginBottom: "var(--space-4)" }}>
+              Esta función está en desarrollo. Próximamente podrás cargar y gestionar clientes desde acá.
+            </p>
+            <Link to="/dashboard" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Volver al dashboard</Link>
+          </div>
+        ),
+      },
+      {
+        path: "/modulos",
+        element: (
+          <div style={{ padding: "var(--space-6)", maxWidth: 480, margin: "0 auto" }}>
+            <h1 style={{ fontFamily: "var(--font-heading)", marginBottom: "var(--space-2)" }}>Módulos</h1>
+            <p style={{ color: "var(--color-gray-600)", marginBottom: "var(--space-4)" }}>
+              Acá podrás ver y contratar módulos adicionales. Próximamente.
+            </p>
+            <Link to="/dashboard" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Volver al dashboard</Link>
+          </div>
+        ),
+      },
+    ],
   },
-  {
-    path: "/catalogo/nuevo",
-    element: (
-      <RequireAuth>
-        <NuevoProductoPage />
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/clientes/nuevo",
-    element: (
-      <RequireAuth>
-        <div style={{ padding: "var(--space-6)", maxWidth: 480, margin: "0 auto" }}>
-          <h1 style={{ fontFamily: "var(--font-heading)", marginBottom: "var(--space-2)" }}>Alta de cliente</h1>
-          <p style={{ color: "var(--color-gray-600)", marginBottom: "var(--space-4)" }}>
-            Esta función está en desarrollo. Próximamente podrás cargar y gestionar clientes desde acá.
-          </p>
-          <Link to="/dashboard" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Volver al dashboard</Link>
-        </div>
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "/modulos",
-    element: (
-      <RequireAuth>
-        <div style={{ padding: "var(--space-6)", maxWidth: 480, margin: "0 auto" }}>
-          <h1 style={{ fontFamily: "var(--font-heading)", marginBottom: "var(--space-2)" }}>Módulos</h1>
-          <p style={{ color: "var(--color-gray-600)", marginBottom: "var(--space-4)" }}>
-            Acá podrás ver y contratar módulos adicionales. Próximamente.
-          </p>
-          <Link to="/dashboard" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Volver al dashboard</Link>
-        </div>
-      </RequireAuth>
-    ),
-  },
-  {
-    path: "*",
-    element: <Navigate to="/" replace />,
-  },
+  { path: "*", element: <Navigate to="/" replace /> },
 ]);
