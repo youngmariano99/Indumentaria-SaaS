@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { EnvelopeSimple, Lock, SignIn, Tag } from "@phosphor-icons/react";
 import { useAuthStore } from "../store/authStore";
 import { authApi } from "../api/authApi";
@@ -11,10 +11,12 @@ import styles from "../AuthPages.module.css";
  * Usa identidad visual (tipografía, colores, componentes) y lógica real (subdominio, API).
  */
 export const LoginScreen = () => {
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [subdominio, setSubdominio] = useState("");
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const loginAuth = useAuthStore((state) => state.login);
@@ -32,7 +34,13 @@ export const LoginScreen = () => {
     } else if (parts.length >= 3) {
       setSubdominio(parts[0]);
     }
-  }, []);
+
+    // Leer el mensaje de éxito si vino del registro
+    const state = location.state as { mensaje?: string } | null;
+    if (state?.mensaje) {
+      setSuccessMsg(state.mensaje);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +55,7 @@ export const LoginScreen = () => {
       const mensaje =
         err && typeof err === "object" && "response" in err
           ? (err as { response?: { data?: { mensaje?: string } } }).response?.data
-              ?.mensaje
+            ?.mensaje
           : null;
       setError(mensaje || "Error al iniciar sesión");
     } finally {
@@ -83,6 +91,12 @@ export const LoginScreen = () => {
             iconLeft={<Tag size={20} />}
             disabled={isLoading}
           />
+        )}
+
+        {successMsg && (
+          <p className={styles.subtitle} role="status" style={{ color: "#16a34a", fontWeight: 600 }}>
+            ✓ {successMsg}
+          </p>
         )}
 
         <Input

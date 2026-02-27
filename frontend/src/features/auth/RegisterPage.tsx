@@ -1,27 +1,30 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { EnvelopeSimple, Lock, User, UserPlus } from "@phosphor-icons/react";
+import { EnvelopeSimple, Lock, User, UserPlus, Tag } from "@phosphor-icons/react";
 import { Button, Input } from "../../components/ui";
+import { authApi } from "./api/authApi";
 import styles from "./AuthPages.module.css";
 
 /**
  * Pantalla de registro. Mismo estilo que login; panel derecho muestra ilustración estadísticas.
+ * Conectada al endpoint POST /api/auth/register-admin-temp
  */
 export function RegisterPage() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState("");
+  const [nombreComercial, setNombreComercial] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!nombre.trim()) {
-      setError("Ingresá tu nombre o nombre comercial.");
+    // Validaciones locales (sin llamar a la API)
+    if (!nombreComercial.trim()) {
+      setError("Ingresá el nombre de tu negocio.");
       return;
     }
     if (!email.trim()) {
@@ -42,10 +45,24 @@ export function RegisterPage() {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      // El subdominio se genera automáticamente del nombre del negocio
+      // (sin espacios, en minúsculas). Ej: "Mi Tienda" → "mi-tienda"
+      const subdominio = nombreComercial.trim().toLowerCase().replace(/\s+/g, "-");
+
+      await authApi.register({ subdominio, email, password });
+
+      // Registro exitoso → redirigir al login para que inicie sesión
+      navigate("/login", { replace: true, state: { mensaje: "¡Cuenta creada! Podés ingresar ahora." } });
+    } catch (err: unknown) {
+      const mensaje =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { mensaje?: string } } }).response?.data?.mensaje
+          : null;
+      setError(mensaje || "No pudimos crear la cuenta. Intentá con otro nombre de negocio.");
+    } finally {
       setLoading(false);
-      navigate("/login", { replace: true });
-    }, 600);
+    }
   };
 
   return (
@@ -72,12 +89,12 @@ export function RegisterPage() {
         )}
 
         <Input
-          label="Nombre o nombre comercial"
+          label="Nombre del negocio"
           type="text"
-          autoComplete="name"
-          placeholder="Mi Tienda"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          autoComplete="organization"
+          placeholder="Ej: Mi Tienda"
+          value={nombreComercial}
+          onChange={(e) => setNombreComercial(e.target.value)}
           iconLeft={<User size={20} />}
           disabled={loading}
         />
@@ -114,6 +131,14 @@ export function RegisterPage() {
           iconLeft={<Lock size={20} />}
           disabled={loading}
         />
+
+        {/* Indicador del subdominio generado — solo informativo */}
+        {nombreComercial.trim() && (
+          <p className={styles.subtitle} style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}>
+            <Tag size={13} />
+            Tu negocio usará el código: <strong>{nombreComercial.trim().toLowerCase().replace(/\s+/g, "-")}</strong>
+          </p>
+        )}
 
         <Button
           type="submit"

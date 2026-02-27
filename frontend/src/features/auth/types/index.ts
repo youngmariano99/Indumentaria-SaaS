@@ -4,6 +4,12 @@ export interface LoginRequest {
     password: string;
 }
 
+export interface RegisterRequest {
+    subdominio: string;  // El nombre del local (se usa como subdominio identificador del tenant)
+    email: string;
+    password: string;
+}
+
 export interface LoginResponse {
     token: string;
     userId: string;

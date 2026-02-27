@@ -27,13 +27,11 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 // 1.5. Configuración de MediatR y FluentValidation (CQRS)
 builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssemblies(AppDomain.CurrentDomain.GetAssemblies().Where(a => a.FullName!.StartsWith("Application")).ToArray());
+    cfg.RegisterServicesFromAssemblyContaining<Application.Features.Ventas.Commands.CobrarTicketCommand>();
     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Application.Behaviors.ValidationBehavior<,>));
 });
 
-builder.Services.AddValidatorsFromAssembly(
-    AppDomain.CurrentDomain.GetAssemblies().First(a => a.FullName!.StartsWith("Application"))
-);
+builder.Services.AddValidatorsFromAssemblyContaining<Application.Features.Auth.Validators.LoginRequestValidator>();
 
 // Mapeo automático de Controllers
 builder.Services.AddControllers();

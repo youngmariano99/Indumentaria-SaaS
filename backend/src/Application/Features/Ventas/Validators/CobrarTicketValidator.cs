@@ -1,23 +1,26 @@
 using Application.DTOs.Ventas;
+using Application.Features.Ventas.Commands;
 using FluentValidation;
 
 namespace Application.Features.Ventas.Validators;
 
-public class CobrarTicketValidator : AbstractValidator<CobrarTicketDto>
+/// <summary>
+/// Validator conectado al Pipeline de MediatR — valida el COMMAND, no sólo el DTO.
+/// </summary>
+public class CobrarTicketCommandValidator : AbstractValidator<CobrarTicketCommand>
 {
-    public CobrarTicketValidator()
+    public CobrarTicketCommandValidator()
     {
-        RuleFor(v => v.MetodoPagoId)
+        RuleFor(c => c.Payload.MetodoPagoId)
             .NotEmpty().WithMessage("El método de pago es obligatorio.");
 
-        RuleFor(v => v.MontoTotalDeclarado)
+        RuleFor(c => c.Payload.MontoTotalDeclarado)
             .GreaterThanOrEqualTo(0).WithMessage("El total de la venta no puede ser negativo.");
 
-        RuleFor(v => v.Detalles)
-            .NotEmpty().WithMessage("El ticket no puede estar vacío.")
-            .Must(d => d.Count > 0).WithMessage("Debe enviar por lo menos un ítem a cobrar.");
+        RuleFor(c => c.Payload.Detalles)
+            .NotEmpty().WithMessage("El ticket no puede estar vacío.");
 
-        RuleForEach(v => v.Detalles).SetValidator(new CobrarTicketDetalleValidator());
+        RuleForEach(c => c.Payload.Detalles).SetValidator(new CobrarTicketDetalleValidator());
     }
 }
 
