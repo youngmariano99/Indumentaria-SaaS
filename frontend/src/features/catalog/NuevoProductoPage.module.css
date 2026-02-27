@@ -6,8 +6,8 @@
 /* ── Página contenedora ───────────────────────────────────────────────────── */
 .page {
     min-height: 100vh;
-    background-color: var(--color-base-dark);
-    color: var(--color-gray-100);
+    background-color: var(--color-gray-50);
+    color: var(--color-gray-900);
     font-family: var(--font-ui);
     padding: var(--space-8) var(--space-6);
 }
@@ -39,13 +39,13 @@
     font-family: var(--font-heading);
     font-size: var(--text-2xl);
     font-weight: 700;
-    color: var(--color-gray-50);
+    color: var(--color-gray-900);
     margin: 0;
 }
 
 .subtitle {
     font-size: var(--text-sm);
-    color: var(--color-gray-400);
+    color: var(--color-gray-600);
     margin: 0;
 }
 
@@ -54,20 +54,20 @@
     align-items: center;
     gap: var(--space-1);
     font-size: var(--text-sm);
-    color: var(--color-gray-400);
+    color: var(--color-gray-500);
     text-decoration: none;
     transition: color var(--transition-fast);
 }
 
 .backLink:hover {
-    color: var(--color-gray-100);
+    color: var(--color-primary);
     text-decoration: none;
 }
 
 /* ── Tarjeta de sección ───────────────────────────────────────────────────── */
 .card {
-    background-color: var(--color-gray-800);
-    border: 1px solid var(--color-gray-700);
+    background-color: #ffffff;
+    border: 1px solid var(--color-gray-200);
     border-radius: var(--radius-lg);
     padding: var(--space-8);
     display: flex;
@@ -80,7 +80,7 @@
     font-family: var(--font-heading);
     font-size: var(--text-lg);
     font-weight: 600;
-    color: var(--color-gray-100);
+    color: var(--color-gray-900);
     margin: 0 0 var(--space-1) 0;
     display: flex;
     align-items: center;
@@ -135,10 +135,10 @@
 }
 
 .input {
-    background-color: var(--color-gray-900);
-    border: 1px solid var(--color-gray-600);
+    background-color: #ffffff;
+    border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-md);
-    color: var(--color-gray-100);
+    color: var(--color-gray-900);
     font-size: var(--text-base);
     padding: 10px var(--space-4);
     width: 100%;
@@ -152,7 +152,7 @@
 }
 
 .input::placeholder {
-    color: var(--color-gray-500);
+    color: var(--color-gray-400);
 }
 
 .input:disabled {
@@ -173,8 +173,8 @@
     gap: var(--space-2);
     min-height: 40px;
     padding: var(--space-2);
-    background-color: var(--color-gray-900);
-    border: 1px solid var(--color-gray-600);
+    background-color: #ffffff;
+    border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-md);
     cursor: text;
 }
@@ -188,8 +188,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    background-color: var(--color-primary);
-    color: white;
+    background-color: rgba(37, 99, 235, 0.08);
+    color: var(--color-primary);
     font-size: var(--text-xs);
     font-weight: 600;
     padding: 4px var(--space-2);
@@ -221,14 +221,14 @@
     background: none;
     border: none;
     outline: none;
-    color: var(--color-gray-100);
+    color: var(--color-gray-900);
     font-size: var(--text-sm);
     font-family: var(--font-ui);
     padding: 2px var(--space-1);
 }
 
 .chipInput::placeholder {
-    color: var(--color-gray-500);
+    color: var(--color-gray-400);
 }
 
 .chipHint {
@@ -253,8 +253,8 @@
 
 .matrixCount {
     font-size: var(--text-xs);
-    color: var(--color-gray-400);
-    background-color: var(--color-gray-700);
+    color: var(--color-gray-700);
+    background-color: var(--color-gray-100);
     padding: 4px var(--space-3);
     border-radius: 99px;
 }
@@ -262,7 +262,7 @@
 .tableWrap {
     overflow-x: auto;
     border-radius: var(--radius-md);
-    border: 1px solid var(--color-gray-700);
+    border: 1px solid var(--color-gray-200);
 }
 
 .table {
@@ -272,7 +272,7 @@
 }
 
 .table thead {
-    background-color: var(--color-gray-700);
+    background-color: var(--color-gray-50);
 }
 
 .table th {
@@ -280,19 +280,19 @@
     padding: var(--space-3) var(--space-4);
     font-size: var(--text-xs);
     font-weight: 600;
-    color: var(--color-gray-300);
+    color: var(--color-gray-600);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     white-space: nowrap;
 }
 
 .table tbody tr {
-    border-top: 1px solid var(--color-gray-700);
+    border-top: 1px solid var(--color-gray-200);
     transition: background-color var(--transition-fast);
 }
 
 .table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.03);
+    background-color: var(--color-gray-50);
 }
 
 .table td {
@@ -320,10 +320,10 @@
 }
 
 .tableInput {
-    background-color: var(--color-gray-900);
-    border: 1px solid var(--color-gray-600);
+    background-color: #ffffff;
+    border: 1px solid var(--color-gray-300);
     border-radius: var(--radius-sm);
-    color: var(--color-gray-100);
+    color: var(--color-gray-900);
     font-size: var(--text-sm);
     padding: 6px 10px;
     width: 100%;
@@ -337,7 +337,7 @@
 }
 
 .tableInput::placeholder {
-    color: var(--color-gray-600);
+    color: var(--color-gray-400);
 }
 
 /* ── Empty state de la matriz ─────────────────────────────────────────────── */
@@ -388,5 +388,5 @@
     justify-content: flex-end;
     gap: var(--space-3);
     padding-top: var(--space-4);
-    border-top: 1px solid var(--color-gray-700);
+    border-top: 1px solid var(--color-gray-200);
 }

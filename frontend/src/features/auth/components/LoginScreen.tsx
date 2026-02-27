@@ -68,7 +68,7 @@ export const LoginScreen = () => {
     try {
       const resp = await authApi.login({ subdominio, email, password });
       loginAuth(resp);
-      window.location.href = "/pos";
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       const mensaje =
         err && typeof err === "object" && "response" in err
