@@ -11,5 +11,10 @@ public interface IApplicationDbContext
 
     DatabaseFacade Database { get; }
 
+    // Sprint 4: Punto de Venta
+    DbSet<Venta> Ventas { get; }
+    DbSet<VentaDetalle> VentasDetalles { get; }
+    DbSet<MetodoPago> MetodosPago { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

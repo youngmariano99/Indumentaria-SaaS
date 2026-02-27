@@ -23,7 +23,14 @@ public class TenantResolverMiddleware
         {
             tenantResolver.SetTenantId(tenantIdFromClaim);
         }
+
+        var userClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userClaim) && Guid.TryParse(userClaim, out var userIdFromClaim))
+        {
+            tenantResolver.SetUserId(userIdFromClaim);
+        }
         else
+
         {
             // 2. Fallback temporal por si se sigue usando Swagger o endpoints sin Auth que envían el Header
             var tenantHeader = context.Request.Headers["X-Tenant-Id"].ToString();

@@ -86,6 +86,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<BilleteraVirtual> BilleterasVirtuales => Set<BilleteraVirtual>();
     public DbSet<TransaccionBilletera> TransaccionesBilleteras => Set<TransaccionBilletera>();
 
+    public DbSet<Venta> Ventas => Set<Venta>();
+    public DbSet<VentaDetalle> VentasDetalles => Set<VentaDetalle>();
+    public DbSet<MetodoPago> MetodosPago => Set<MetodoPago>();
+
     public DbSet<LogAuditoria> LogsAuditoria => Set<LogAuditoria>();
     public DbSet<TelemetriaUso> TelemetriasUso => Set<TelemetriaUso>();
 
