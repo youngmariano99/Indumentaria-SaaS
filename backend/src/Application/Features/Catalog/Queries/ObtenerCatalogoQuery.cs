@@ -63,7 +63,8 @@ public class ObtenerCatalogoQueryHandler : IRequestHandler<ObtenerCatalogoQuery,
                     SKU = v.SKU,
                     PrecioCosto = v.PrecioCosto,
                     PrecioOverride = v.PrecioOverride,
-                    StockActual = stockPorVariante.TryGetValue(v.Id, out var stock) ? stock : 0
+                    StockActual = stockPorVariante.TryGetValue(v.Id, out var stock) ? stock : 0,
+                    AtributosJson = v.AtributosJson
                 }).ToList()
                 : new List<VarianteResumenDto>()
         }).ToList();

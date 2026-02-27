@@ -56,7 +56,36 @@
 ### 3.4 — types/index.ts
 - `VarianteDto.atributos: Record<string, string>` — para enviar atributos al backend.
 - `AtributoKV` — tipo interno para el editor de atributos en el formulario.
-- `CrearProductoDto.temporada` — documetado como puede ser vacío.
+- `CrearProductoDto.temporada` — documentado como puede ser vacío.
+
+### 3.5 — Edición Masiva de Variantes (Bulk Edit) — 20:20 hs
+**Archivo:** `features/catalog/NuevoProductoPage.tsx` + `NuevoProductoPage.module.css`
+
+**Problema:** Al generar una matriz con 16 filas (8 talles × 2 colores), ingresar precio/costo/stock fila por fila era tedioso. Ej: botines negros talles 38-40 a $20.000 y talles 41-43 a $25.000 requería editar 6 celdas individualmente.
+
+**Solución:** Sistema de selección múltiple con barra de acción masiva.
+
+**State agregado:**
+- `seleccionadas: Set<number>` — índices de filas seleccionadas
+- `bulkPrecio`, `bulkCosto`, `bulkStock` — inputs temporales de acción masiva
+
+**Funciones:**
+- `toggleFila(idx)` — marca/desmarca una fila
+- `toggleTodas()` — selecciona/deselecciona todas las filas
+- `aplicarASeleccionadas()` — aplica los valores bulk **solo a los campos no vacíos** en todas las filas del Set
+- `eliminarFila(idx)` — actualizado para re-indexar el Set correctamente
+
+**UI:**
+- Checkbox en header (seleccionar todas) + checkbox por fila. Click en la fila entera también toggle.
+- Fila seleccionada: fondo azul suave + outline
+- `bulkBar`: panel que aparece con animación `fadeIn` cuando hay ≥1 fila seleccionada → inputs de Precio esp. / Costo / Stock + botón "Aplicar" (deshabilitado si los tres están vacíos) + botón "Deseleccionar"
+- El contador en el header muestra `X variantes · Y seleccionadas`
+
+**Nuevas clases CSS:**
+- `.tableRowSelected` — highlight seleccionado
+- `.bulkBar`, `.bulkLabel`, `.bulkFields`, `.bulkField`, `.bulkFieldLabel`
+- `.bulkApplyBtn`, `.bulkCancelBtn`
+- Animación `@keyframes fadeIn` para la barra
 
 ---
 
@@ -75,14 +104,16 @@ Al cambiar TipoProducto:
 
 ---
 
-## 5. Flujo de variantes flexible
+## 5. Flujo de variantes flexible (actualizado)
 ```
 1. Usuario elige Calzado → talles 38-45 pre-cargados
 2. Agrega colores: Negro, Azul
 3. Tabla genera 16 filas (8 talles × 2 colores)
-4. Usuario borra filas de Azul que no tiene: quedan 8+3 = 11 variantes
-5. Agrega atributo Uso: F11
-6. Guarda → 11 variantes con AtributosJson = {"Uso":"F11"}
+4. Usuario borra filas de Azul que no tiene: quedan 11 variantes
+5. Selecciona Negro 38-40 (checkbox) → escribe $20.000 en Precio esp. → Aplicar
+6. Selecciona Negro 41-43 → escribe $25.000 → Aplicar
+7. Agrega atributo Uso: F11
+8. Guarda → 11 variantes con precios diferenciados y AtributosJson = {"Uso":"F11"}
 ```
 
 ---
@@ -97,3 +128,6 @@ Al cambiar TipoProducto:
 
 ### ¿Por qué pre-cargar desde el backend y no hardcodear?
 > Los talles y atributos varían por negocio: un local mayorista de Calzado tiene talles del 28 al 50; un local boutique del 36 al 42. Al cargar desde `/api/ajustes`, cada tenant ve su propia configuración. El código no cambia — cambia el dato.
+
+### ¿Por qué Set<number> para la selección?
+> Un `Set` garantiza que no haya índices duplicados y las operaciones `.has()`, `.add()` y `.delete()` son O(1). Al borrar una fila se re-indexan los índices mayores para que el Set siga siendo consistente con el arreglo de filas.

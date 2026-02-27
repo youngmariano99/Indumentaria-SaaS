@@ -10,4 +10,5 @@ public class VarianteResumenDto
     public decimal PrecioCosto { get; set; }
     public decimal? PrecioOverride { get; set; }
     public int StockActual { get; set; }  // Viene de la tabla Inventario
+    public string AtributosJson { get; set; } = string.Empty;
 }

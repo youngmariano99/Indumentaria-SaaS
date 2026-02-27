@@ -49,6 +49,12 @@ export function NuevoProductoPage() {
 
     // ── Tabla de variantes ─────────────────────────────────────────────────────
     const [filas, setFilas] = useState<FilaVariante[]>([]);
+    const [seleccionadas, setSeleccionadas] = useState<Set<number>>(new Set());
+
+    // ── Edición masiva (bulk-edit) ───────────────────────────────────────
+    const [bulkPrecio, setBulkPrecio] = useState("");
+    const [bulkCosto, setBulkCosto] = useState("");
+    const [bulkStock, setBulkStock] = useState("");
 
     // ── Atributos adicionales (pares clave/valor comunes a todas las variantes) ─
     const [atributos, setAtributos] = useState<Array<{ clave: string; valor: string }>>([]);
@@ -108,6 +114,7 @@ export function NuevoProductoPage() {
             }
         }
         setFilas(nuevasFilas);
+        setSeleccionadas(new Set()); // limpiar selección al regenerar
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [talles, colores]);
 
@@ -144,6 +151,46 @@ export function NuevoProductoPage() {
     // ── Eliminar fila individual de la tabla ────────────────────────────────────
     const eliminarFila = (idx: number) => {
         setFilas(prev => prev.filter((_, i) => i !== idx));
+        setSeleccionadas(prev => {
+            const next = new Set(prev);
+            next.delete(idx);
+            // Re-indexar: los índices mayores a idx se reducen en 1
+            return new Set([...next].map(i => i > idx ? i - 1 : i));
+        });
+    };
+
+    // ── Selección de filas ─────────────────────────────────────────────────
+    const toggleFila = (idx: number) => {
+        setSeleccionadas(prev => {
+            const next = new Set(prev);
+            if (next.has(idx)) next.delete(idx);
+            else next.add(idx);
+            return next;
+        });
+    };
+
+    const toggleTodas = () => {
+        if (seleccionadas.size === filas.length) {
+            setSeleccionadas(new Set());
+        } else {
+            setSeleccionadas(new Set(filas.map((_, i) => i)));
+        }
+    };
+
+    // ── Aplicar valores masivos a las filas seleccionadas ──────────────────────
+    const aplicarASeleccionadas = () => {
+        setFilas(prev => prev.map((f, i) => {
+            if (!seleccionadas.has(i)) return f;
+            return {
+                ...f,
+                ...(bulkPrecio !== "" ? { precioOverride: bulkPrecio } : {}),
+                ...(bulkCosto !== "" ? { precioCosto: bulkCosto } : {}),
+                ...(bulkStock !== "" ? { stockInicial: bulkStock } : {}),
+            };
+        }));
+        setBulkPrecio("");
+        setBulkCosto("");
+        setBulkStock("");
     };
 
     // ── Atributos adicionales ──────────────────────────────────────────────────
@@ -399,9 +446,71 @@ export function NuevoProductoPage() {
                             {filas.length > 0 && (
                                 <span className={styles.matrixCount}>
                                     {filas.length} variante{filas.length !== 1 ? "s" : ""}
+                                    {seleccionadas.size > 0 && (
+                                        <span style={{ marginLeft: 6, color: "var(--color-primary)", fontWeight: 700 }}>
+                                            · {seleccionadas.size} seleccionada{seleccionadas.size !== 1 ? "s" : ""}
+                                        </span>
+                                    )}
                                 </span>
                             )}
                         </div>
+
+                        {/* ── Barra de edición masiva ──────────────────────────────────── */}
+                        {seleccionadas.size > 0 && (
+                            <div className={styles.bulkBar}>
+                                <span className={styles.bulkLabel}>
+                                    Aplicar a {seleccionadas.size} fila{seleccionadas.size !== 1 ? "s" : ""}:
+                                </span>
+                                <div className={styles.bulkFields}>
+                                    <div className={styles.bulkField}>
+                                        <label className={styles.bulkFieldLabel}>Precio esp. $</label>
+                                        <input
+                                            className={styles.tableInput}
+                                            type="number" min="0" step="0.01"
+                                            placeholder="ej: 25000"
+                                            value={bulkPrecio}
+                                            onChange={e => setBulkPrecio(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className={styles.bulkField}>
+                                        <label className={styles.bulkFieldLabel}>Costo $</label>
+                                        <input
+                                            className={styles.tableInput}
+                                            type="number" min="0" step="0.01"
+                                            placeholder="ej: 12000"
+                                            value={bulkCosto}
+                                            onChange={e => setBulkCosto(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className={styles.bulkField}>
+                                        <label className={styles.bulkFieldLabel}>Stock inicial</label>
+                                        <input
+                                            className={styles.tableInput}
+                                            type="number" min="0" step="1"
+                                            placeholder="ej: 10"
+                                            value={bulkStock}
+                                            onChange={e => setBulkStock(e.target.value)}
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={styles.bulkApplyBtn}
+                                        onClick={aplicarASeleccionadas}
+                                        disabled={bulkPrecio === "" && bulkCosto === "" && bulkStock === ""}
+                                    >
+                                        <CheckCircle size={15} weight="bold" />
+                                        Aplicar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={styles.bulkCancelBtn}
+                                        onClick={() => setSeleccionadas(new Set())}
+                                    >
+                                        Deseleccionar
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {filas.length === 0 ? (
                             <div className={styles.emptyMatrix}>
@@ -415,6 +524,15 @@ export function NuevoProductoPage() {
                                 <table className={styles.table}>
                                     <thead>
                                         <tr>
+                                            <th style={{ width: 32, textAlign: "center" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={seleccionadas.size === filas.length && filas.length > 0}
+                                                    onChange={toggleTodas}
+                                                    title="Seleccionar todas"
+                                                    style={{ cursor: "pointer", accentColor: "var(--color-primary)" }}
+                                                />
+                                            </th>
                                             <th style={{ width: 32 }}></th>
                                             <th>Talle</th>
                                             <th>Color</th>
@@ -426,8 +544,21 @@ export function NuevoProductoPage() {
                                     </thead>
                                     <tbody>
                                         {filas.map((fila, idx) => (
-                                            <tr key={`${fila.talle}-${fila.color}-${idx}`} className={styles.tableRow}>
-                                                <td>
+                                            <tr
+                                                key={`${fila.talle}-${fila.color}-${idx}`}
+                                                className={`${styles.tableRow} ${seleccionadas.has(idx) ? styles.tableRowSelected : ""}`}
+                                                onClick={() => toggleFila(idx)}
+                                                style={{ cursor: "pointer" }}
+                                            >
+                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={seleccionadas.has(idx)}
+                                                        onChange={() => toggleFila(idx)}
+                                                        style={{ cursor: "pointer", accentColor: "var(--color-primary)" }}
+                                                    />
+                                                </td>
+                                                <td onClick={e => e.stopPropagation()}>
                                                     <button
                                                         type="button"
                                                         className={styles.deleteRowBtn}

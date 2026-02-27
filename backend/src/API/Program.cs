@@ -33,8 +33,12 @@ builder.Services.AddMediatR(cfg => {
 
 builder.Services.AddValidatorsFromAssemblyContaining<Application.Features.Auth.Validators.LoginRequestValidator>();
 
-// Mapeo automático de Controllers
-builder.Services.AddControllers();
+// Mapeo automático de Controllers — JsonStringEnumConverter permite enviar enums como strings desde el frontend
+builder.Services.AddControllers()
+    .AddJsonOptions(opts =>
+    {
+        opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 // CORS: permitir peticiones desde el frontend durante desarrollo
 builder.Services.AddCors(options =>

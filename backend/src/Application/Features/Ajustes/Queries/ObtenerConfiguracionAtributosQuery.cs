@@ -35,8 +35,12 @@ public class ObtenerConfiguracionAtributosQueryHandler
         if (inquilino is null)
             return new ConfiguracionAtributosDto { AtributosPorTipo = new() };
 
+        var json = inquilino.ConfiguracionAtributosJson;
+        if (string.IsNullOrWhiteSpace(json) || json.Trim() == "{}")
+            return new ConfiguracionAtributosDto { AtributosPorTipo = new() };
+
         var atributos = JsonSerializer.Deserialize<Dictionary<string, List<AtributoDefaultDto>>>(
-            inquilino.ConfiguracionAtributosJson,
+            json,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? new();
 

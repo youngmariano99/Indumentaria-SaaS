@@ -40,6 +40,7 @@ export interface VarianteResumen {
     precioCosto: number;
     precioOverride?: number;
     stockActual: number;    // Desde tabla Inventario
+    atributosJson?: string;
 }
 
 export interface ProductoConVariantes {
