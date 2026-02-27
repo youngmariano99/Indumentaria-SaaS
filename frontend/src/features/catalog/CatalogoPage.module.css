@@ -12,7 +12,7 @@
 }
 
 .container {
-    max-width: 960px;
+    max-width: 1100px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
@@ -28,18 +28,18 @@
     gap: var(--space-4);
 }
 
-.title {
+.headerText h1 {
     font-family: var(--font-heading);
     font-size: var(--text-2xl);
     font-weight: 700;
     color: var(--color-gray-50);
-    margin: 0;
+    margin: 0 0 var(--space-1) 0;
 }
 
-.subtitle {
+.headerText p {
     font-size: var(--text-sm);
     color: var(--color-gray-400);
-    margin: var(--space-1) 0 0 0;
+    margin: 0;
 }
 
 .btnNuevo {
@@ -64,6 +64,43 @@
     transform: translateY(-1px);
     text-decoration: none;
     color: white;
+}
+
+/* ── Loading ────────────────────────────────────────────────────────── */
+.loadingWrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-12) 0;
+    color: var(--color-gray-400);
+    font-size: var(--text-sm);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--color-gray-700);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ── Error ──────────────────────────────────────────────────────────── */
+.errorAlert {
+    background-color: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    font-size: var(--text-sm);
+    color: #fca5a5;
+    text-align: center;
 }
 
 /* ── Empty state ────────────────────────────────────────────────────── */
@@ -97,4 +134,160 @@
     max-width: 340px;
     margin: 0;
     line-height: var(--leading-relaxed);
+}
+
+/* ── Barra de estadísticas ──────────────────────────────────────────── */
+.statsBar {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.statChip {
+    background-color: var(--color-gray-800);
+    border: 1px solid var(--color-gray-700);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-5);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-gray-300);
+}
+
+.statChip strong {
+    color: var(--color-gray-50);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    font-family: var(--font-heading);
+}
+
+/* ── Grilla de cards ────────────────────────────────────────────────── */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-5);
+}
+
+/* ── Card de producto ───────────────────────────────────────────────── */
+.card {
+    background-color: var(--color-gray-800);
+    border: 1px solid var(--color-gray-700);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+}
+
+.card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+}
+
+/* Banda superior de acento */
+.cardAccent {
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), #7c3aed);
+}
+
+.cardBody {
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    flex: 1;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-2);
+}
+
+.cardName {
+    font-family: var(--font-heading);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--color-gray-50);
+    margin: 0;
+    line-height: var(--leading-tight);
+}
+
+.cardPrice {
+    font-size: var(--text-xl);
+    font-weight: 700;
+    font-family: var(--font-heading);
+    color: var(--color-primary);
+    white-space: nowrap;
+}
+
+.cardDesc {
+    font-size: var(--text-sm);
+    color: var(--color-gray-400);
+    margin: 0;
+    line-height: var(--leading-normal);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.cardMeta {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.metaChip {
+    font-size: var(--text-xs);
+    color: var(--color-gray-400);
+    background-color: var(--color-gray-700);
+    border-radius: 99px;
+    padding: 3px 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ── Variantes en la card ───────────────────────────────────────────── */
+.variantesSection {
+    border-top: 1px solid var(--color-gray-700);
+    padding-top: var(--space-3);
+}
+
+.variantesLabel {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    margin: 0 0 var(--space-2) 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+.variantesList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+.varianteChip {
+    font-size: var(--text-xs);
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-weight: 600;
+    background-color: rgba(37, 99, 235, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    white-space: nowrap;
+}
+
+.variantesMore {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    align-self: center;
 }
