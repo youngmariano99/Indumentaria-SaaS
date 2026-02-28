@@ -5,7 +5,8 @@ import {
     Package,
     ChartLine,
     GearSix,
-    Folder
+    Folder,
+    Users
 } from "@phosphor-icons/react";
 import styles from "./AppLayout.module.css";
 
@@ -94,6 +95,30 @@ export function AppLayout() {
                         </span>
                         <span>Reportes</span>
                     </button>
+
+                    <NavLink
+                        to="/clientes"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
+                    >
+                        <span className={styles.navItemIcon}>
+                            <Users size={20} weight="bold" />
+                        </span>
+                        <span>Clientes y CRM</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/clientes"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
+                    >
+                        <span className={styles.navItemIcon}>
+                            <Users size={20} weight="bold" />
+                        </span>
+                        <span>Clientes y CRM</span>
+                    </NavLink>
 
                     <NavLink
                         to="/ajustes"

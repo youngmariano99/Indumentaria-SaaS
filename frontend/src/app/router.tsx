@@ -9,6 +9,8 @@ import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { AjustesPage } from "../features/ajustes/AjustesPage";
 import { PosPage } from "../features/pos/PosPage";
 import { CategoriasPage } from "../features/catalog/CategoriasPage";
+import { ClientesPage } from "../features/catalog/ClientesPage";
+import { PerfilClientePage } from "../features/catalog/PerfilClientePage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
@@ -45,18 +47,8 @@ export const router = createBrowserRouter([
       { path: "/categorias", element: <CategoriasPage /> },
       { path: "/ajustes", element: <AjustesPage /> },
       { path: "/pos", element: <PosPage /> },
-      {
-        path: "/clientes/nuevo",
-        element: (
-          <div style={{ padding: "var(--space-6)", maxWidth: 480, margin: "0 auto" }}>
-            <h1 style={{ fontFamily: "var(--font-heading)", marginBottom: "var(--space-2)" }}>Alta de cliente</h1>
-            <p style={{ color: "var(--color-gray-600)", marginBottom: "var(--space-4)" }}>
-              Esta función está en desarrollo. Próximamente podrás cargar y gestionar clientes desde acá.
-            </p>
-            <Link to="/dashboard" style={{ color: "var(--color-primary)", fontWeight: 600 }}>Volver al dashboard</Link>
-          </div>
-        ),
-      },
+      { path: "/clientes", element: <ClientesPage /> },
+      { path: "/clientes/:id", element: <PerfilClientePage /> },
       {
         path: "/modulos",
         element: (

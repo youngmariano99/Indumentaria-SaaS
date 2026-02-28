@@ -12,6 +12,8 @@ import {
 } from "@phosphor-icons/react";
 import { posApi } from "./api/posApi";
 import type { MetodoPagoDto } from "./api/posApi";
+import { clientesApi } from "../catalog/api/clientesApi";
+import type { ClienteDto } from "../catalog/api/clientesApi";
 import styles from "./PosPage.module.css";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
@@ -48,15 +50,19 @@ export function PosPage() {
   const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
   const [metodoPagoActivo, setMetodoPagoActivo] = useState<string>("");
 
+  const [clientes, setClientes] = useState<ClienteDto[]>([]);
+  const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState<string>("");
+
   const [procesandoCobro, setProcesandoCobro] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [catData, mpData] = await Promise.all([
+        const [catData, mpData, clData] = await Promise.all([
           posApi.obtenerCatalogoPos(),
           posApi.obtenerMetodosPago(),
+          clientesApi.getAll(),
         ]);
 
         // Flatten catálogo
@@ -76,6 +82,7 @@ export function PosPage() {
 
         setCatalogo(flatCatalog);
         setMetodosPago(mpData);
+        setClientes(clData);
         if (mpData.length > 0) {
           setMetodoPagoActivo(mpData[0].id);
         }
@@ -161,6 +168,7 @@ export function PosPage() {
     try {
       const payload = {
         metodoPagoId: metodoPagoActivo,
+        clienteId: clienteSeleccionadoId ? clienteSeleccionadoId : undefined,
         montoTotalDeclarado: total,
         descuentoGlobalPct: descuentoNum,
         recargoGlobalPct: recargoNum,
@@ -176,6 +184,7 @@ export function PosPage() {
       setCarrito([]);
       setDescuentoGlobalPct("");
       setRecargoGlobalPct("");
+      setClienteSeleccionadoId("");
       setCobroExitoso(`¡Cobro completado! Ticket: ${res.ventaId.split('-')[0]}`);
 
       setTimeout(() => setCobroExitoso(null), 5000);
@@ -249,14 +258,21 @@ export function PosPage() {
               Venta en curso
             </h2>
 
-            {/* Cliente (cartera) — placeholder hasta que exista módulo */}
-            <div className={styles.clientBlock}>
-              <div className={styles.clientLabel}>
+            {/* Cliente (cartera) */}
+            <div className={styles.clientBlock} style={{ marginBottom: "1rem" }}>
+              <div className={styles.clientLabel} style={{ display: "flex", alignItems: "center", gap: "0.25rem", color: "#6b7280", fontSize: "0.875rem", marginBottom: "0.25rem" }}>
                 <User size={16} />
-                Cliente
+                Cliente (Opcional)
               </div>
               <div className={styles.clientValue}>
-                Sin cliente — Cartera en desarrollo
+                <select
+                  value={clienteSeleccionadoId}
+                  onChange={(e) => setClienteSeleccionadoId(e.target.value)}
+                  style={{ width: "100%", padding: "0.5rem", borderRadius: "0.25rem", border: "1px solid #d1d5db" }}
+                >
+                  <option value="">Consumidor Final / Sin Asignar</option>
+                  {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre} {c.documento ? `(${c.documento})` : ""}</option>)}
+                </select>
               </div>
             </div>
 

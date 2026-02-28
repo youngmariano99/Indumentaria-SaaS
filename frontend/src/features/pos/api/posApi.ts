@@ -27,6 +27,7 @@ export interface CobrarTicketDetalleDto {
 
 export interface CobrarTicketDto {
     metodoPagoId: string;
+    clienteId?: string;
     montoTotalDeclarado: number;
     descuentoGlobalPct: number;
     recargoGlobalPct: number;

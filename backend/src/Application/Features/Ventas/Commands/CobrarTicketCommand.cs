@@ -38,6 +38,7 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                 TenantId = tenantId,
                 UsuarioId = cajeroId,
                 MetodoPagoId = payload.MetodoPagoId,
+                ClienteId = payload.ClienteId,
                 IdentificadorTicket = $"TCK-{DateTime.UtcNow:yyyyMMdd-HHmmss}",
                 MontoTotal = 0, // Lo recalculamos para mayor seguridad
                 EstadoVenta = EstadoVenta.Cobrada,

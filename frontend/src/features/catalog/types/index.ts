@@ -4,6 +4,16 @@
 // Enum que replica Core.Enums.TipoProducto del backend
 export type TipoProductoKey = "Ropa" | "Calzado" | "Accesorio" | "RopaInterior" | "Deporte" | "RopaDeTrabajo";
 
+export const CondicionIva = {
+    ConsumidorFinal: 0,
+    ResponsableInscripto: 1,
+    Monotributista: 2,
+    Exento: 3,
+    NoCategorizado: 4
+} as const;
+
+export type CondicionIva = typeof CondicionIva[keyof typeof CondicionIva];
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Payload de creación (POST /api/productos/matrix)
 // ──────────────────────────────────────────────────────────────────────────────

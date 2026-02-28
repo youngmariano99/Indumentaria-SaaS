@@ -14,6 +14,8 @@ public interface IApplicationDbContext
 
     DatabaseFacade Database { get; }
 
+    DbSet<Cliente> Clientes { get; }
+
     // Sprint 4: Punto de Venta
     DbSet<Venta> Ventas { get; }
     DbSet<VentaDetalle> VentasDetalles { get; }

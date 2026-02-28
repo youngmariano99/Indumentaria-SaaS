@@ -8,6 +8,7 @@ public class Venta : BaseEntity, IMustHaveTenant
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid TenantId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Cajero que procesó el ticket
     public Guid UsuarioId { get; set; }
@@ -26,6 +27,9 @@ public class Venta : BaseEntity, IMustHaveTenant
     
     public EstadoVenta EstadoVenta { get; set; } = EstadoVenta.Pendiente;
     
+    // Cliente Asociado (CRM)
+    public Guid? ClienteId { get; set; }
+    
     // Ej: TCK-0001
     public string IdentificadorTicket { get; set; } = string.Empty;
     
@@ -40,6 +44,7 @@ public class Venta : BaseEntity, IMustHaveTenant
     public Inquilino Inquilino { get; set; } = null!;
     public Usuario Usuario { get; set; } = null!;
     public MetodoPago MetodoPago { get; set; } = null!;
+    public Cliente? Cliente { get; set; }
     
     public ICollection<VentaDetalle> Detalles { get; set; } = new List<VentaDetalle>();
 }

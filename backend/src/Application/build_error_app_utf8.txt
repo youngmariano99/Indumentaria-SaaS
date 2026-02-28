@@ -1,0 +1,14 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  Core -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\bin\Debug\net9.0\Core.dll
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\CrearClienteCommand.cs(17,22): error CS0246: El nombre del tipo o del espacio de nombres 'ITenantResolver' no se encontr├│ (┬┐falta una directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\CrearClienteCommand.cs(21,9): error CS0246: El nombre del tipo o del espacio de nombres 'ITenantResolver' no se encontr├│ (┬┐falta una directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+
+ERROR al compilar.
+
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\CrearClienteCommand.cs(17,22): error CS0246: El nombre del tipo o del espacio de nombres 'ITenantResolver' no se encontr├│ (┬┐falta una directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\CrearClienteCommand.cs(21,9): error CS0246: El nombre del tipo o del espacio de nombres 'ITenantResolver' no se encontr├│ (┬┐falta una directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:02.70

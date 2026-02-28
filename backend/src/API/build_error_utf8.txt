@@ -1,0 +1,17 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\Cliente.cs(21,12): error CS0246: El nombre del tipo o del espacio de nombres 'CondicionIva' no se encontr├│ (┬┐falta una directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\MetodoPago.cs(8,17): warning CS0108: 'MetodoPago.Id' oculta el miembro heredado 'BaseEntity.Id'. Use la palabra clave new si su intenci├│n era ocultarlo. [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\VentaDetalle.cs(8,17): warning CS0108: 'VentaDetalle.Id' oculta el miembro heredado 'BaseEntity.Id'. Use la palabra clave new si su intenci├│n era ocultarlo. [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\Venta.cs(9,17): warning CS0108: 'Venta.Id' oculta el miembro heredado 'BaseEntity.Id'. Use la palabra clave new si su intenci├│n era ocultarlo. [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+
+ERROR al compilar.
+
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\MetodoPago.cs(8,17): warning CS0108: 'MetodoPago.Id' oculta el miembro heredado 'BaseEntity.Id'. Use la palabra clave new si su intenci├│n era ocultarlo. [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\VentaDetalle.cs(8,17): warning CS0108: 'VentaDetalle.Id' oculta el miembro heredado 'BaseEntity.Id'. Use la palabra clave new si su intenci├│n era ocultarlo. [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\Venta.cs(9,17): warning CS0108: 'Venta.Id' oculta el miembro heredado 'BaseEntity.Id'. Use la palabra clave new si su intenci├│n era ocultarlo. [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Entities\Cliente.cs(21,12): error CS0246: El nombre del tipo o del espacio de nombres 'CondicionIva' no se encontr├│ (┬┐falta una directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\Core.csproj]
+    3 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:05.21
