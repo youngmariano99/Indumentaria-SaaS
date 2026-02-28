@@ -8,6 +8,7 @@ import { CatalogoPage } from "../features/catalog/CatalogoPage";
 import { NuevoProductoPage } from "../features/catalog/NuevoProductoPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { AjustesPage } from "../features/ajustes/AjustesPage";
+import { PosPage } from "../features/pos/PosPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
@@ -41,17 +42,7 @@ export const router = createBrowserRouter([
       { path: "/catalogo", element: <CatalogoPage /> },
       { path: "/catalogo/nuevo", element: <NuevoProductoPage /> },
       { path: "/ajustes", element: <AjustesPage /> },
-      {
-        path: "/pos",
-        element: (
-          <div className="p-8">
-            <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "var(--text-2xl)", marginBottom: "var(--space-4)" }}>
-              Punto de Venta
-            </h1>
-            <p style={{ color: "var(--color-gray-500)" }}>En construcción — Sprint 4.</p>
-          </div>
-        ),
-      },
+      { path: "/pos", element: <PosPage /> },
       {
         path: "/clientes/nuevo",
         element: (
