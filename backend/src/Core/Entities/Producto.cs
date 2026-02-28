@@ -3,7 +3,7 @@ using Core.Enums;
 
 namespace Core.Entities;
 
-public class Producto : BaseEntity, IMustHaveTenant
+public class Producto : BaseEntity, IMustHaveTenant, ISoftDelete
 {
     public Guid TenantId { get; set; }
 
@@ -20,4 +20,6 @@ public class Producto : BaseEntity, IMustHaveTenant
     /// Referencia: Core.Enums.TipoProducto
     /// </summary>
     public TipoProducto TipoProducto { get; set; } = TipoProducto.Ropa;
+
+    public bool IsDeleted { get; set; }
 }

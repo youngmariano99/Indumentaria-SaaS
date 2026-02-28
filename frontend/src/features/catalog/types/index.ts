@@ -65,6 +65,7 @@ export interface AtributoKV {
 
 /** Una fila editable en la tabla de variantes generadas. */
 export interface FilaVariante {
+    id?: string;
     talle: string;
     color: string;
     sku: string;

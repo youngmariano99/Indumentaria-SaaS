@@ -100,14 +100,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         // Se aplican las configuraciones de FluentAPI de manera limpia (IEntityTypeConfiguration)
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
-        // 1. Aplicación automática de Global Query Filters para evitar fuga de datos
-        // Iteramos sobre todas las entidades del modelo mapeado que implementen IMustHaveTenant
+        // 1. Aplicación automática de Global Query Filters para evitar fuga de datos y baja lógica
+        // Iteramos sobre todas las entidades del modelo mapeado
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
-            if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
+            if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType) || typeof(ISoftDelete).IsAssignableFrom(entityType.ClrType))
             {
                 var method = typeof(ApplicationDbContext)
-                    .GetMethod(nameof(ApplyGlobalTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)
+                    .GetMethod(nameof(ApplyGlobalFilters), BindingFlags.NonPublic | BindingFlags.Instance)
                     ?.MakeGenericMethod(entityType.ClrType);
 
                 method?.Invoke(this, new object[] { builder });
@@ -131,9 +131,23 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         });
     }
 
-    private void ApplyGlobalTenantFilter<T>(ModelBuilder builder) where T : class, IMustHaveTenant
+    private void ApplyGlobalFilters<T>(ModelBuilder builder) where T : class
     {
-        builder.Entity<T>().HasQueryFilter(e => e.TenantId == CurrentTenantId);
+        bool hasTenant = typeof(IMustHaveTenant).IsAssignableFrom(typeof(T));
+        bool hasSoftDelete = typeof(ISoftDelete).IsAssignableFrom(typeof(T));
+
+        if (hasTenant && hasSoftDelete)
+        {
+            builder.Entity<T>().HasQueryFilter(e => ((IMustHaveTenant)e).TenantId == CurrentTenantId && !((ISoftDelete)e).IsDeleted);
+        }
+        else if (hasTenant)
+        {
+            builder.Entity<T>().HasQueryFilter(e => ((IMustHaveTenant)e).TenantId == CurrentTenantId);
+        }
+        else if (hasSoftDelete)
+        {
+            builder.Entity<T>().HasQueryFilter(e => !((ISoftDelete)e).IsDeleted);
+        }
     }
 
     public Guid CurrentTenantId => _tenantResolver.TenantId ?? Guid.Empty;

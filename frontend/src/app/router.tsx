@@ -1,4 +1,3 @@
-import React from "react";
 import { createBrowserRouter, Link, Navigate } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout";
 import { AuthLayout } from "../components/layout/AuthLayout";
@@ -41,6 +40,7 @@ export const router = createBrowserRouter([
       { path: "/dashboard", element: <DashboardPage /> },
       { path: "/catalogo", element: <CatalogoPage /> },
       { path: "/catalogo/nuevo", element: <NuevoProductoPage /> },
+      { path: "/catalogo/editar/:id", element: <NuevoProductoPage /> },
       { path: "/ajustes", element: <AjustesPage /> },
       { path: "/pos", element: <PosPage /> },
       {

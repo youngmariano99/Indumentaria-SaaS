@@ -103,7 +103,17 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 3.3: Roadmap Futuro — Catálogo Avanzado (Diferido)
+## Sprint 3.4: ABM de Catálogo Completo (Edición y Baja Lógica) - [PRIORIDAD: ANTES DEL MVP]
+**Objetivo:** Permitir la modificación de precios y la ocultación de productos (baja lógica) sin destruir el historial contable de ventas pasadas. Requisito estricto antes de lanzar al público.
+
+*   [ ] **Backend:** Interfaz `ISoftDelete` en `Producto` y `VarianteProducto` con Global Query Filter asociado.
+*   [ ] **Backend:** Comandos y Endpoints `PUT /api/productos/{id}` y `DELETE /api/productos/{id}`.
+*   [ ] **Frontend:** Adición de botones Editar/Eliminar en las cards del Catálogo.
+*   [ ] **Frontend:** Re-utilización de `NuevoProductoPage` para inicializarse con datos existentes (Modo Edición).
+
+---
+
+## Sprint 3.5: Roadmap Futuro — Catálogo Avanzado (Diferido post-MVP)
 > Estas funcionalidades requieren migraciones complejas y rediseño profundo. Se implementan luego del POS y solo si hay demanda real de clientes.
 
 *   [ ] **Categorías Jerárquicas con NCM:** Tabla de categorías con código NCM del MERCOSUR para automatizar tributación y comercio exterior.
@@ -128,15 +138,53 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 5: Módulo Fiscal Crítico y Resiliencia (Módulo ARCA)
-**Fechas Estimadas:** Del 01/04/2026 al 15/04/2026
-**Objetivo:** Orquestar de manera legal y robusta la comunicación en tiempo real con ARCA.
+## Sprint 4.1: Estabilización Offline-First (Roadmap)
+**Objetivo:** Garantizar la continuidad operativa del punto de venta ante inestabilidad de red.
 
-*   [ ] **Backend:** Integración WSFE v1 y WSFEX vía .NET Source Generators XML (desempeño y compatibilidad SOAP).
-*   [ ] **Backend:** Resiliencia (Backoff Exponencial y función automática de recuperación CAEA / Fortaleza `FECompUltimoAutorizado`).
-*   [ ] **Seguridad:** Gestión de certificados crudos del Tenant vía _Azure Key Vault_.
-*   [ ] **Backend:** Serialización mandatoria a Base de Datos en columnas `LogFiscal.RequestJson` / `ResponseJson` para peritajes.
+*   [ ] **Arquitectura de Persistencia Local:** Implementación de base de datos embebida (SQLite/IndexedDB) para registro inmediato de ventas.
+*   [ ] **Sync Manager:** Motor de sincronización en segundo plano para subida diferida de comprobantes y resolución de conflictos de stock.
+*   [ ] **Resiliencia de Red (Mesh):** Configuración de redundancia para comunicación entre dispositivos vía Bluetooth o Wi-Fi Direct.
+*   [ ] **UX No Bloqueante:** Optimización de la interfaz React para operar sin latencia durante micro-cortes de conexión.
 
+---
+
+## Sprint 4.2: Cliente 360 y CRM (Roadmap)
+**Objetivo:** Capturar datos estratégicos para fidelización y personalización automática de la atención.
+
+*   [ ] **Perfil Unificado de Cliente:** Registro de DNI/CUIT (opcional) y preferencias de talle/color automatizadas según historial de compra.
+*   [ ] **Historial de Tendencias:** Seguimiento de hábitos de consumo y medios de pago. Soporte para ventas anónimas con asociación flexible al ticket.
+*   [ ] **Gestión de Saldos y Créditos:** Sistema de "dinero a favor" multi-sucursal para devoluciones y pagos parciales/totales.
+*   [ ] **Dashboard de Fidelización:** Identificación de clientes recurrentes e integración para contacto directo vía WhatsApp.
+
+---
+
+## Sprint 4.3: Operación Móvil y Etiquetado (Roadmap)
+**Objetivo:** Incrementar la eficiencia operativa en salón y depósito mediante hardware y movilidad.
+
+*   [ ] **Motor de Etiquetas Térmicas:** Generación de códigos 1D/QR para variantes de producto, compatible con impresoras Zebra y estándares industriales.
+*   [ ] **Escaneo Móvil de Consulta:** Aplicación para consulta instantánea de stock en depósito y sucursales remotas mediante cámara del celular.
+*   [ ] **Carga Masiva (Bulk Import) Pro:** Refactorización de la grilla de carga para procesamiento de altos volúmenes de mercadería.
+*   [ ] **Diseño "Thumb Zone":** Ajuste ergonómico de la UI del POS para operación con una sola mano en dispositivos móviles.
+
+---
+
+## Sprint 4.4: Base Contable y Fiscal Pre-ARCA - [PRIORIDAD: ANTES DEL MVP]
+**Objetivo:** Preparar la base de datos de Tenants, Ventas y generar Clientes antes de tocar los Web Services de AFIP, ajustando el despiece del IVA.
+
+*   [ ] **Backend - Identidad Fiscal:** Añadir `CuitEmisor`, `CondicionIvaEmisor` y `PuntoDeVenta` a la entidad `Inquilino`. Endpoints para su configuración.
+*   [ ] **Backend - Clientes:** Entidad `Cliente` (CUIT/DNI, Nombre, CondicionIVA) y ABM básico.
+*   [ ] **Backend - Refactor de Venta:** Añadir `ClienteId` opcional. Desglosar matemáticamente `SubtotalNeto` e `IVA` en `VentaDetalle` desde el Command Handler.
+*   [ ] **Frontend:** Pantallas de Configuración Fiscal y Buscador de Clientes en el POS.
+
+---
+
+## Sprint 5: Middleware Fiscal "Nexo" (ARCA/AFIP)
+**Objetivo:** Desarrollar una API independiente para la gestión del ciclo de vida fiscal (ARCA) con alta disponibilidad.
+
+*   [ ] **Servicio de Autenticación:** Implementación de `TokenManager` para gestión de acceso WSAA con caché en Redis.
+*   [ ] **Microservicio de Firma:** Lógica aislada para firma digital CMS utilizando certificados por inquilino (Azure Key Vault).
+*   [ ] **Orquestador de Comprobantes:** Endpoints para WSFE v1 (Venta local), WSFEX (Exportación) y FCE (Factura de Crédito).
+*   [ ] **Estrategia de Resiliencia:** Implementación de recuperación mediante `FECompUltimoAutorizado` para garantizar consistencia tras fallos de red.
 ---
 
 ## Sprint 6: Módulos Monetizables (Wallet y Multi-Sucursal)

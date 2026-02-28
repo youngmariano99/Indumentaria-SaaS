@@ -31,8 +31,12 @@ const TEMPORADAS = [
     "Todo el año",
 ];
 
+import { useParams } from "react-router-dom";
+
 export function NuevoProductoPage() {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditMode = !!id;
 
     // ── Datos base del producto ────────────────────────────────────────────────
     const [nombre, setNombre] = useState("");
@@ -98,6 +102,54 @@ export function NuevoProductoPage() {
         }).catch(() => { });
     };
 
+    // ── Pre-carga inicial Modo Edición ──────────────────────────────────────────
+    useEffect(() => {
+        if (!isEditMode) return;
+        setLoading(true);
+        catalogApi.obtenerProductoPorId(id!).then(prod => {
+            setNombre(prod.nombre);
+            setDescripcion(prod.descripcion || "");
+            setPrecioBase(prod.precioBase.toString());
+            setTemporada(prod.temporada || "");
+            setTipoProducto(prod.tipoProducto);
+
+            // Poblar chips usando Sets
+            const tallesUnicos = new Set<string>();
+            const coloresUnicos = new Set<string>();
+            prod.variantes.forEach(v => {
+                tallesUnicos.add(v.talle);
+                coloresUnicos.add(v.color);
+            });
+            setTalles(Array.from(tallesUnicos));
+            setColores(Array.from(coloresUnicos));
+
+            // Poblar las filas con los IDs de DB preexistentes
+            const mapper: FilaVariante[] = prod.variantes.map(v => {
+                return {
+                    id: v.id, // importante para mandar al PUT
+                    talle: v.talle,
+                    color: v.color,
+                    sku: v.sku || "",
+                    precioCosto: String(v.precioCosto || 0),
+                    precioOverride: v.precioOverride ? String(v.precioOverride) : "",
+                    stockInicial: String(v.stockActual || 0)
+                };
+            });
+            setFilas(mapper);
+
+            // Tratar de derivar atributos extra (solo lo hacemos del primer item si existen, simplificación)
+            if (prod.variantes.length > 0) {
+                try {
+                    const firstAttrs = JSON.parse(prod.variantes[0].atributosJson || "{}");
+                    const kvArr = Object.entries(firstAttrs).map(([k, v]) => ({ clave: k, valor: String(v) }));
+                    setAtributos(kvArr);
+                } catch { }
+            }
+        }).catch(() => {
+            setError("No se pudo cargar el producto para editar.");
+        }).finally(() => setLoading(false));
+    }, [isEditMode, id]);
+
     // ── Generación reactiva de la tabla de variantes ───────────────────────────
     useEffect(() => {
         if (talles.length === 0 || colores.length === 0) {
@@ -116,7 +168,7 @@ export function NuevoProductoPage() {
         setFilas(nuevasFilas);
         setSeleccionadas(new Set()); // limpiar selección al regenerar
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [talles, colores]);
+    }, [talles, colores, isEditMode]);
 
     // ── Helpers chips ──────────────────────────────────────────────────────────
     const agregarTalle = () => {
@@ -228,27 +280,47 @@ export function NuevoProductoPage() {
             const atributosMap: Record<string, string> = {};
             atributos.forEach(a => { if (a.clave.trim()) atributosMap[a.clave.trim()] = a.valor.trim(); });
 
-            const resp = await catalogApi.crearProductoConVariantes({
-                nombre: nombre.trim(),
-                descripcion: descripcion.trim(),
-                precioBase: Number(precioBase),
-                categoriaId: CATEGORIA_PLACEHOLDER,
-                temporada,
-                tipoProducto,
-                variantes: filas.map(f => ({
-                    talle: f.talle,
-                    color: f.color,
-                    sku: f.sku.trim(),
-                    precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
-                    precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
-                    stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
-                    atributos: atributosMap,
-                })),
-            });
-
-            setSuccess(`¡Producto creado! ID: ${resp.id} — ${filas.length} variantes guardadas.`);
-            setNombre(""); setDescripcion(""); setPrecioBase(""); setTemporada("");
-            setTalles([]); setColores([]); setFilas([]); setAtributos([]);
+            if (isEditMode) {
+                // MODO EDICIÓN
+                await catalogApi.editarProducto(id!, {
+                    nombre: nombre.trim(),
+                    descripcion: descripcion.trim(),
+                    precioBase: Number(precioBase),
+                    categoriaId: CATEGORIA_PLACEHOLDER,
+                    temporada,
+                    tipoProducto,
+                    variantes: filas.map(f => ({
+                        id: f.id, // Enviar si viene de DB
+                        precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
+                        precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
+                        atributos: atributosMap,
+                    })).filter(f => f.id) // Solo enviamos las filas pre-existentes que tienen ID a EditarProductoCommand
+                });
+                setSuccess(`Producto actulizado exitosamente.`);
+                setTimeout(() => navigate("/catalogo"), 1500); // Volver
+            } else {
+                // MODO CREACIÓN
+                const resp = await catalogApi.crearProductoConVariantes({
+                    nombre: nombre.trim(),
+                    descripcion: descripcion.trim(),
+                    precioBase: Number(precioBase),
+                    categoriaId: CATEGORIA_PLACEHOLDER,
+                    temporada,
+                    tipoProducto,
+                    variantes: filas.map(f => ({
+                        talle: f.talle,
+                        color: f.color,
+                        sku: f.sku.trim(),
+                        precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
+                        precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
+                        stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
+                        atributos: atributosMap,
+                    })),
+                });
+                setSuccess(`¡Producto creado! ID: ${resp.id} — ${filas.length} variantes guardadas.`);
+                setNombre(""); setDescripcion(""); setPrecioBase(""); setTemporada("");
+                setTalles([]); setColores([]); setFilas([]); setAtributos([]);
+            }
         } catch (err: unknown) {
             const mensaje =
                 err && typeof err === "object" && "response" in err
@@ -267,9 +339,9 @@ export function NuevoProductoPage() {
                 {/* Header */}
                 <div className={styles.header}>
                     <div className={styles.headerText}>
-                        <h1 className={styles.title}>Nuevo Producto</h1>
+                        <h1 className={styles.title}>{isEditMode ? "Editar Producto" : "Nuevo Producto"}</h1>
                         <p className={styles.subtitle}>
-                            Completá los datos base y generá la matriz de variantes en segundos.
+                            {isEditMode ? "Actualizá precios y atributos del producto y sus variantes." : "Completá los datos base y generá la matriz de variantes en segundos."}
                         </p>
                     </div>
                     <Link to="/catalogo" className={styles.backLink}>
@@ -755,7 +827,7 @@ export function NuevoProductoPage() {
                             }}
                         >
                             <PlusCircle size={20} weight="bold" />
-                            {loading ? "Guardando…" : `Guardar producto ${filas.length > 0 ? `(${filas.length} variantes)` : ""}`}
+                            {loading ? "Guardando…" : (isEditMode ? "Actualizar producto" : `Guardar producto ${filas.length > 0 ? `(${filas.length} variantes)` : ""}`)}
                         </button>
                     </div>
 

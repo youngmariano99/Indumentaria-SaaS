@@ -12,6 +12,7 @@ import {
     Rows,
     PencilSimple,
     ArrowSquareOut,
+    Trash,
 } from "@phosphor-icons/react";
 import { catalogApi } from "./api/catalogApi";
 import type { ProductoConVariantes, VarianteResumen } from "./types";
@@ -92,21 +93,33 @@ export function CatalogoPage() {
     const [inputTalle, setInputTalle] = useState("");
     const [inputColor, setInputColor] = useState("");
 
+    const cargarCatalogo = async () => {
+        setLoading(true); setError(null);
+        try {
+            const data = await catalogApi.obtenerCatalogo();
+            setProductos(data);
+        } catch {
+            setError("No pudimos cargar el catálogo. Revisá la conexión.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        let cancelado = false;
-        (async () => {
-            setLoading(true); setError(null);
-            try {
-                const data = await catalogApi.obtenerCatalogo();
-                if (!cancelado) setProductos(data);
-            } catch {
-                if (!cancelado) setError("No pudimos cargar el catálogo. Revisá la conexión.");
-            } finally {
-                if (!cancelado) setLoading(false);
-            }
-        })();
-        return () => { cancelado = true; };
+        cargarCatalogo();
     }, []);
+
+    const handleDelete = async (id: string, nombre: string) => {
+        if (!confirm(`¿Estás seguro de que querés ELIMINAR el producto "${nombre}"?\n(Esta acción lo ocultará de la grilla pero se conservará en el historial de ventas pasadas)`)) return;
+        try {
+            await catalogApi.eliminarProducto(id);
+            alert("Producto eliminado correctamente.");
+            setProductoModal(null);
+            cargarCatalogo();
+        } catch (e: any) {
+            alert(e?.response?.data?.mensaje || "Error al eliminar el producto.");
+        }
+    };
 
     // ── Valores únicos para los filtros dropdown ──
     const opcionesTemporada = useMemo(() =>
@@ -364,6 +377,7 @@ export function CatalogoPage() {
                                                         key={p.id}
                                                         producto={p}
                                                         onClick={() => setProductoModal(p)}
+                                                        onDelete={() => handleDelete(p.id, p.nombre)}
                                                     />
                                                 ))}
                                             </tbody>
@@ -381,6 +395,7 @@ export function CatalogoPage() {
                 <ProductoModal
                     producto={productoModal}
                     onClose={() => setProductoModal(null)}
+                    onDelete={() => handleDelete(productoModal.id, productoModal.nombre)}
                 />
             )}
         </>
@@ -390,7 +405,7 @@ export function CatalogoPage() {
 // ──────────────────────────────────────────────────────────────────────────────
 // Fila de la tabla
 // ──────────────────────────────────────────────────────────────────────────────
-function ProductoRow({ producto: p, onClick }: { producto: ProductoConVariantes; onClick: () => void }) {
+function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoConVariantes; onClick: () => void; onDelete: () => void }) {
     const tallesUnicos = [...new Set(p.variantes.map(v => v.talle))];
     const coloresUnicos = [...new Set(p.variantes.map(v => v.color))];
     const stockTotal = p.variantes.reduce((a, v) => a + (v.stockActual ?? 0), 0);
@@ -433,6 +448,9 @@ function ProductoRow({ producto: p, onClick }: { producto: ProductoConVariantes;
                     <button type="button" className={styles.rowActionBtn} title="Ver detalle" onClick={onClick}>
                         <ArrowSquareOut size={14} />
                     </button>
+                    <button type="button" className={`${styles.rowActionBtn} ${styles.rowActionDangerBtn || ""}`} style={{ color: "var(--color-danger)" }} title="Eliminar producto" onClick={onDelete}>
+                        <Trash size={14} />
+                    </button>
                 </div>
             </td>
         </tr>
@@ -442,7 +460,7 @@ function ProductoRow({ producto: p, onClick }: { producto: ProductoConVariantes;
 // ──────────────────────────────────────────────────────────────────────────────
 // Modal de detalle
 // ──────────────────────────────────────────────────────────────────────────────
-function ProductoModal({ producto: p, onClose }: { producto: ProductoConVariantes; onClose: () => void }) {
+function ProductoModal({ producto: p, onClose, onDelete }: { producto: ProductoConVariantes; onClose: () => void; onDelete: () => void }) {
     const overlayRef = useRef<HTMLDivElement>(null);
     const tallesUnicos = [...new Set(p.variantes.map(v => v.talle))];
     const coloresUnicos = [...new Set(p.variantes.map(v => v.color))];
@@ -549,9 +567,14 @@ function ProductoModal({ producto: p, onClose }: { producto: ProductoConVariante
 
                 {/* Footer de acciones */}
                 <div className={styles.modalFooter}>
-                    <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>
-                        Cerrar
-                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                        <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>
+                            Cerrar
+                        </button>
+                        <button type="button" className={`${styles.modalBtnSecondary} ${styles.modalBtnDanger || ""}`} style={{ color: "var(--color-danger)", borderColor: "var(--color-danger)" }} onClick={onDelete}>
+                            <Trash size={15} /> Eliminar
+                        </button>
+                    </div>
                     <Link to={`/catalogo/editar/${p.id}`} className={styles.modalBtnPrimary} onClick={onClose}>
                         <PencilSimple size={15} weight="bold" />
                         Editar producto

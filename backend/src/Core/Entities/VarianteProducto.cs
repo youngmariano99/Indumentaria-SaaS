@@ -3,7 +3,7 @@ using Core.Entities.Base;
 
 namespace Core.Entities;
 
-public class VarianteProducto : BaseEntity, IMustHaveTenant
+public class VarianteProducto : BaseEntity, IMustHaveTenant, ISoftDelete
 {
     public Guid TenantId { get; set; }
     public Guid ProductId { get; set; }
@@ -20,4 +20,6 @@ public class VarianteProducto : BaseEntity, IMustHaveTenant
     /// Pre-cargados desde Ajustes â Atributos por tipo. Editables en la carga.
     /// </summary>
     public string AtributosJson { get; set; } = "{}";
+
+    public bool IsDeleted { get; set; }
 }

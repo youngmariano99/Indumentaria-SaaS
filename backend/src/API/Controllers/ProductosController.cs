@@ -53,4 +53,28 @@ public class ProductosController : ControllerBase
         if (producto is null) return NotFound();
         return Ok(producto);
     }
+
+    /// <summary>
+    /// Edita un producto y sus variantes existentes.
+    /// PUT /api/productos/{id}
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<IActionResult> EditarProducto(Guid id, [FromBody] EditarProductoDto request)
+    {
+        var exito = await _mediator.Send(new EditarProductoCommand { ProductoId = id, Payload = request });
+        if (!exito) return NotFound("Producto no encontrado o inaccesible.");
+        return NoContent(); // 204 No Content
+    }
+
+    /// <summary>
+    /// Aplica una baja lógica a un producto y sus variantes.
+    /// DELETE /api/productos/{id}
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> EliminarProducto(Guid id)
+    {
+        var exito = await _mediator.Send(new EliminarProductoCommand { ProductoId = id });
+        if (!exito) return NotFound("Producto no encontrado o inaccesible.");
+        return NoContent(); // 204 No Content
+    }
 }
