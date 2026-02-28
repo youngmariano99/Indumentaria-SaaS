@@ -75,14 +75,25 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                 // TO-DO: Implementar Domain Event -> InventarioCalculatedEvent
             }
 
-            // Validar si el Front End mentía severamente sobre el Monto
-            if (Math.Abs(montoRealCalculado - payload.MontoTotalDeclarado) > 1m) 
+            // 1. Calculamos los extra globales
+            decimal subtotalAcumulado = montoRealCalculado;
+            // Ojo: en C# hay que castear a decimal si no viniera como decimal, pero payload es decimal
+            decimal descuentoMonto = Math.Round((subtotalAcumulado * payload.DescuentoGlobalPct) / 100m, 2);
+            decimal recargoMonto   = Math.Round((subtotalAcumulado * payload.RecargoGlobalPct) / 100m, 2);
+            decimal totalFinalCalculado = subtotalAcumulado - descuentoMonto + recargoMonto;
+
+            // 2. Validar si el Front End mentía severamente sobre el Monto Total (margen de 1 peso por redondeo)
+            if (Math.Abs(totalFinalCalculado - payload.MontoTotalDeclarado) > 1m) 
             {
-                 // Descuadre superior a $1 peso es sospechoso
-                 throw new Exception("El monto enviado difiere con el cálculo de precios real en el servidor. Re-sincronice el catálogo.");
+                 throw new Exception("El monto enviado difiere con el cálculo mágico de precios reales en el servidor. Revise descuentos y catálogo.");
             }
 
-            venta.MontoTotal = montoRealCalculado;
+            venta.Subtotal = subtotalAcumulado;
+            venta.DescuentoGlobalPct = payload.DescuentoGlobalPct;
+            venta.DescuentoMonto = descuentoMonto;
+            venta.RecargoGlobalPct = payload.RecargoGlobalPct;
+            venta.RecargoMonto = recargoMonto;
+            venta.MontoTotal = totalFinalCalculado;
 
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync(cancellationToken);

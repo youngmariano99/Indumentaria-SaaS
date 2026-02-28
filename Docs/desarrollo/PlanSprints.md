@@ -115,14 +115,16 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 4: Punto de Venta (POS) Offline-First "Zona del Pulgar"
-**Fechas Estimadas:** Del 16/03/2026 al 31/03/2026
-**Objetivo:** Desarrollar la principal interfaz operativa del empleado de sucursal.
+## Sprint 4: Punto de Venta (POS) - Conexión Back/Front (FINALIZADO)
+**Fecha de Finalización:** 28/02/2026
+**Objetivo:** Desarrollar la principal interfaz operativa del empleado de sucursal y conectarla a la base de datos central.
 
-*   [ ] **Frontend:** UI/UX en apaisado para tablets, enfocando las acciones de la mano.
-*   [ ] **Frontend:** Configuración de Base de Datos Local (RxDB o WatermelonDB) para guardar precios, productos y clientes sin red.
-*   [ ] **Frontend:** Generación y encolamiento de tickets transitorios (Background Worker + SyncManager).
-*   [ ] **Frontend (Autenticación):** Acceso rápido seguro vía PIN para Alta Rotación (`PinCodeHash`).
+*   [x] **Backend:** Extensión de la entidad `Venta` para soportar `Subtotal`, `Descuento` y `Recargo`. Migración de base de datos aplicada.
+*   [x] **Backend:** Módulo CQRS para cobrar tickets (`CobrarTicketCommand`) con re-validación matemática segura en el lado del servidor.
+*   [x] **Backend:** Endpoints para recabar Catálogo Posificado rápidos y listado de Metodos de Pago (Efectivo, Tarjeta, Débito) autosembrados.
+*   [x] **Frontend:** UI/UX funcional, refactorizada de mock a datos reales, enlazada a `posApi.ts`.
+*   [x] **Frontend:** Selección de Método de Pago obligatoria, aplicación dinámica de Descuentos/Recargos y emisión de venta 100% transaccionada en la Nube.
+*   [ ] **Frontend (Pendiente Sprint 4.1):** Operación Offline-First (Local Database Syncing para tickets transitorios) y Auth por PIN.
 
 ---
 

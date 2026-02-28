@@ -1,0 +1,14 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  Core -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\bin\Debug\net9.0\Core.dll
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\Ventas\Queries\ObtenerMetodosPagoQuery.cs(36,37): error CS1061: "IApplicationDbContext" no contiene una definici├│n para "CurrentTenantId" ni un m├®todo de extensi├│n accesible "CurrentTenantId" que acepte un primer argumento del tipo "IApplicationDbContext" (┬┐falta alguna directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\Ventas\Commands\CobrarTicketCommand.cs(62,21): error CS0136: Una variable local o un par├ímetro denominados 'subtotalReal' no se pueden declarar en este ├ímbito porque ese nombre se est├í usando en un ├ímbito local envolvente para definir una variable local o un par├ímetro [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+
+ERROR al compilar.
+
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\Ventas\Queries\ObtenerMetodosPagoQuery.cs(36,37): error CS1061: "IApplicationDbContext" no contiene una definici├│n para "CurrentTenantId" ni un m├®todo de extensi├│n accesible "CurrentTenantId" que acepte un primer argumento del tipo "IApplicationDbContext" (┬┐falta alguna directiva using o una referencia de ensamblado?) [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\Ventas\Commands\CobrarTicketCommand.cs(62,21): error CS0136: Una variable local o un par├ímetro denominados 'subtotalReal' no se pueden declarar en este ├ímbito porque ese nombre se est├í usando en un ├ímbito local envolvente para definir una variable local o un par├ímetro [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+    0 Advertencia(s)
+    2 Errores
+
+Tiempo transcurrido 00:00:03.28

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MagnifyingGlass,
   Plus,
@@ -6,17 +6,19 @@ import {
   Trash,
   User,
   CurrencyDollar,
-  CreditCard,
   Wallet,
   Receipt,
-  Bank,
+  CheckCircle,
 } from "@phosphor-icons/react";
+import { posApi } from "./api/posApi";
+import type { MetodoPagoDto } from "./api/posApi";
 import styles from "./PosPage.module.css";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
 type LineItem = {
   id: string;
   productId: string;
+  varianteId: string;
   nombre: string;
   variante: string;
   precioUnitario: number;
@@ -25,14 +27,15 @@ type LineItem = {
   recargoPct: number;
 };
 
-/** Producto disponible para agregar (mock; luego desde catálogo/API o BD local) */
-const MOCK_PRODUCTOS = [
-  { id: "1", nombre: "Jean Mom Azul", variante: "M / Azul", precio: 25_000 },
-  { id: "2", nombre: "Remera Oversize Blanca", variante: "L / Blanco", precio: 8_000 },
-  { id: "3", nombre: "Campera Cargo Verde", variante: "S / Verde", precio: 18_000 },
-  { id: "4", nombre: "Short Deportivo Negro", variante: "M / Negro", precio: 6_500 },
-  { id: "5", nombre: "Buzo Capucha Gris", variante: "XL / Gris", precio: 15_000 },
-];
+/** Flat product object ready to be added to cart */
+type PosProductItem = {
+  id: string; // unique visual ID (e.g. prodId-varId)
+  productId: string;
+  varianteId: string;
+  nombre: string;
+  variante: string;
+  precio: number;
+};
 
 export function PosPage() {
   const [busqueda, setBusqueda] = useState("");
@@ -40,16 +43,62 @@ export function PosPage() {
   const [descuentoGlobalPct, setDescuentoGlobalPct] = useState("");
   const [recargoGlobalPct, setRecargoGlobalPct] = useState("");
 
-  const productosFiltrados = MOCK_PRODUCTOS.filter(
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [catalogo, setCatalogo] = useState<PosProductItem[]>([]);
+  const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
+  const [metodoPagoActivo, setMetodoPagoActivo] = useState<string>("");
+
+  const [procesandoCobro, setProcesandoCobro] = useState(false);
+  const [cobroExitoso, setCobroExitoso] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [catData, mpData] = await Promise.all([
+          posApi.obtenerCatalogoPos(),
+          posApi.obtenerMetodosPago(),
+        ]);
+
+        // Flatten catálogo
+        const flatCatalog: PosProductItem[] = [];
+        catData.forEach((p) => {
+          p.variantes.forEach((v) => {
+            flatCatalog.push({
+              id: `${p.id}-${v.varianteId}`,
+              productId: p.id,
+              varianteId: v.varianteId,
+              nombre: p.nombre,
+              variante: v.sizeColor,
+              precio: p.precioBase,
+            });
+          });
+        });
+
+        setCatalogo(flatCatalog);
+        setMetodosPago(mpData);
+        if (mpData.length > 0) {
+          setMetodoPagoActivo(mpData[0].id);
+        }
+      } catch (error) {
+        console.error("Error cargando datos POS:", error);
+      } finally {
+        setLoadingInitial(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  const productosFiltrados = catalogo.filter(
     (p) =>
       !busqueda.trim() ||
       p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       p.variante.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const agregarAlCarrito = (p: (typeof MOCK_PRODUCTOS)[0]) => {
+  const agregarAlCarrito = (p: PosProductItem) => {
     const existente = carrito.find(
-      (i) => i.productId === p.id && i.variante === p.variante
+      (i) => i.varianteId === p.varianteId
     );
     if (existente) {
       setCarrito((prev) =>
@@ -64,7 +113,8 @@ export function PosPage() {
         ...prev,
         {
           id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          productId: p.id,
+          productId: p.productId,
+          varianteId: p.varianteId,
           nombre: p.nombre,
           variante: p.variante,
           precioUnitario: p.precio,
@@ -103,10 +153,38 @@ export function PosPage() {
   const recargoMonto = (subtotal * recargoNum) / 100;
   const total = subtotal - descuentoMonto + recargoMonto;
 
-  const handleCobrar = () => {
-    if (carrito.length === 0) return;
-    // TODO: abrir flujo de método de pago y encolar ticket (Sprint 4 backend/offline)
-    alert("Cobrar: en desarrollo. Se encolará el ticket y se sincronizará con el backend.");
+  const handleCobrar = async () => {
+    if (carrito.length === 0 || !metodoPagoActivo) return;
+
+    setProcesandoCobro(true);
+    setCobroExitoso(null);
+    try {
+      const payload = {
+        metodoPagoId: metodoPagoActivo,
+        montoTotalDeclarado: total,
+        descuentoGlobalPct: descuentoNum,
+        recargoGlobalPct: recargoNum,
+        detalles: carrito.map((i) => ({
+          varianteProductoId: i.varianteId,
+          cantidad: i.cantidad,
+          precioUnitarioDeclarado: i.precioUnitario,
+        })),
+      };
+
+      const res = await posApi.cobrarTicket(payload);
+
+      setCarrito([]);
+      setDescuentoGlobalPct("");
+      setRecargoGlobalPct("");
+      setCobroExitoso(`¡Cobro completado! Ticket: ${res.ventaId.split('-')[0]}`);
+
+      setTimeout(() => setCobroExitoso(null), 5000);
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.message || "Error al procesar la venta.");
+    } finally {
+      setProcesandoCobro(false);
+    }
   };
 
   return (
@@ -134,14 +212,16 @@ export function PosPage() {
           </div>
 
           <div className={styles.productList}>
-            {productosFiltrados.length === 0 ? (
+            {loadingInitial ? (
+              <p className={styles.emptyHint}>Cargando catálogo POS...</p>
+            ) : productosFiltrados.length === 0 ? (
               <p className={styles.emptyHint}>
                 No hay productos que coincidan con la búsqueda.
               </p>
             ) : (
               productosFiltrados.map((p) => (
                 <button
-                  key={`${p.id}-${p.variante}`}
+                  key={p.id}
                   type="button"
                   className={styles.productCard}
                   onClick={() => agregarAlCarrito(p)}
@@ -290,44 +370,49 @@ export function PosPage() {
               </div>
             </div>
 
-            {/* Métodos de pago — placeholder visual; luego flujo real */}
+            {/* Métodos de pago */}
             <div className={styles.paymentBlock}>
               <div className={styles.paymentLabel}>
                 <CurrencyDollar size={16} />
                 Método de pago
               </div>
               <div className={styles.paymentMethods}>
-                <button type="button" className={styles.paymentChip} disabled>
-                  <Wallet size={18} />
-                  Efectivo
-                </button>
-                <button type="button" className={styles.paymentChip} disabled>
-                  <CreditCard size={18} />
-                  Tarjeta débito
-                </button>
-                <button type="button" className={styles.paymentChip} disabled>
-                  <CreditCard size={18} />
-                  Tarjeta crédito
-                </button>
-                <button type="button" className={styles.paymentChip} disabled>
-                  <Bank size={18} />
-                  Transferencia
-                </button>
-                <button type="button" className={styles.paymentChip} disabled>
-                  Mixto
-                </button>
+                {loadingInitial ? (
+                  <span style={{ fontSize: "0.85rem", color: "#666" }}>Cargando métodos...</span>
+                ) : (
+                  metodosPago.map((mp) => (
+                    <button
+                      key={mp.id}
+                      type="button"
+                      className={`${styles.paymentChip} ${metodoPagoActivo === mp.id ? styles.paymentChipActive : ""
+                        }`}
+                      onClick={() => setMetodoPagoActivo(mp.id)}
+                    >
+                      {/* TODO: Íconos dinámicos en base al nombre, por ahora default */}
+                      <Wallet size={18} />
+                      {mp.nombre}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
+
+            {cobroExitoso && (
+              <div style={{ color: "var(--success-color)", textAlign: "center", marginBottom: "0.5rem", fontSize: "0.9rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                <CheckCircle size={18} weight="fill" />
+                {cobroExitoso}
+              </div>
+            )}
 
             <button
               type="button"
               className={styles.cobrarBtn}
               onClick={handleCobrar}
-              disabled={carrito.length === 0}
+              disabled={carrito.length === 0 || procesandoCobro || !metodoPagoActivo}
               aria-label="Cobrar venta"
             >
               <Receipt size={22} weight="bold" />
-              Cobrar
+              {procesandoCobro ? "Procesando..." : "Cobrar"}
             </button>
           </div>
         </aside>

@@ -13,7 +13,15 @@ public class Venta : BaseEntity, IMustHaveTenant
     public Guid UsuarioId { get; set; }
     
     public Guid MetodoPagoId { get; set; }
+    public decimal Subtotal { get; set; }
     
+    // Descuentos y recargos globales aplicados al ticket
+    public decimal DescuentoGlobalPct { get; set; }
+    public decimal DescuentoMonto { get; set; }
+    public decimal RecargoGlobalPct { get; set; }
+    public decimal RecargoMonto { get; set; }
+    
+    // Total final a pagar: Subtotal - DescuentoMonto + RecargoMonto
     public decimal MontoTotal { get; set; }
     
     public EstadoVenta EstadoVenta { get; set; } = EstadoVenta.Pendiente;

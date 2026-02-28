@@ -26,6 +26,13 @@ public class VentasController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("metodos-pago")]
+    public async Task<IActionResult> ObtenerMetodosPago()
+    {
+        var result = await _mediator.Send(new ObtenerMetodosPagoQuery());
+        return Ok(result);
+    }
+
     [HttpPost("cobrar")]
     public async Task<IActionResult> ProcesarTicketDeCaja([FromBody] CobrarTicketDto payload)
     {
