@@ -22,4 +22,18 @@ public class Producto : BaseEntity, IMustHaveTenant, ISoftDelete
     public TipoProducto TipoProducto { get; set; } = TipoProducto.Ropa;
 
     public bool IsDeleted { get; set; }
+
+    // ── Metadatos Avanzados (Sprint 3.5) ──
+    public decimal PesoKg { get; set; }
+    public string Ean13 { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Ej: "Nacional", "Importado"
+    /// </summary>
+    public string Origen { get; set; } = string.Empty; 
+
+    /// <summary>
+    /// Escala base de talles para ropa importada/calzado. Ej: "AR", "US", "EU", "UK"
+    /// </summary>
+    public string EscalaTalles { get; set; } = string.Empty; 
 }

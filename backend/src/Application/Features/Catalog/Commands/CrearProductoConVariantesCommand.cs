@@ -41,7 +41,11 @@ public class CrearProductoConVariantesCommandHandler : IRequestHandler<CrearProd
                 PrecioBase = dto.PrecioBase,
                 CategoriaId = dto.CategoriaId,
                 Temporada = dto.Temporada,
-                TipoProducto = dto.TipoProducto
+                TipoProducto = dto.TipoProducto,
+                PesoKg = dto.PesoKg,
+                Ean13 = dto.Ean13,
+                Origen = dto.Origen,
+                EscalaTalles = dto.EscalaTalles
             };
 
             await _dbContext.Productos.AddAsync(producto, cancellationToken);

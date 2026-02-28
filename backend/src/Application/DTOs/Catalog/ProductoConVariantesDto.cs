@@ -11,5 +11,11 @@ public class ProductoConVariantesDto
     public decimal PrecioBase { get; set; }
     public string Temporada { get; set; } = string.Empty;
     public TipoProducto TipoProducto { get; set; }
+
+    public decimal PesoKg { get; set; }
+    public string Ean13 { get; set; } = string.Empty;
+    public string Origen { get; set; } = string.Empty;
+    public string EscalaTalles { get; set; } = string.Empty;
+
     public List<VarianteResumenDto> Variantes { get; set; } = new();
 }

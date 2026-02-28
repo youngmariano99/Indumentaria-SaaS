@@ -11,6 +11,11 @@ public class EditarProductoDto
     public string Temporada { get; set; } = string.Empty;
     public TipoProducto TipoProducto { get; set; } = TipoProducto.Ropa;
 
+    public decimal PesoKg { get; set; }
+    public string Ean13 { get; set; } = string.Empty;
+    public string Origen { get; set; } = string.Empty;
+    public string EscalaTalles { get; set; } = string.Empty;
+
     // Solo se manda la actualización de variables existentes (Precios / Atributos). 
     // Para simplificar el ABM intermedio de catálogo.
     public List<VarianteEdicionDto> Variantes { get; set; } = new();

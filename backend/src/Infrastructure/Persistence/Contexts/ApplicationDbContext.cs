@@ -69,6 +69,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     }
 
     public DbSet<Inquilino> Inquilinos => Set<Inquilino>();
+    public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Sucursal> Sucursales => Set<Sucursal>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<ModuloSuscripcion> ModulosSuscripcion => Set<ModuloSuscripcion>();

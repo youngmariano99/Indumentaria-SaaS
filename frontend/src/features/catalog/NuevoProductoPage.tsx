@@ -14,13 +14,12 @@ import {
     Plus,
 } from "@phosphor-icons/react";
 import { catalogApi } from "./api/catalogApi";
+import { categoriasApi } from "./api/categoriasApi";
+import type { CategoriaDto } from "./api/categoriasApi";
 import { ajustesApi } from "../ajustes/api/ajustesApi";
 import type { FilaVariante } from "./types";
 import { TALLES_POR_TIPO, NOMBRE_TIPO, TIPOS_PRODUCTO } from "./data/tallesPorTipo";
 import styles from "./NuevoProductoPage.module.css";
-
-// UUID placeholder para CategoriaId mientras no existe el endpoint de categorías
-const CATEGORIA_PLACEHOLDER = "00000000-0000-0000-0000-000000000001";
 
 const TEMPORADAS = [
     "",  // sin temporada
@@ -44,6 +43,16 @@ export function NuevoProductoPage() {
     const [precioBase, setPrecioBase] = useState("");
     const [temporada, setTemporada] = useState("");
     const [tipoProducto, setTipoProducto] = useState<string>(TIPOS_PRODUCTO[0]);
+
+    // Categorías dinámicas
+    const [categoriasRaw, setCategoriasRaw] = useState<CategoriaDto[]>([]);
+    const [categoriaId, setCategoriaId] = useState("");
+
+    // ── Metadatos (Sprint 3.5) ─────────────────────────────────────────────────
+    const [pesoKg, setPesoKg] = useState("");
+    const [ean13, setEan13] = useState("");
+    const [origen, setOrigen] = useState("");
+    const [escalaTalles, setEscalaTalles] = useState("");
 
     // ── Chips de talles y colores ──────────────────────────────────────────────
     const [talles, setTalles] = useState<string[]>([]);
@@ -75,6 +84,9 @@ export function NuevoProductoPage() {
 
     // Cargar config del tenant al montar
     useEffect(() => {
+        // Categorías
+        categoriasApi.obtenerCategorias().then(data => setCategoriasRaw(data)).catch(() => { });
+
         // Talles personalizados
         ajustesApi.obtenerTalles().then(data => {
             if (data.tallesPorTipo && Object.keys(data.tallesPorTipo).length > 0) {
@@ -112,6 +124,13 @@ export function NuevoProductoPage() {
             setPrecioBase(prod.precioBase.toString());
             setTemporada(prod.temporada || "");
             setTipoProducto(prod.tipoProducto);
+            setCategoriaId(prod.categoriaId);
+
+            // Metadatos
+            setPesoKg(prod.pesoKg?.toString() || "");
+            setEan13(prod.ean13 || "");
+            setOrigen(prod.origen || "");
+            setEscalaTalles(prod.escalaTalles || "");
 
             // Poblar chips usando Sets
             const tallesUnicos = new Set<string>();
@@ -271,6 +290,7 @@ export function NuevoProductoPage() {
         setSuccess(null);
 
         if (!nombre.trim()) return setError("El nombre del producto es obligatorio.");
+        if (!categoriaId) return setError("Debe seleccionar una categoría.");
         if (!precioBase || Number(precioBase) <= 0) return setError("El precio base debe ser mayor a $0.");
         if (filas.length === 0) return setError("Agregá al menos un talle y un color para generar las variantes.");
 
@@ -286,9 +306,13 @@ export function NuevoProductoPage() {
                     nombre: nombre.trim(),
                     descripcion: descripcion.trim(),
                     precioBase: Number(precioBase),
-                    categoriaId: CATEGORIA_PLACEHOLDER,
+                    categoriaId: categoriaId,
                     temporada,
                     tipoProducto,
+                    pesoKg: pesoKg ? Number(pesoKg) : 0,
+                    ean13: ean13.trim(),
+                    origen: origen.trim(),
+                    escalaTalles: escalaTalles.trim(),
                     variantes: filas.map(f => ({
                         id: f.id, // Enviar si viene de DB
                         precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
@@ -304,9 +328,13 @@ export function NuevoProductoPage() {
                     nombre: nombre.trim(),
                     descripcion: descripcion.trim(),
                     precioBase: Number(precioBase),
-                    categoriaId: CATEGORIA_PLACEHOLDER,
+                    categoriaId: categoriaId,
                     temporada,
                     tipoProducto,
+                    pesoKg: pesoKg ? Number(pesoKg) : 0,
+                    ean13: ean13.trim(),
+                    origen: origen.trim(),
+                    escalaTalles: escalaTalles.trim(),
                     variantes: filas.map(f => ({
                         talle: f.talle,
                         color: f.color,
@@ -319,6 +347,7 @@ export function NuevoProductoPage() {
                 });
                 setSuccess(`¡Producto creado! ID: ${resp.id} — ${filas.length} variantes guardadas.`);
                 setNombre(""); setDescripcion(""); setPrecioBase(""); setTemporada("");
+                setPesoKg(""); setEan13(""); setOrigen(""); setEscalaTalles("");
                 setTalles([]); setColores([]); setFilas([]); setAtributos([]);
             }
         } catch (err: unknown) {
@@ -384,6 +413,32 @@ export function NuevoProductoPage() {
                                 />
                             </div>
 
+                            {/* Categoría Seleccionable */}
+                            <div className={`${styles.fieldGroup} ${styles.fullSpan}`}>
+                                <label className={styles.label}>
+                                    <Tag size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
+                                    Categoría <span className={styles.required}>*</span>
+                                </label>
+                                <select
+                                    className={styles.input}
+                                    value={categoriaId}
+                                    onChange={e => setCategoriaId(e.target.value)}
+                                    disabled={loading || categoriasRaw.length === 0}
+                                >
+                                    <option value="">Seleccione una categoría...</option>
+                                    {(function aplanar(cats: CategoriaDto[], prefix = ""): React.ReactNode[] {
+                                        let opts: React.ReactNode[] = [];
+                                        for (const c of cats) {
+                                            opts.push(<option key={c.id} value={c.id}>{prefix}{c.nombre}</option>);
+                                            if (c.subcategorias?.length > 0) {
+                                                opts = opts.concat(aplanar(c.subcategorias, prefix + "— "));
+                                            }
+                                        }
+                                        return opts;
+                                    })(categoriasRaw)}
+                                </select>
+                            </div>
+
                             {/* Tipo de producto — pre-carga los talles */}
                             <div className={styles.fieldGroup}>
                                 <label className={styles.label}>
@@ -430,6 +485,69 @@ export function NuevoProductoPage() {
                                     onChange={e => setPrecioBase(e.target.value)}
                                     disabled={loading}
                                 />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Metadatos y Logística ───────────────────────────────────────────── */}
+                    <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
+                        <h2 className={styles.cardTitle}>
+                            <Tag size={20} weight="bold" />
+                            Metadatos y Logística (Opcional)
+                        </h2>
+
+                        <div className={styles.grid2}>
+                            <div className={styles.fieldGroup}>
+                                <label className={styles.label}>Peso (Kg)</label>
+                                <input
+                                    className={styles.input}
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Ej: 0.5"
+                                    value={pesoKg}
+                                    onChange={e => setPesoKg(e.target.value)}
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <label className={styles.label}>Código de barras base (EAN-13)</label>
+                                <input
+                                    className={styles.input}
+                                    type="text"
+                                    placeholder="Ej: 7791234567890"
+                                    value={ean13}
+                                    onChange={e => setEan13(e.target.value)}
+                                    disabled={loading}
+                                />
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <label className={styles.label}>Origen</label>
+                                <select
+                                    className={styles.input}
+                                    value={origen}
+                                    onChange={e => setOrigen(e.target.value)}
+                                    disabled={loading}
+                                >
+                                    <option value="">Seleccionar origen...</option>
+                                    <option value="Nacional">Nacional (Argentina)</option>
+                                    <option value="Importado">Importado</option>
+                                </select>
+                            </div>
+                            <div className={styles.fieldGroup}>
+                                <label className={styles.label}>Escala de Talles</label>
+                                <select
+                                    className={styles.input}
+                                    value={escalaTalles}
+                                    onChange={e => setEscalaTalles(e.target.value)}
+                                    disabled={loading}
+                                >
+                                    <option value="">Seleccionar escala...</option>
+                                    <option value="AR">Argentina (AR)</option>
+                                    <option value="US">Estados Unidos (US)</option>
+                                    <option value="EU">Europa (EU)</option>
+                                    <option value="UK">Reino Unido (UK)</option>
+                                </select>
                             </div>
                         </div>
                     </div>

@@ -39,6 +39,10 @@ public class EditarProductoCommandHandler : IRequestHandler<EditarProductoComman
             producto.CategoriaId = request.Payload.CategoriaId;
             producto.Temporada = request.Payload.Temporada;
             producto.TipoProducto = request.Payload.TipoProducto;
+            producto.PesoKg = request.Payload.PesoKg;
+            producto.Ean13 = request.Payload.Ean13;
+            producto.Origen = request.Payload.Origen;
+            producto.EscalaTalles = request.Payload.EscalaTalles;
 
             // 2. Actualizar Variantes Hijas (Solo variables dependientes de precio y atributos extra)
             var variantesExistentes = await _dbContext.VariantesProducto

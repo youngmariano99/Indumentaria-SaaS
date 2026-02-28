@@ -13,5 +13,10 @@ public class CrearProductoDto
     /// <summary>Tipo de producto para determinar la grilla de talles.</summary>
     public TipoProducto TipoProducto { get; set; } = TipoProducto.Ropa;
 
+    public decimal PesoKg { get; set; }
+    public string Ean13 { get; set; } = string.Empty;
+    public string Origen { get; set; } = string.Empty;
+    public string EscalaTalles { get; set; } = string.Empty;
+
     public List<VarianteDto> Variantes { get; set; } = new();
 }

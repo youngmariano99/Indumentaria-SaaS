@@ -1,0 +1,159 @@
+.page {
+    padding: 24px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.treeWrap {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+
+
+.nodeHeader {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 6px;
+    justify-content: space-between;
+}
+
+.nodeHeader:hover {
+    background-color: #f1f5f9;
+}
+
+.nodeInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nodeToggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 2px;
+}
+
+.nodeDetails {
+    display: flex;
+    flex-direction: column;
+}
+
+.nodeName {
+    font-weight: 500;
+    color: #0f172a;
+}
+
+.nodeMeta {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: flex;
+    gap: 8px;
+}
+
+.nodeActions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.nodeHeader:hover .nodeActions {
+    opacity: 1;
+}
+
+.iconBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    color: #64748b;
+}
+
+.iconBtn:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
+}
+
+.iconBtnDanger:hover {
+    color: #ef4444;
+    background-color: #fee2e2;
+}
+
+.nodeChildren {
+    margin-left: 20px;
+    padding-left: 8px;
+    border-left: 1px solid #e2e8f0;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+
+/* Modal form */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: white;
+    width: 400px;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.modalContent h2 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.formGroup {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.formGroup label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #334155;
+}
+
+.formGroup input,
+.formGroup textarea {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}

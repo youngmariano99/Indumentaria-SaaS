@@ -25,6 +25,10 @@ export interface CrearProductoDto {
     categoriaId: string;    // UUID (placeholder hasta que existan categorías)
     temporada: string;      // Puede ser vacío ""
     tipoProducto: string;   // Valor del enum TipoProducto (ej: "Ropa", "Calzado")
+    pesoKg: number;
+    ean13: string;
+    origen: string;
+    escalaTalles: string;
     variantes: VarianteDto[];
 }
 
@@ -48,8 +52,13 @@ export interface ProductoConVariantes {
     nombre: string;
     descripcion: string;
     precioBase: number;
+    categoriaId: string;
     temporada: string;
     tipoProducto: string;   // Valor del enum TipoProducto
+    pesoKg: number;
+    ean13: string;
+    origen: string;
+    escalaTalles: string;
     variantes: VarianteResumen[];
 }
 

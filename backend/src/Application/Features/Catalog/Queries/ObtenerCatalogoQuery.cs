@@ -54,6 +54,10 @@ public class ObtenerCatalogoQueryHandler : IRequestHandler<ObtenerCatalogoQuery,
             PrecioBase = p.PrecioBase,
             Temporada = p.Temporada,
             TipoProducto = p.TipoProducto,
+            PesoKg = p.PesoKg,
+            Ean13 = p.Ean13,
+            Origen = p.Origen,
+            EscalaTalles = p.EscalaTalles,
             Variantes = variantesPorProducto.TryGetValue(p.Id, out var vars)
                 ? vars.Select(v => new VarianteResumenDto
                 {
