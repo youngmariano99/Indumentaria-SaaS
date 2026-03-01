@@ -162,6 +162,44 @@
   text-align: center;
 }
 
+/* Paginación */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  flex-shrink: 0;
+  border-top: 1px solid var(--color-gray-200);
+  margin-top: var(--space-2);
+}
+
+.paginationBtn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  font-family: var(--font-ui);
+  color: var(--color-primary);
+  background: transparent;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: var(--color-gray-50);
+  border-color: var(--color-primary);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationInfo {
+  font-size: var(--text-sm);
+  color: var(--color-gray-600);
+}
+
 /* Tarjeta de producto: touch-friendly (min 44px altura útil) */
 .productCard {
   display: flex;
@@ -201,9 +239,9 @@
 
 .productCardBody {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
   min-width: 0;
   flex: 1;
 }
@@ -215,8 +253,32 @@
   word-break: break-word;
 }
 
-.productVariante {
+/* Talles y colores disponibles en la tarjeta (antes de abrir el modal) */
+.productTallesColores {
   font-size: var(--text-xs);
+  color: var(--color-gray-600);
+  line-height: 1.35;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.25rem;
+}
+
+.productTallesColoresLabel {
+  font-weight: 600;
+  color: var(--color-gray-500);
+}
+
+.productTallesColoresVal {
+  color: var(--color-gray-700);
+}
+
+.productTallesColoresSep {
+  color: var(--color-gray-400);
+}
+
+.productSinStock {
+  font-style: italic;
   color: var(--color-gray-500);
 }
 
@@ -246,19 +308,24 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  min-height: 0;
 }
 
 @media (min-width: 900px) {
   .cartSection {
     min-height: 0;
     overflow: hidden;
+    display: flex;
   }
 
   .cartCard {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -302,18 +369,21 @@
   color: var(--color-gray-600);
 }
 
-/* Ítems del carrito */
+/* Ítems del carrito: área con scroll para ver varios sin achicar cliente/descuento/pago */
 .cartItems {
   display: flex;
   flex-direction: column;
+  min-height: 180px;
+  max-height: 40vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 @media (min-width: 900px) {
   .cartItems {
     flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    min-height: 200px;
+    max-height: none;
   }
 }
 
@@ -329,18 +399,19 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
-/* Ítem compacto: dos líneas (nombre+subtotal | detalle+acciones) */
+/* Ítem compacto pero legible: dos líneas (nombre+subtotal | detalle+acciones) */
 .cartItem {
   background: var(--color-gray-50);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .cartItemTop {
@@ -629,4 +700,136 @@
   .posPage {
     padding: var(--space-5);
   }
+}
+
+/* ── Modal elegir variante (talle/color) ─────────────────────────────────── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.modalContent {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-width: 420px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.modalTitle {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.modalClose {
+  flex-shrink: 0;
+  padding: var(--space-1);
+  border: none;
+  background: transparent;
+  color: var(--color-gray-500);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalClose:hover {
+  color: var(--color-gray-700);
+  background: var(--color-gray-100);
+}
+
+.modalSubtitle {
+  font-size: var(--text-sm);
+  color: var(--color-gray-500);
+  margin: var(--space-1) var(--space-4) var(--space-3);
+}
+
+.varianteList {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-4) var(--space-4);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.varianteCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  min-height: 48px;
+  text-align: left;
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  width: 100%;
+  font-family: inherit;
+}
+
+.varianteCard:hover {
+  border-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.varianteTalleColor {
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.varianteSku {
+  font-size: var(--text-xs);
+  color: var(--color-gray-500);
+  margin-left: auto;
+}
+
+.varianteStock {
+  font-size: var(--text-xs);
+  color: var(--color-gray-600);
+  margin-left: auto;
+}
+
+.variantePrecio {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.varianteCardSinStock {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.varianteCardSinStock:hover {
+  border-color: var(--color-gray-200);
+  background: var(--color-gray-50);
 }

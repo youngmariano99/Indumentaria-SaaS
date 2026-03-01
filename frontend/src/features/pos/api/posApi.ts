@@ -3,13 +3,17 @@ import { apiClient } from "../../../lib/apiClient";
 export interface VarianteLayerPosDto {
     varianteId: string;
     sizeColor: string;
-    coeficienteStock: number;
+    talle: string;
+    color: string;
+    sku: string;
+    stockActual: number;
 }
 
 export interface ProductoLayerPosDto {
     id: string;
     nombre: string;
     precioBase: number;
+    ean13: string;
     variantes: VarianteLayerPosDto[];
 }
 

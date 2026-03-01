@@ -9,9 +9,10 @@ import {
   Wallet,
   Receipt,
   CheckCircle,
+  X,
 } from "@phosphor-icons/react";
 import { posApi } from "./api/posApi";
-import type { MetodoPagoDto } from "./api/posApi";
+import type { MetodoPagoDto, ProductoLayerPosDto, VarianteLayerPosDto } from "./api/posApi";
 import { clientesApi } from "../catalog/api/clientesApi";
 import type { ClienteDto } from "../catalog/api/clientesApi";
 import styles from "./PosPage.module.css";
@@ -29,15 +30,70 @@ type LineItem = {
   recargoPct: number;
 };
 
-/** Flat product object ready to be added to cart */
-type PosProductItem = {
-  id: string; // unique visual ID (e.g. prodId-varId)
-  productId: string;
-  varianteId: string;
-  nombre: string;
-  variante: string;
-  precio: number;
-};
+/** Acepta respuestas en camelCase o PascalCase del API */
+function getEan13(p: ProductoLayerPosDto): string {
+  const raw = (p as Record<string, unknown>).ean13 ?? (p as Record<string, unknown>).Ean13;
+  return typeof raw === "string" ? raw.trim() : "";
+}
+function getTalle(v: VarianteLayerPosDto): string {
+  const raw = (v as Record<string, unknown>).talle ?? (v as Record<string, unknown>).Talle;
+  return typeof raw === "string" ? raw : "";
+}
+function getColor(v: VarianteLayerPosDto): string {
+  const raw = (v as Record<string, unknown>).color ?? (v as Record<string, unknown>).Color;
+  return typeof raw === "string" ? raw : "";
+}
+function getSku(v: VarianteLayerPosDto): string {
+  const raw = (v as Record<string, unknown>).sku ?? (v as Record<string, unknown>).Sku;
+  return typeof raw === "string" ? raw.trim() : "";
+}
+function getStockActual(v: VarianteLayerPosDto): number {
+  const raw = (v as Record<string, unknown>).stockActual ?? (v as Record<string, unknown>).StockActual;
+  return typeof raw === "number" ? raw : 0;
+}
+/** sizeColor suele venir como "Talle / Color"; si talle/color vienen vacíos, derivar desde acá */
+function getSizeColor(v: VarianteLayerPosDto): string {
+  const raw = (v as Record<string, unknown>).sizeColor ?? (v as Record<string, unknown>).SizeColor;
+  return typeof raw === "string" ? raw.trim() : "";
+}
+/** Talle para mostrar: primero campo talle, si no viene, primera parte de sizeColor */
+function getTalleParaMostrar(v: VarianteLayerPosDto): string {
+  const t = getTalle(v);
+  if (t) return t;
+  const sc = getSizeColor(v);
+  const idx = sc.indexOf(" / ");
+  return idx >= 0 ? sc.slice(0, idx).trim() : sc.trim() || "";
+}
+/** Color para mostrar: primero campo color, si no viene, segunda parte de sizeColor */
+function getColorParaMostrar(v: VarianteLayerPosDto): string {
+  const c = getColor(v);
+  if (c) return c;
+  const sc = getSizeColor(v);
+  const idx = sc.indexOf(" / ");
+  return idx >= 0 ? sc.slice(idx + 3).trim() : "";
+}
+
+const PAGE_SIZE = 20;
+
+/** Normaliza respuesta del API (PascalCase) a camelCase para uso en el front */
+function normalizarProductoPos(raw: Record<string, unknown>): ProductoLayerPosDto {
+  const variantesRaw = raw.variantes ?? raw.Variantes;
+  const variantes = Array.isArray(variantesRaw) ? variantesRaw : [];
+  return {
+    id: String(raw.id ?? raw.Id ?? ""),
+    nombre: String(raw.nombre ?? raw.Nombre ?? ""),
+    precioBase: Number(raw.precioBase ?? raw.PrecioBase ?? 0),
+    ean13: String(raw.ean13 ?? raw.Ean13 ?? "").trim(),
+    variantes: variantes.map((v: Record<string, unknown>) => ({
+      varianteId: String(v.varianteId ?? v.VarianteId ?? ""),
+      sizeColor: String(v.sizeColor ?? v.SizeColor ?? "").trim(),
+      talle: String(v.talle ?? v.Talle ?? "").trim(),
+      color: String(v.color ?? v.Color ?? "").trim(),
+      sku: String(v.sku ?? v.Sku ?? "").trim(),
+      stockActual: Number(v.stockActual ?? v.StockActual ?? 0),
+    })),
+  };
+}
 
 export function PosPage() {
   const [busqueda, setBusqueda] = useState("");
@@ -46,7 +102,7 @@ export function PosPage() {
   const [recargoGlobalPct, setRecargoGlobalPct] = useState("");
 
   const [loadingInitial, setLoadingInitial] = useState(true);
-  const [catalogo, setCatalogo] = useState<PosProductItem[]>([]);
+  const [productos, setProductos] = useState<ProductoLayerPosDto[]>([]);
   const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
   const [metodoPagoActivo, setMetodoPagoActivo] = useState<string>("");
 
@@ -56,35 +112,33 @@ export function PosPage() {
   const [procesandoCobro, setProcesandoCobro] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState<string | null>(null);
 
+  /** Producto abierto en el modal para elegir variante (talle/color) */
+  const [productoModal, setProductoModal] = useState<ProductoLayerPosDto | null>(null);
+
+  /** Paginación de la lista de productos */
+  const [paginaActual, setPaginaActual] = useState(1);
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [catData, mpData, clData] = await Promise.all([
+        const [catResult, mpResult, clResult] = await Promise.allSettled([
           posApi.obtenerCatalogoPos(),
           posApi.obtenerMetodosPago(),
           clientesApi.getAll(),
         ]);
 
-        // Flatten catálogo
-        const flatCatalog: PosProductItem[] = [];
-        catData.forEach((p) => {
-          p.variantes.forEach((v) => {
-            flatCatalog.push({
-              id: `${p.id}-${v.varianteId}`,
-              productId: p.id,
-              varianteId: v.varianteId,
-              nombre: p.nombre,
-              variante: v.sizeColor,
-              precio: p.precioBase,
-            });
-          });
-        });
+        if (catResult.status === "fulfilled") {
+          const list = Array.isArray(catResult.value) ? catResult.value : [];
+          setProductos(list.map((p) => normalizarProductoPos(p as Record<string, unknown>)));
+        }
 
-        setCatalogo(flatCatalog);
-        setMetodosPago(mpData);
-        setClientes(clData);
-        if (mpData.length > 0) {
-          setMetodoPagoActivo(mpData[0].id);
+        if (mpResult.status === "fulfilled" && mpResult.value.length > 0) {
+          setMetodosPago(mpResult.value);
+          setMetodoPagoActivo(mpResult.value[0].id);
+        }
+
+        if (clResult.status === "fulfilled") {
+          setClientes(clResult.value);
         }
       } catch (error) {
         console.error("Error cargando datos POS:", error);
@@ -96,23 +150,38 @@ export function PosPage() {
     fetchInitialData();
   }, []);
 
-  const productosFiltrados = catalogo.filter(
-    (p) =>
-      !busqueda.trim() ||
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.variante.toLowerCase().includes(busqueda.toLowerCase())
-  );
-
-  const agregarAlCarrito = (p: PosProductItem) => {
-    const existente = carrito.find(
-      (i) => i.varianteId === p.varianteId
+  /** Filtro: nombre, código de barra (EAN13 producto o SKU variante), talle, color */
+  const productosFiltrados = productos.filter((p) => {
+    const q = busqueda.trim();
+    if (!q) return true;
+    const qLower = q.toLowerCase();
+    if (p.nombre.toLowerCase().includes(qLower)) return true;
+    const ean13 = getEan13(p);
+    if (ean13 && ean13.includes(q)) return true;
+    const matchVariante = p.variantes.some(
+      (v) =>
+        getTalle(v).toLowerCase().includes(qLower) ||
+        getColor(v).toLowerCase().includes(qLower) ||
+        getSku(v).toLowerCase().includes(qLower) ||
+        (v.sizeColor ?? (v as Record<string, unknown>).SizeColor as string)?.toLowerCase().includes(qLower)
     );
+    return matchVariante;
+  });
+
+  const totalPaginas = Math.max(1, Math.ceil(productosFiltrados.length / PAGE_SIZE));
+  const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
+  const productosPagina = productosFiltrados.slice(indiceInicio, indiceInicio + PAGE_SIZE);
+
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [busqueda]);
+
+  const agregarVarianteAlCarrito = (producto: ProductoLayerPosDto, variante: VarianteLayerPosDto) => {
+    const existente = carrito.find((i) => i.varianteId === variante.varianteId);
     if (existente) {
       setCarrito((prev) =>
         prev.map((i) =>
-          i.id === existente.id
-            ? { ...i, cantidad: i.cantidad + 1 }
-            : i
+          i.id === existente.id ? { ...i, cantidad: i.cantidad + 1 } : i
         )
       );
     } else {
@@ -120,16 +189,26 @@ export function PosPage() {
         ...prev,
         {
           id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          productId: p.productId,
-          varianteId: p.varianteId,
-          nombre: p.nombre,
-          variante: p.variante,
-          precioUnitario: p.precio,
+          productId: producto.id,
+          varianteId: variante.varianteId,
+          nombre: producto.nombre,
+          variante: variante.sizeColor,
+          precioUnitario: producto.precioBase,
           cantidad: 1,
           descuentoPct: 0,
           recargoPct: 0,
         },
       ]);
+    }
+    setProductoModal(null);
+  };
+
+  const onSeleccionarProducto = (producto: ProductoLayerPosDto) => {
+    if (producto.variantes.length === 0) return;
+    if (producto.variantes.length === 1) {
+      agregarVarianteAlCarrito(producto, producto.variantes[0]);
+    } else {
+      setProductoModal(producto);
     }
   };
 
@@ -213,7 +292,7 @@ export function PosPage() {
             <input
               type="search"
               className={styles.searchInput}
-              placeholder="Buscar por nombre o variante..."
+              placeholder="Buscar por nombre, talle, SKU o código de barra..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               aria-label="Buscar productos"
@@ -228,34 +307,147 @@ export function PosPage() {
                 No hay productos que coincidan con la búsqueda.
               </p>
             ) : (
-              productosFiltrados.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={styles.productCard}
-                  onClick={() => agregarAlCarrito(p)}
-                  aria-label={`Agregar ${p.nombre} ${p.variante}`}
-                >
-                  <div className={styles.productCardBody}>
-                    <span className={styles.productName}>{p.nombre}</span>
-                    <span className={styles.productVariante}>{p.variante}</span>
-                    <span className={styles.productPrice}>
-                      ${p.precio.toLocaleString("es-AR")}
+              <>
+                {productosPagina.map((p) => {
+                  const tallesUnicos = [...new Set(p.variantes.map((v) => getTalleParaMostrar(v)).filter(Boolean))];
+                  const coloresUnicos = [...new Set(p.variantes.map((v) => getColorParaMostrar(v)).filter(Boolean))];
+                  const hayTalles = tallesUnicos.length > 0;
+                  const hayColores = coloresUnicos.length > 0;
+                  const hayAlgo = hayTalles || hayColores;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={styles.productCard}
+                      onClick={() => onSeleccionarProducto(p)}
+                      aria-label={`Agregar ${p.nombre}`}
+                    >
+                      <div className={styles.productCardBody}>
+                        <span className={styles.productName}>{p.nombre}</span>
+                        <div className={styles.productTallesColores}>
+                          {hayTalles && (
+                            <>
+                              <span className={styles.productTallesColoresLabel}>Talles:</span>
+                              <span className={styles.productTallesColoresVal}>{tallesUnicos.slice(0, 10).join(", ")}{tallesUnicos.length > 10 ? "…" : ""}</span>
+                            </>
+                          )}
+                          {hayTalles && hayColores && <span className={styles.productTallesColoresSep}> · </span>}
+                          {hayColores && (
+                            <>
+                              <span className={styles.productTallesColoresLabel}>Colores:</span>
+                              <span className={styles.productTallesColoresVal}>{coloresUnicos.slice(0, 8).join(", ")}{coloresUnicos.length > 8 ? "…" : ""}</span>
+                            </>
+                          )}
+                          {!hayAlgo && p.variantes.length > 0 && (
+                            <span className={styles.productTallesColoresVal}>{p.variantes.length} variante{p.variantes.length !== 1 ? "s" : ""} (sin talle/color cargado)</span>
+                          )}
+                        </div>
+                        <span className={styles.productPrice}>
+                          ${p.precioBase.toLocaleString("es-AR")}
+                        </span>
+                      </div>
+                      <Plus size={20} weight="bold" className={styles.productAddIcon} />
+                    </button>
+                  );
+                })}
+                {totalPaginas > 1 && (
+                  <div className={styles.pagination}>
+                    <button
+                      type="button"
+                      className={styles.paginationBtn}
+                      onClick={() => setPaginaActual((prev) => Math.max(1, prev - 1))}
+                      disabled={paginaActual <= 1}
+                      aria-label="Página anterior"
+                    >
+                      Anterior
+                    </button>
+                    <span className={styles.paginationInfo}>
+                      Página {paginaActual} de {totalPaginas}
                     </span>
+                    <button
+                      type="button"
+                      className={styles.paginationBtn}
+                      onClick={() => setPaginaActual((prev) => Math.min(totalPaginas, prev + 1))}
+                      disabled={paginaActual >= totalPaginas}
+                      aria-label="Página siguiente"
+                    >
+                      Siguiente
+                    </button>
                   </div>
-                  <Plus size={20} weight="bold" className={styles.productAddIcon} />
-                </button>
-              ))
+                )}
+              </>
             )}
           </div>
         </section>
+
+        {/* Modal: elegir variante (talle/color) cuando el producto tiene varias */}
+        {productoModal && (
+          <div
+            className={styles.modalOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-variantes-title"
+            onClick={() => setProductoModal(null)}
+          >
+            <div
+              className={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <h2 id="modal-variantes-title" className={styles.modalTitle}>
+                  {productoModal.nombre}
+                </h2>
+                <button
+                  type="button"
+                  className={styles.modalClose}
+                  onClick={() => setProductoModal(null)}
+                  aria-label="Cerrar"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <p className={styles.modalSubtitle}>
+                Todas las variantes cargadas y su stock. Elegí una para agregar al carrito.
+              </p>
+              <ul className={styles.varianteList}>
+                {productoModal.variantes.map((v) => {
+                  const stock = getStockActual(v);
+                  const sinStock = stock < 1;
+                  return (
+                    <li key={v.varianteId}>
+                      <button
+                        type="button"
+                        className={`${styles.varianteCard} ${sinStock ? styles.varianteCardSinStock : ""}`}
+                        onClick={() => !sinStock && agregarVarianteAlCarrito(productoModal, v)}
+                        disabled={sinStock}
+                        aria-label={sinStock ? `${v.sizeColor} sin stock` : `Agregar ${v.sizeColor} (stock: ${stock})`}
+                      >
+                        <span className={styles.varianteTalleColor}>{v.sizeColor}</span>
+                        {getSku(v) && (
+                          <span className={styles.varianteSku}>{getSku(v)}</span>
+                        )}
+                        <span className={styles.varianteStock} title="Stock">
+                          Stock: {stock}
+                        </span>
+                        <span className={styles.variantePrecio}>
+                          ${productoModal.precioBase.toLocaleString("es-AR")}
+                        </span>
+                        {!sinStock && <Plus size={18} weight="bold" className={styles.productAddIcon} />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        )}
 
         {/* ── Zona carrito + cliente + totales + pago ─────────────────────── */}
         <aside className={styles.cartSection} aria-label="Venta en curso">
           <div className={styles.cartCard}>
             <h2 className={styles.cartTitle}>
               <Receipt size={20} weight="bold" />
-              Venta en curso
+              Venta en curso {carrito.length > 0 && `(${carrito.length} ${carrito.length === 1 ? "ítem" : "ítems"})`}
             </h2>
 
             {/* Cliente (cartera) */}

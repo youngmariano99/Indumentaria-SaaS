@@ -50,28 +50,28 @@ export interface Cliente360Dto extends ClienteDto {
 
 export const clientesApi = {
     getAll: async (): Promise<ClienteDto[]> => {
-        const response = await apiClient.get<ClienteDto[]>('/api/Clientes');
+        const response = await apiClient.get<ClienteDto[]>('/Clientes');
         return response.data;
     },
 
     getPerfil360: async (id: string): Promise<Cliente360Dto> => {
-        const response = await apiClient.get<Cliente360Dto>(`/api/Clientes/${id}/perfil-360`);
+        const response = await apiClient.get<Cliente360Dto>(`/Clientes/${id}/perfil-360`);
         return response.data;
     },
 
     create: async (data: CrearClienteDto): Promise<ClienteDto> => {
         const payload = { ...data, preferenciasJson: data.preferenciasJson || "{}" };
-        const response = await apiClient.post<ClienteDto>('/api/Clientes', payload);
+        const response = await apiClient.post<ClienteDto>('/Clientes', payload);
         return response.data;
     },
 
     update: async (id: string, data: EditarClienteDto): Promise<ClienteDto> => {
         const payload = { ...data, preferenciasJson: data.preferenciasJson || "{}" };
-        const response = await apiClient.put<ClienteDto>(`/api/Clientes/${id}`, payload);
+        const response = await apiClient.put<ClienteDto>(`/Clientes/${id}`, payload);
         return response.data;
     },
 
     delete: async (id: string): Promise<void> => {
-        await apiClient.delete(`/api/Clientes/${id}`);
+        await apiClient.delete(`/Clientes/${id}`);
     }
 }

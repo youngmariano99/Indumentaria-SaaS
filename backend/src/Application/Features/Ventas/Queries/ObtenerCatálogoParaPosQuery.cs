@@ -9,8 +9,8 @@ public record ProductoLayerPosDto
     public Guid Id { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public decimal PrecioBase { get; set; }
-    
-    // Lista compactada
+    /// <summary>Código de barras a nivel producto (EAN13).</summary>
+    public string Ean13 { get; set; } = string.Empty;
     public List<VarianteLayerPosDto> Variantes { get; set; } = new();
 }
 
@@ -18,7 +18,11 @@ public record VarianteLayerPosDto
 {
     public Guid VarianteId { get; set; }
     public string SizeColor { get; set; } = string.Empty;
-    public int CoeficienteStock { get; set; }
+    public string Talle { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
+    public string Sku { get; set; } = string.Empty;
+    /// <summary>Stock actual (suma de Inventarios por variante).</summary>
+    public int StockActual { get; set; }
 }
 
 public record ObtenerCatálogoParaPosQuery() : IRequest<List<ProductoLayerPosDto>>;
@@ -34,25 +38,47 @@ public class ObtenerCatálogoParaPosQueryHandler : IRequestHandler<ObtenerCatál
 
     public async Task<List<ProductoLayerPosDto>> Handle(ObtenerCatálogoParaPosQuery request, CancellationToken cancellationToken)
     {
-        // Se carga todo el catálogo habilitado para venta y se mapea a un DTO comprimido
         var productos = await _context.Productos
-            // NO se incluye Descripcion profunda para ahorrar payload
-            .Select(p => new ProductoLayerPosDto
-            {
-                Id = p.Id,
-                Nombre = p.Nombre,
-                PrecioBase = p.PrecioBase,
-                Variantes = _context.VariantesProducto
-                    .Where(v => v.ProductId == p.Id)
-                    .Select(v => new VarianteLayerPosDto
-                    {
-                        VarianteId = v.Id,
-                        SizeColor = v.Talle + " / " + v.Color,
-                        CoeficienteStock = 0 // El stock está en la tabla Inventarios, requiere un Include a futuro, devolvemos 0 por ahora
-                    }).ToList()
-            })
+            .Where(p => !p.IsDeleted)
+            .Select(p => new { p.Id, p.Nombre, p.PrecioBase, p.Ean13 })
             .ToListAsync(cancellationToken);
 
-        return productos;
+        var productoIds = productos.Select(p => p.Id).ToList();
+        var variantes = await _context.VariantesProducto
+            .Where(v => productoIds.Contains(v.ProductId) && !v.IsDeleted)
+            .Select(v => new { v.Id, v.ProductId, v.Talle, v.Color, v.SKU })
+            .ToListAsync(cancellationToken);
+
+        var varianteIds = variantes.Select(v => v.Id).ToList();
+        var inventarios = await _context.Inventarios
+            .Where(i => varianteIds.Contains(i.ProductVariantId))
+            .ToListAsync(cancellationToken);
+
+        var stockPorVariante = inventarios
+            .GroupBy(i => i.ProductVariantId)
+            .ToDictionary(g => g.Key, g => g.Sum(i => i.StockActual));
+
+        var variantesPorProducto = variantes
+            .GroupBy(v => v.ProductId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return productos.Select(p => new ProductoLayerPosDto
+        {
+            Id = p.Id,
+            Nombre = p.Nombre,
+            PrecioBase = p.PrecioBase,
+            Ean13 = p.Ean13 ?? string.Empty,
+            Variantes = variantesPorProducto.TryGetValue(p.Id, out var vars)
+                ? vars.Select(v => new VarianteLayerPosDto
+                {
+                    VarianteId = v.Id,
+                    SizeColor = v.Talle + " / " + v.Color,
+                    Talle = v.Talle,
+                    Color = v.Color,
+                    Sku = v.SKU ?? string.Empty,
+                    StockActual = stockPorVariante.TryGetValue(v.Id, out var stock) ? stock : 0
+                }).ToList()
+                : new List<VarianteLayerPosDto>()
+        }).ToList();
     }
 }
