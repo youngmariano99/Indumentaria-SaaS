@@ -92,36 +92,36 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 3.2 — Parte 3: Escalas de Talles Internacionales (Roadmap)
+## Sprint 3.2 — Parte 3: Escalas de Talles Internacionales (Completado)
 **Fechas Estimadas:** Post Sprint 4 (POS)
 **Objetivo:** Soporte para productos importados con escalas de talles de otros países.
 
-*   [ ] **Ajustes — País de operación por defecto:** El tenant elige su país base (Argentina, Europa, USA, etc.). Los talles pre-cargados se adaptan a esa escala.
-*   [ ] **Formulario de carga — Escala de talles por producto:** Desplegable por producto para elegir la escala de talles (AR, EU, US, UK, BR). Útil para ropa importada que viene con talles del país de origen.
-*   [ ] **Tabla de conversión:** Mapeo base entre escalas (ej: EU 38 = AR 38 = US 7.5) como referencia visual para el operador. No convierte automáticamente — muestra la equivalencia.
+*   [x] **Ajustes — País de operación por defecto:** El tenant elige su país base (Argentina, Europa, USA, etc.). Los talles pre-cargados se adaptan a esa escala.
+*   [x] **Formulario de carga — Escala de talles por producto:** Desplegable por producto para elegir la escala de talles (AR, EU, US, UK, BR). Útil para ropa importada que viene con talles del país de origen.
+*   [x] **Tabla de conversión:** Mapeo base entre escalas (ej: EU 38 = AR 38 = US 7.5) como referencia visual para el operador. No convierte automáticamente — muestra la equivalencia.
 *   [ ] Referencia: `Docs/indicacionesIA/Talles.md`.
 
 ---
 
-## Sprint 3.4: ABM de Catálogo Completo (Edición y Baja Lógica) - [PRIORIDAD: ANTES DEL MVP]
+## Sprint 3.4: ABM de Catálogo Completo (Edición y Baja Lógica) (Completado)
 **Objetivo:** Permitir la modificación de precios y la ocultación de productos (baja lógica) sin destruir el historial contable de ventas pasadas. Requisito estricto antes de lanzar al público.
 
-*   [ ] **Backend:** Interfaz `ISoftDelete` en `Producto` y `VarianteProducto` con Global Query Filter asociado.
-*   [ ] **Backend:** Comandos y Endpoints `PUT /api/productos/{id}` y `DELETE /api/productos/{id}`.
-*   [ ] **Frontend:** Adición de botones Editar/Eliminar en las cards del Catálogo.
-*   [ ] **Frontend:** Re-utilización de `NuevoProductoPage` para inicializarse con datos existentes (Modo Edición).
+*   [x] **Backend:** Interfaz `ISoftDelete` en `Producto` y `VarianteProducto` con Global Query Filter asociado.
+*   [x] **Backend:** Comandos y Endpoints `PUT /api/productos/{id}` y `DELETE /api/productos/{id}`.
+*   [x] **Frontend:** Adición de botones Editar/Eliminar en las cards del Catálogo.
+*   [x] **Frontend:** Re-utilización de `NuevoProductoPage` para inicializarse con datos existentes (Modo Edición).
 
 ---
 
-## Sprint 3.5: Roadmap Futuro — Catálogo Avanzado (Diferido post-MVP)
+## Sprint 3.5: Catálogo Avanzado (Completado)
 > Estas funcionalidades requieren migraciones complejas y rediseño profundo. Se implementan luego del POS y solo si hay demanda real de clientes.
 
-*   [ ] **Categorías Jerárquicas con NCM:** Tabla de categorías con código NCM del MERCOSUR para automatizar tributación y comercio exterior.
-*   [ ] **Atributos Dinámicos EAV:** Tablas `DefinicionAtributos` y `MapeoAtributosCategoria` para campos propios por categoría (Copa/Contorno para Ropa Interior, Tipo de Suela para Calzado, etc.).
-*   [ ] **Activación de Atributos por Tenant:** Un local de ropa de oficina ve solo categorías formales; un local deportivo ve Deporte + Athleisure.
-*   [ ] **Metadata de Logística por SKU:** Peso, dimensiones, GTIN/EAN-13, País de Origen, Composición de fibra para integración con e-commerce y aduanas.
+*   [x] **Categorías Jerárquicas con NCM:** Tabla de categorías con código NCM del MERCOSUR para automatizar tributación y comercio exterior.
+*   [x] **Atributos Dinámicos EAV:** Tablas `DefinicionAtributos` y `MapeoAtributosCategoria` para campos propios por categoría (Copa/Contorno para Ropa Interior, Tipo de Suela para Calzado, etc.).
+*   [x] **Activación de Atributos por Tenant:** Un local de ropa de oficina ve solo categorías formales; un local deportivo ve Deporte + Athleisure.
+*   [x] **Metadata de Logística por SKU:** Peso, dimensiones, GTIN/EAN-13, País de Origen, Composición de fibra para integración con e-commerce y aduanas.
 *   [ ] **Packs y Bundles:** Soporte para "Pack SKU Único", "Virtual Bundle" y "Pre-packs Mayoristas" (curvas de talles).
-*   [ ] **Edición y Eliminación de Productos:** Endpoint `PUT /api/productos/{id}` y `DELETE` con baja lógica para preservar historial de ventas.
+*   [x] **Edición y Eliminación de Productos:** Endpoint `PUT /api/productos/{id}` y `DELETE` con baja lógica para preservar historial de ventas.
 
 ---
 
@@ -151,10 +151,10 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 ## Sprint 4.2: Cliente 360 y CRM (Roadmap)
 **Objetivo:** Capturar datos estratégicos para fidelización y personalización automática de la atención.
 
-*   [ ] **Perfil Unificado de Cliente:** Registro de DNI/CUIT (opcional) y preferencias de talle/color automatizadas según historial de compra.
-*   [ ] **Historial de Tendencias:** Seguimiento de hábitos de consumo y medios de pago. Soporte para ventas anónimas con asociación flexible al ticket.
-*   [ ] **Gestión de Saldos y Créditos:** Sistema de "dinero a favor" multi-sucursal para devoluciones y pagos parciales/totales.
-*   [ ] **Dashboard de Fidelización:** Identificación de clientes recurrentes e integración para contacto directo vía WhatsApp.
+*   [x] **Perfil Unificado de Cliente:** Registro de DNI/CUIT (opcional) y preferencias de talle/color automatizadas según historial de compra.
+*   [x] **Historial de Tendencias:** Seguimiento de hábitos de consumo y medios de pago. Soporte para ventas anónimas con asociación flexible al ticket.
+*   [x] **Gestión de Saldos y Créditos:** Sistema de "dinero a favor" multi-sucursal para devoluciones y pagos parciales/totales.
+*   [x] **Dashboard de Fidelización:** Identificación de clientes recurrentes e integración para contacto directo vía WhatsApp.
 
 ---
 
@@ -172,9 +172,11 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 **Objetivo:** Preparar la base de datos de Tenants, Ventas y generar Clientes antes de tocar los Web Services de AFIP, ajustando el despiece del IVA.
 
 *   [ ] **Backend - Identidad Fiscal:** Añadir `CuitEmisor`, `CondicionIvaEmisor` y `PuntoDeVenta` a la entidad `Inquilino`. Endpoints para su configuración.
-*   [ ] **Backend - Clientes:** Entidad `Cliente` (CUIT/DNI, Nombre, CondicionIVA) y ABM básico.
-*   [ ] **Backend - Refactor de Venta:** Añadir `ClienteId` opcional. Desglosar matemáticamente `SubtotalNeto` e `IVA` en `VentaDetalle` desde el Command Handler.
-*   [ ] **Frontend:** Pantallas de Configuración Fiscal y Buscador de Clientes en el POS.
+*   [x] **Backend - Clientes:** Entidad `Cliente` (CUIT/DNI, Nombre, CondicionIVA) y ABM básico.
+*   [x] **Backend - Refactor de Venta:** Añadir `ClienteId` opcional.
+*   [ ] **Backend - Desglose de IVA:** Desglosar matemáticamente `SubtotalNeto` e `IVA` en `VentaDetalle` desde el Command Handler.
+*   [x] **Frontend:** Buscador de Clientes incorporado en el POS.
+*   [ ] **Frontend - Fiscal:** Pantallas de Configuración Fiscal en `/ajustes`.
 
 ---
 

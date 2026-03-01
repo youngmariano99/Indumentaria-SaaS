@@ -10,6 +10,7 @@ export interface ClienteDto {
     direccion?: string;
     condicionIva?: CondicionIva;
     preferenciasJson: string;
+    saldoAFavor: number;
 }
 
 export interface CrearClienteDto {
@@ -73,5 +74,19 @@ export const clientesApi = {
 
     delete: async (id: string): Promise<void> => {
         await apiClient.delete(`/Clientes/${id}`);
+    },
+
+    agregarSaldo: async (id: string, monto: number): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, monto, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return response.data;
+    },
+
+    descontarSaldo: async (id: string, monto: number): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/restar`, monto, {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        return response.data;
     }
 }

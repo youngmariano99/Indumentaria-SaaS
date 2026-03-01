@@ -32,7 +32,8 @@ public class ObtenerClientesQueryHandler : IRequestHandler<ObtenerClientesQuery,
                 Telefono = c.Telefono,
                 Direccion = c.Direccion,
                 CondicionIva = c.CondicionIva,
-                PreferenciasJson = c.PreferenciasJson
+                PreferenciasJson = c.PreferenciasJson,
+                SaldoAFavor = c.SaldoAFavor
             })
             .ToListAsync(cancellationToken);
 

@@ -2,6 +2,7 @@ using Application.Common.Interfaces;
 using Application.Features.CRM.DTOs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Features.CRM.Queries;
 
@@ -13,14 +14,18 @@ public class ObtenerCliente360Query : IRequest<Cliente360Dto>
 public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Query, Cliente360Dto>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ILogger<ObtenerCliente360QueryHandler> _logger;
 
-    public ObtenerCliente360QueryHandler(IApplicationDbContext context)
+    public ObtenerCliente360QueryHandler(IApplicationDbContext context, ILogger<ObtenerCliente360QueryHandler> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<Cliente360Dto> Handle(ObtenerCliente360Query request, CancellationToken cancellationToken)
     {
+        try 
+        {
         var cliente = await _context.Clientes
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == request.ClienteId && !c.IsDeleted, cancellationToken)
@@ -56,6 +61,7 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             Direccion = cliente.Direccion,
             CondicionIva = cliente.CondicionIva,
             PreferenciasJson = cliente.PreferenciasJson,
+            SaldoAFavor = cliente.SaldoAFavor,
 
             // Métricas y Cruce de datos
             TotalGastadoHistorico = totalGastado,
@@ -64,5 +70,11 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             FechaUltimaCompra = ultimaCompra,
             ComprasRecientes = comprasRecientes
         };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "==== GRAVE ERROR AL CARGAR EL PERFIL 360 DEL CLIENTE {Id} ====", request.ClienteId);
+            throw;
+        }
     }
 }

@@ -32,28 +32,28 @@ type LineItem = {
 
 /** Acepta respuestas en camelCase o PascalCase del API */
 function getEan13(p: ProductoLayerPosDto): string {
-  const raw = (p as Record<string, unknown>).ean13 ?? (p as Record<string, unknown>).Ean13;
+  const raw = (p as any).ean13 ?? (p as any).Ean13;
   return typeof raw === "string" ? raw.trim() : "";
 }
 function getTalle(v: VarianteLayerPosDto): string {
-  const raw = (v as Record<string, unknown>).talle ?? (v as Record<string, unknown>).Talle;
+  const raw = (v as any).talle ?? (v as any).Talle;
   return typeof raw === "string" ? raw : "";
 }
 function getColor(v: VarianteLayerPosDto): string {
-  const raw = (v as Record<string, unknown>).color ?? (v as Record<string, unknown>).Color;
+  const raw = (v as any).color ?? (v as any).Color;
   return typeof raw === "string" ? raw : "";
 }
 function getSku(v: VarianteLayerPosDto): string {
-  const raw = (v as Record<string, unknown>).sku ?? (v as Record<string, unknown>).Sku;
+  const raw = (v as any).sku ?? (v as any).Sku;
   return typeof raw === "string" ? raw.trim() : "";
 }
 function getStockActual(v: VarianteLayerPosDto): number {
-  const raw = (v as Record<string, unknown>).stockActual ?? (v as Record<string, unknown>).StockActual;
+  const raw = (v as any).stockActual ?? (v as any).StockActual;
   return typeof raw === "number" ? raw : 0;
 }
 /** sizeColor suele venir como "Talle / Color"; si talle/color vienen vacíos, derivar desde acá */
 function getSizeColor(v: VarianteLayerPosDto): string {
-  const raw = (v as Record<string, unknown>).sizeColor ?? (v as Record<string, unknown>).SizeColor;
+  const raw = (v as any).sizeColor ?? (v as any).SizeColor;
   return typeof raw === "string" ? raw.trim() : "";
 }
 /** Talle para mostrar: primero campo talle, si no viene, primera parte de sizeColor */
@@ -129,7 +129,7 @@ export function PosPage() {
 
         if (catResult.status === "fulfilled") {
           const list = Array.isArray(catResult.value) ? catResult.value : [];
-          setProductos(list.map((p) => normalizarProductoPos(p as Record<string, unknown>)));
+          setProductos(list.map((p) => normalizarProductoPos(p as any)));
         }
 
         if (mpResult.status === "fulfilled" && mpResult.value.length > 0) {
@@ -163,7 +163,7 @@ export function PosPage() {
         getTalle(v).toLowerCase().includes(qLower) ||
         getColor(v).toLowerCase().includes(qLower) ||
         getSku(v).toLowerCase().includes(qLower) ||
-        (v.sizeColor ?? (v as Record<string, unknown>).SizeColor as string)?.toLowerCase().includes(qLower)
+        (v.sizeColor ?? (v as any).SizeColor as string)?.toLowerCase().includes(qLower)
     );
     return matchVariante;
   });
@@ -466,6 +466,18 @@ export function PosPage() {
                   {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre} {c.documento ? `(${c.documento})` : ""}</option>)}
                 </select>
               </div>
+              {(() => {
+                const c = clientes.find(x => x.id === clienteSeleccionadoId);
+                if (c && c.saldoAFavor && c.saldoAFavor > 0) {
+                  return (
+                    <div style={{ marginTop: '0.75rem', padding: '0.5rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontSize: '0.875rem' }}>
+                      <Wallet size={16} weight="fill" />
+                      <span>Saldo a Favor del Cliente: <strong>${c.saldoAFavor.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</strong></span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             {/* Ítems del carrito */}

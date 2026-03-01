@@ -23,6 +23,9 @@ public class Cliente : BaseEntity, IMustHaveTenant, ISoftDelete
     // Almacena preferencias visuales o talles favoritos (JSONB)
     public string PreferenciasJson { get; set; } = "{}";
 
+    // CRM - Billetera Virtual del Cliente
+    public decimal SaldoAFavor { get; set; } = 0;
+
     // Para evitar romper reportes de venta de tickets viejos
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }

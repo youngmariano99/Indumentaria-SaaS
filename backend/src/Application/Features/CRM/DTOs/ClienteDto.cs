@@ -15,4 +15,6 @@ public class ClienteDto
     public CondicionIva? CondicionIva { get; set; }
     
     public string PreferenciasJson { get; set; } = "{}";
+    
+    public decimal SaldoAFavor { get; set; }
 }

@@ -109,18 +109,6 @@ export function AppLayout() {
                     </NavLink>
 
                     <NavLink
-                        to="/clientes"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                    >
-                        <span className={styles.navItemIcon}>
-                            <Users size={20} weight="bold" />
-                        </span>
-                        <span>Clientes y CRM</span>
-                    </NavLink>
-
-                    <NavLink
                         to="/ajustes"
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`

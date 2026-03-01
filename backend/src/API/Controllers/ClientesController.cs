@@ -55,4 +55,18 @@ public class ClientesController : ControllerBase
         await _mediator.Send(new EliminarClienteCommand { Id = id });
         return NoContent();
     }
+
+    [HttpPost("{id}/saldo/sumar")]
+    public async Task<ActionResult<decimal>> AgregarSaldo(Guid id, [FromBody] decimal monto)
+    {
+        var result = await _mediator.Send(new AgregarSaldoClienteCommand { ClienteId = id, Monto = monto });
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/saldo/restar")]
+    public async Task<ActionResult<decimal>> DescontarSaldo(Guid id, [FromBody] decimal monto)
+    {
+        var result = await _mediator.Send(new DescontarSaldoClienteCommand { ClienteId = id, Monto = monto });
+        return Ok(result);
+    }
 }
