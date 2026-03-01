@@ -4,8 +4,9 @@ import { CaretLeft, ShoppingBag, Money, CalendarBlank, UserGear, Wallet, Whatsap
 import { clientesApi } from './api/clientesApi';
 import type { Cliente360Dto } from './api/clientesApi';
 
-export function PerfilClientePage() {
+export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp?: string, onCloseModal?: () => void }) {
     const { id } = useParams<{ id: string }>();
+    const effectiveId = clientIdProp || id;
     const [cliente, setCliente] = useState<Cliente360Dto | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -24,10 +25,10 @@ export function PerfilClientePage() {
     };
 
     useEffect(() => {
-        if (id) {
-            loadPerfil(id);
+        if (effectiveId) {
+            loadPerfil(effectiveId);
         }
-    }, [id]);
+    }, [effectiveId]);
 
     const loadPerfil = async (clienteId: string) => {
         setLoading(true);
@@ -71,11 +72,18 @@ export function PerfilClientePage() {
     if (!cliente) return <div style={{ padding: '3rem', textAlign: 'center' }}>Cliente no encontrado.</div>;
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: clientIdProp ? '0' : '1.5rem' }}>
             <header style={{ marginBottom: '2rem' }}>
-                <Link to="/clientes" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280', textDecoration: 'none', marginBottom: '1rem', fontWeight: 500 }}>
-                    <CaretLeft size={16} weight="bold" /> Volver a Clientes
-                </Link>
+                {!clientIdProp && (
+                    <Link to="/clientes" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280', textDecoration: 'none', marginBottom: '1rem', fontWeight: 500 }}>
+                        <CaretLeft size={16} weight="bold" /> Volver a Clientes
+                    </Link>
+                )}
+                {clientIdProp && onCloseModal && (
+                    <button onClick={onCloseModal} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', marginBottom: '1rem', fontWeight: 500, padding: 0 }}>
+                        <CaretLeft size={16} weight="bold" /> Volver
+                    </button>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <h1 style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#111827', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -101,13 +109,13 @@ export function PerfilClientePage() {
                 {/* Saldo a Favor / Billetera */}
                 <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridColumn: 'span 1' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Wallet size={24} color="#16a34a" />
+                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: cliente.saldoAFavor >= 0 ? '#f0fdf4' : '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Wallet size={24} color={cliente.saldoAFavor >= 0 ? "#16a34a" : "#dc2626"} />
                         </div>
                         <div>
-                            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>Billetera Digital</p>
-                            <h3 style={{ margin: 0, color: '#16a34a', fontSize: '1.5rem', fontWeight: 'bold' }}>
-                                ${cliente.saldoAFavor != null ? cliente.saldoAFavor.toLocaleString('es-AR', { minimumFractionDigits: 2 }) : '0,00'}
+                            <p style={{ margin: 0, color: '#6b7280', fontSize: '0.875rem' }}>{cliente.saldoAFavor >= 0 ? 'Saldo a Favor' : 'Saldo Deudor / En Contra'}</p>
+                            <h3 style={{ margin: 0, color: cliente.saldoAFavor >= 0 ? '#16a34a' : '#dc2626', fontSize: '1.5rem', fontWeight: 'bold' }}>
+                                ${Math.abs(cliente.saldoAFavor ?? 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                             </h3>
                         </div>
                     </div>
@@ -115,13 +123,14 @@ export function PerfilClientePage() {
                         <button
                             onClick={() => { setOperacionSaldo('sumar'); setMontoSaldo(''); setShowSaldoModal(true); }}
                             style={{ flex: 1, padding: '0.5rem', backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
+                            title="Ingresar dinero a la cuenta del cliente"
                         >
-                            <PlusCircle size={16} /> Cargar
+                            <PlusCircle size={16} /> Sumar
                         </button>
                         <button
                             onClick={() => { setOperacionSaldo('restar'); setMontoSaldo(''); setShowSaldoModal(true); }}
-                            disabled={!cliente.saldoAFavor || cliente.saldoAFavor <= 0}
-                            style={{ flex: 1, padding: '0.5rem', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '0.375rem', cursor: (!cliente.saldoAFavor || cliente.saldoAFavor <= 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500, opacity: (!cliente.saldoAFavor || cliente.saldoAFavor <= 0) ? 0.5 : 1 }}
+                            style={{ flex: 1, padding: '0.5rem', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
+                            title="Descontar o registrar un cobro no pagado (fiado)"
                         >
                             <MinusCircle size={16} /> Restar
                         </button>
@@ -241,12 +250,14 @@ export function PerfilClientePage() {
                                     step="0.01"
                                     required
                                     min="0.01"
-                                    max={operacionSaldo === 'restar' ? cliente?.saldoAFavor : undefined}
                                     value={montoSaldo}
                                     onChange={e => setMontoSaldo(e.target.value)}
                                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
                                     placeholder="Ej: 1500.00"
                                 />
+                                <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
+                                    {operacionSaldo === 'sumar' ? 'Se sumará al favor del cliente.' : 'Se restará, pudiendo enviarlo a negativo (Deuda).'}
+                                </p>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                 <button

@@ -33,9 +33,18 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
 
         // Obtener Ventas de este Cliente
         var ventas = await _context.Ventas
+            .AsNoTracking()
             .Where(v => v.ClienteId == request.ClienteId)
+            .Include(v => v.Detalles)
+                .ThenInclude(d => d.VarianteProducto)
             .OrderByDescending(v => v.CreatedAt) // Asumiendo BaseEntity o similar
             .ToListAsync(cancellationToken);
+
+        var productIds = ventas.SelectMany(v => v.Detalles).Select(d => d.VarianteProducto.ProductId).Distinct().ToList();
+        var productosDict = await _context.Productos
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Nombre, cancellationToken);
 
         var totalGastado = ventas.Sum(v => v.MontoTotal);
         var cantidadCompras = ventas.Count;
@@ -48,7 +57,15 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             VentaId = v.Id,
             Fecha = v.CreatedAt,
             MontoTotal = v.MontoTotal,
-            IdentificadorTicket = v.IdentificadorTicket
+            IdentificadorTicket = v.IdentificadorTicket,
+            Detalles = v.Detalles.Select(d => new CompraRecienteDetalleDto 
+            {
+                VarianteProductoId = d.VarianteProductoId,
+                Cantidad = d.Cantidad,
+                PrecioUnitario = d.PrecioUnitarioAplicado,
+                VarianteNombre = $"{d.VarianteProducto.Talle} / {d.VarianteProducto.Color}".Trim(' ', '/'),
+                ProductoNombre = productosDict.TryGetValue(d.VarianteProducto.ProductId, out var n) ? n : "Producto Borrado"
+            }).ToList()
         }).ToList();
 
         return new Cliente360Dto

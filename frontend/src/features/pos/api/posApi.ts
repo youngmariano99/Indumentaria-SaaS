@@ -32,6 +32,7 @@ export interface CobrarTicketDetalleDto {
 export interface CobrarTicketDto {
     metodoPagoId: string;
     clienteId?: string;
+    usarSaldoCliente?: boolean;
     montoTotalDeclarado: number;
     descuentoGlobalPct: number;
     recargoGlobalPct: number;
@@ -52,6 +53,11 @@ export const posApi = {
 
     cobrarTicket: async (payload: CobrarTicketDto): Promise<{ ventaId: string; mensaje: string }> => {
         const response = await apiClient.post<{ ventaId: string; mensaje: string }>("/ventas/cobrar", payload);
+        return response.data;
+    },
+
+    procesarDevolucion: async (payload: any): Promise<{ devolucionId: string; mensaje: string }> => {
+        const response = await apiClient.post<{ devolucionId: string; mensaje: string }>("/ventas/devolucion", payload);
         return response.data;
     },
 };

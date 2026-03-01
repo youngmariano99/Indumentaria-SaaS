@@ -41,4 +41,11 @@ public class VentasController : ControllerBase
         // Retornamos 201 Created con información del Ticket
         return Created("", new { VentaId = ticketGeneradoId, Mensaje = "Venta procesada con éxito y stock detraído automáticamnente." });
     }
+
+    [HttpPost("devolucion")]
+    public async Task<IActionResult> ProcesarDevolucion([FromBody] DevolucionDto payload)
+    {
+        var devolucionId = await _mediator.Send(new CrearDevolucionCommand(payload));
+        return Ok(new { DevolucionId = devolucionId, Mensaje = "Devolución y/o Cambio registrado correctamente. El saldo del cliente ha sido actualizado." });
+    }
 }

@@ -11,6 +11,7 @@ import { PosPage } from "../features/pos/PosPage";
 import { CategoriasPage } from "../features/catalog/CategoriasPage";
 import { ClientesPage } from "../features/catalog/ClientesPage";
 import { PerfilClientePage } from "../features/catalog/PerfilClientePage";
+import { DevolucionesPage } from "../features/pos/DevolucionesPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: "/pos", element: <PosPage /> },
       { path: "/clientes", element: <ClientesPage /> },
       { path: "/clientes/:id", element: <PerfilClientePage /> },
+      { path: "/devoluciones", element: <DevolucionesPage /> },
       {
         path: "/modulos",
         element: (

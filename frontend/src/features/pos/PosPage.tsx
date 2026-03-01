@@ -109,6 +109,8 @@ export function PosPage() {
   const [clientes, setClientes] = useState<ClienteDto[]>([]);
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState<string>("");
 
+  const [usarSaldoCliente, setUsarSaldoCliente] = useState<boolean>(false);
+
   const [procesandoCobro, setProcesandoCobro] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState<string | null>(null);
 
@@ -240,15 +242,28 @@ export function PosPage() {
   const total = subtotal - descuentoMonto + recargoMonto;
 
   const handleCobrar = async () => {
-    if (carrito.length === 0 || !metodoPagoActivo) return;
+    if (carrito.length === 0 || (!metodoPagoActivo && total > 0)) return;
 
     setProcesandoCobro(true);
     setCobroExitoso(null);
     try {
+      let totalConSaldo = total;
+      if (usarSaldoCliente && clienteSeleccionadoId) {
+        const c = clientes.find((x) => x.id === clienteSeleccionadoId);
+        if (c && c.saldoAFavor !== 0) {
+          if (c.saldoAFavor > 0) {
+            totalConSaldo -= Math.min(total, c.saldoAFavor);
+          } else {
+            totalConSaldo += Math.abs(c.saldoAFavor);
+          }
+        }
+      }
+
       const payload = {
         metodoPagoId: metodoPagoActivo,
         clienteId: clienteSeleccionadoId ? clienteSeleccionadoId : undefined,
-        montoTotalDeclarado: total,
+        usarSaldoCliente: usarSaldoCliente,
+        montoTotalDeclarado: Math.max(0, totalConSaldo), // Lo que ve fisicamente el usuario en pantalla (UI Total)
         descuentoGlobalPct: descuentoNum,
         recargoGlobalPct: recargoNum,
         detalles: carrito.map((i) => ({
@@ -264,6 +279,7 @@ export function PosPage() {
       setDescuentoGlobalPct("");
       setRecargoGlobalPct("");
       setClienteSeleccionadoId("");
+      setUsarSaldoCliente(false); // reseteamos billetera
       setCobroExitoso(`¡Cobro completado! Ticket: ${res.ventaId.split('-')[0]}`);
 
       setTimeout(() => setCobroExitoso(null), 5000);
@@ -468,11 +484,32 @@ export function PosPage() {
               </div>
               {(() => {
                 const c = clientes.find(x => x.id === clienteSeleccionadoId);
-                if (c && c.saldoAFavor && c.saldoAFavor > 0) {
+                if (c && c.saldoAFavor !== 0) {
+                  const esAcreedor = c.saldoAFavor > 0;
                   return (
-                    <div style={{ marginTop: '0.75rem', padding: '0.5rem', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534', fontSize: '0.875rem' }}>
-                      <Wallet size={16} weight="fill" />
-                      <span>Saldo a Favor del Cliente: <strong>${c.saldoAFavor.toLocaleString("es-AR", { minimumFractionDigits: 2 })}</strong></span>
+                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: esAcreedor ? '#f0fdf4' : '#fef2f2', border: `1px solid ${esAcreedor ? '#bbf7d0' : '#fecaca'}`, borderRadius: '0.375rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', color: esAcreedor ? '#166534' : '#991b1b', fontSize: '0.875rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Wallet size={16} weight="fill" />
+                          <span>{esAcreedor ? 'Saldo a Favor:' : 'Saldo Deudor:'} <strong>${Math.abs(c.saldoAFavor).toLocaleString("es-AR", { minimumFractionDigits: 2 })}</strong></span>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 500 }}>
+                          <input
+                            type="checkbox"
+                            checked={usarSaldoCliente}
+                            onChange={(e) => setUsarSaldoCliente(e.target.checked)}
+                            style={{ cursor: 'pointer', accentColor: esAcreedor ? '#16a34a' : '#dc2626' }}
+                          />
+                          Aplicar al Ticket
+                        </label>
+                      </div>
+                      {usarSaldoCliente && (
+                        <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                          {esAcreedor
+                            ? "El monto abonado se descontará de la billetera del cliente."
+                            : "La deuda anterior del cliente se sumará al subtotal del ticket."}
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -584,9 +621,44 @@ export function PosPage() {
                   </span>
                 </div>
               )}
+              {(() => {
+                const c = clientes.find(x => x.id === clienteSeleccionadoId);
+                if (usarSaldoCliente && c && c.saldoAFavor !== 0) {
+                  if (c.saldoAFavor > 0) {
+                    const aplicable = Math.min(total, c.saldoAFavor);
+                    return (
+                      <div className={styles.totalRow} style={{ color: '#16a34a' }}>
+                        <span>Billetera </span>
+                        <span>-${aplicable.toLocaleString("es-AR")}</span>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className={styles.totalRow} style={{ color: '#dc2626' }}>
+                        <span>Deuda Anterior</span>
+                        <span>+${Math.abs(c.saldoAFavor).toLocaleString("es-AR")}</span>
+                      </div>
+                    )
+                  }
+                }
+                return null;
+              })()}
               <div className={`${styles.totalRow} ${styles.totalRowFinal}`}>
                 <span>Total</span>
-                <span>${total.toLocaleString("es-AR")}</span>
+                <span>
+                  ${(() => {
+                    let totalFinal = total;
+                    const c = clientes.find(x => x.id === clienteSeleccionadoId);
+                    if (usarSaldoCliente && c && c.saldoAFavor !== 0) {
+                      if (c.saldoAFavor > 0) {
+                        totalFinal -= Math.min(total, c.saldoAFavor);
+                      } else {
+                        totalFinal += Math.abs(c.saldoAFavor);
+                      }
+                    }
+                    return Math.max(0, totalFinal).toLocaleString("es-AR");
+                  })()}
+                </span>
               </div>
             </div>
 
@@ -628,7 +700,7 @@ export function PosPage() {
               type="button"
               className={styles.cobrarBtn}
               onClick={handleCobrar}
-              disabled={carrito.length === 0 || procesandoCobro || !metodoPagoActivo}
+              disabled={carrito.length === 0 || procesandoCobro || (!metodoPagoActivo && total > 0)}
               aria-label="Cobrar venta"
             >
               <Receipt size={22} weight="bold" />

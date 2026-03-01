@@ -462,6 +462,8 @@ function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoCon
 // ──────────────────────────────────────────────────────────────────────────────
 function ProductoModal({ producto: p, onClose, onDelete }: { producto: ProductoConVariantes; onClose: () => void; onDelete: () => void }) {
     const overlayRef = useRef<HTMLDivElement>(null);
+    const [modalVariantesPage, setModalVariantesPage] = useState(1);
+    const LIMIT_VARIANTES_MODAL = 5;
     const tallesUnicos = [...new Set(p.variantes.map(v => v.talle))];
     const coloresUnicos = [...new Set(p.variantes.map(v => v.color))];
     const stockTotal = p.variantes.reduce((a, v) => a + (v.stockActual ?? 0), 0);
@@ -534,36 +536,61 @@ function ProductoModal({ producto: p, onClose, onDelete }: { producto: ProductoC
                             </tr>
                         </thead>
                         <tbody>
-                            {p.variantes.map(v => {
-                                const attrs = atributosDeVariante(v);
-                                const hasAttrs = Object.keys(attrs).length > 0;
-                                return (
-                                    <tr key={v.id} className={styles.modalTableRow}>
-                                        <td><span className={styles.talleChip}>{v.talle}</span></td>
-                                        <td><span className={styles.colorChip}>{v.color}</span></td>
-                                        <td className={styles.cellMuted}>{v.sku || <span style={{ color: "var(--color-gray-500)" }}>—</span>}</td>
-                                        <td style={{ textAlign: "right" }} className={styles.cellMuted}>{v.precioCosto > 0 ? fmt(v.precioCosto) : "—"}</td>
-                                        <td style={{ textAlign: "right" }}>{v.precioOverride ? <span className={styles.cellPrecio}>{fmt(v.precioOverride)}</span> : <span className={styles.cellMuted}>—</span>}</td>
-                                        <td style={{ textAlign: "center" }}>
-                                            <span className={(v.stockActual ?? 0) > 0 ? styles.stockOk : styles.stockEmpty}>
-                                                {v.stockActual ?? 0}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {hasAttrs ? (
-                                                <div className={styles.attrList}>
-                                                    {Object.entries(attrs).map(([k, val]) => (
-                                                        <span key={k} className={styles.attrChip}>{k}: {val}</span>
-                                                    ))}
-                                                </div>
-                                            ) : <span className={styles.cellMuted}>—</span>}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                            {p.variantes
+                                .slice((modalVariantesPage - 1) * LIMIT_VARIANTES_MODAL, modalVariantesPage * LIMIT_VARIANTES_MODAL)
+                                .map(v => {
+                                    const attrs = atributosDeVariante(v);
+                                    const hasAttrs = Object.keys(attrs).length > 0;
+                                    return (
+                                        <tr key={v.id} className={styles.modalTableRow}>
+                                            <td><span className={styles.talleChip}>{v.talle}</span></td>
+                                            <td><span className={styles.colorChip}>{v.color}</span></td>
+                                            <td className={styles.cellMuted}>{v.sku || <span style={{ color: "var(--color-gray-500)" }}>—</span>}</td>
+                                            <td style={{ textAlign: "right" }} className={styles.cellMuted}>{v.precioCosto > 0 ? fmt(v.precioCosto) : "—"}</td>
+                                            <td style={{ textAlign: "right" }}>{v.precioOverride ? <span className={styles.cellPrecio}>{fmt(v.precioOverride)}</span> : <span className={styles.cellMuted}>—</span>}</td>
+                                            <td style={{ textAlign: "center" }}>
+                                                <span className={(v.stockActual ?? 0) > 0 ? styles.stockOk : styles.stockEmpty}>
+                                                    {v.stockActual ?? 0}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {hasAttrs ? (
+                                                    <div className={styles.attrList}>
+                                                        {Object.entries(attrs).map(([k, val]) => (
+                                                            <span key={k} className={styles.attrChip}>{k}: {val}</span>
+                                                        ))}
+                                                    </div>
+                                                ) : <span className={styles.cellMuted}>—</span>}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Paginación de Variantes */}
+                {p.variantes.length > LIMIT_VARIANTES_MODAL && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", marginBottom: "1rem", padding: "0 1rem" }}>
+                        <button
+                            onClick={() => setModalVariantesPage(page => Math.max(1, page - 1))}
+                            disabled={modalVariantesPage === 1}
+                            style={{ padding: "0.3rem 0.6rem", border: "1px solid #d1d5db", borderRadius: "0.25rem", background: "white", cursor: modalVariantesPage === 1 ? "not-allowed" : "pointer", opacity: modalVariantesPage === 1 ? 0.5 : 1 }}
+                        >
+                            Anterior
+                        </button>
+                        <span style={{ fontSize: "0.85rem", color: "#6b7280", fontWeight: 500 }}>
+                            Pág {modalVariantesPage} de {Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL)}
+                        </span>
+                        <button
+                            onClick={() => setModalVariantesPage(page => Math.min(Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL), page + 1))}
+                            disabled={modalVariantesPage === Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL)}
+                            style={{ padding: "0.3rem 0.6rem", border: "1px solid #d1d5db", borderRadius: "0.25rem", background: "white", cursor: modalVariantesPage === Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL) ? "not-allowed" : "pointer", opacity: modalVariantesPage === Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL) ? 0.5 : 1 }}
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                )}
 
                 {/* Footer de acciones */}
                 <div className={styles.modalFooter}>

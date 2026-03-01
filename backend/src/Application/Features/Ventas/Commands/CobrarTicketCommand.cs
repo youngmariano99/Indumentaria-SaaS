@@ -45,6 +45,12 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                 Notas = payload.Notas
             };
 
+            Cliente? clienteDb = null;
+            if (payload.ClienteId.HasValue)
+            {
+                clienteDb = await _context.Clientes.FindAsync(new object[] { payload.ClienteId.Value }, cancellationToken);
+            }
+
             decimal montoRealCalculado = 0;
 
             foreach (var detalleDto in payload.Detalles)
@@ -78,15 +84,42 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
 
             // 1. Calculamos los extra globales
             decimal subtotalAcumulado = montoRealCalculado;
-            // Ojo: en C# hay que castear a decimal si no viniera como decimal, pero payload es decimal
             decimal descuentoMonto = Math.Round((subtotalAcumulado * payload.DescuentoGlobalPct) / 100m, 2);
             decimal recargoMonto   = Math.Round((subtotalAcumulado * payload.RecargoGlobalPct) / 100m, 2);
-            decimal totalFinalCalculado = subtotalAcumulado - descuentoMonto + recargoMonto;
+            decimal totalParcial = subtotalAcumulado - descuentoMonto + recargoMonto;
 
-            // 2. Validar si el Front End mentía severamente sobre el Monto Total (margen de 1 peso por redondeo)
-            if (Math.Abs(totalFinalCalculado - payload.MontoTotalDeclarado) > 1m) 
+            // 1.5 Aplicación Matemática del Saldo (FASE 2)
+            if (payload.UsarSaldoCliente && clienteDb != null)
             {
-                 throw new Exception("El monto enviado difiere con el cálculo mágico de precios reales en el servidor. Revise descuentos y catálogo.");
+                if (clienteDb.SaldoAFavor > 0)
+                {
+                    // Cliente tiene dinero a favor: Descontamos hasta agotar la venta
+                    // Si la venta es 10k y tiene 3k, le descontamos 3k.
+                    // Si la venta es 3k y tiene 10k, la venta queda en 0 y gasta 3k.
+                    decimal descuentoAplicable = Math.Min(totalParcial, clienteDb.SaldoAFavor);
+                    totalParcial -= descuentoAplicable;
+                    clienteDb.SaldoAFavor -= descuentoAplicable;
+                    venta.Notas = string.IsNullOrWhiteSpace(venta.Notas) 
+                        ? $"Abonó ${descuentoAplicable} con Billetera." 
+                        : venta.Notas + $" | Abonó ${descuentoAplicable} con Billetera.";
+                }
+                else if (clienteDb.SaldoAFavor < 0)
+                {
+                    // Cliente TIENE DEUDA (saldo negativo). Se la cobramos ahora sumándola al total.
+                    // Ej: debe -2000. totalParcial = 10k. Total a pagar en mostrador = 12k.
+                    decimal deudaACobrar = Math.Abs(clienteDb.SaldoAFavor);
+                    totalParcial += deudaACobrar;
+                    clienteDb.SaldoAFavor = 0; // Si el cajero avanza y paga, liquida la deuda en este ticket.
+                    venta.Notas = string.IsNullOrWhiteSpace(venta.Notas) 
+                        ? $"Saldó deuda anterior de ${deudaACobrar}." 
+                        : venta.Notas + $" | Saldó deuda anterior de ${deudaACobrar}.";
+                }
+            }
+
+            // 2. Validar si el Front End mentía severamente sobre el Monto Total
+            if (Math.Abs(totalParcial - payload.MontoTotalDeclarado) > 1m) 
+            {
+                 throw new Exception("El monto enviado difiere con el cálculo en el servidor (Subtotales + Descuentos/Recargos + Billetera).");
             }
 
             venta.Subtotal = subtotalAcumulado;
@@ -94,7 +127,7 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
             venta.DescuentoMonto = descuentoMonto;
             venta.RecargoGlobalPct = payload.RecargoGlobalPct;
             venta.RecargoMonto = recargoMonto;
-            venta.MontoTotal = totalFinalCalculado;
+            venta.MontoTotal = totalParcial;
 
             _context.Ventas.Add(venta);
             await _context.SaveChangesAsync(cancellationToken);

@@ -153,8 +153,19 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 *   [x] **Perfil Unificado de Cliente:** Registro de DNI/CUIT (opcional) y preferencias de talle/color automatizadas según historial de compra.
 *   [x] **Historial de Tendencias:** Seguimiento de hábitos de consumo y medios de pago. Soporte para ventas anónimas con asociación flexible al ticket.
-*   [x] **Gestión de Saldos y Créditos:** Sistema de "dinero a favor" multi-sucursal para devoluciones y pagos parciales/totales.
+*   [x] **Gestión de Saldos y Créditos:** Sistema de "dinero a favor" (o en contra) multi-sucursal para devoluciones y pagos parciales/totales. Capacidad de impactar saldos negativos y aplicar saldos a favor/en contra directo en el cierre del POS.
+*   [x] **Módulo de Devoluciones y Cambios:** Sección dedicada para registrar prendas devueltas (restaurando stock) e intercambiarlas por otras (descontando stock), calculando diferencias a pagar, o dejando saldo pendiente en la cuenta del cliente de forma automática.
 *   [x] **Dashboard de Fidelización:** Identificación de clientes recurrentes e integración para contacto directo vía WhatsApp.
+
+---
+
+## Sprint 4.5: Marketing y CRM Avanzado (Completado)
+**Objetivo:** Otorgar a la empresa herramientas de segmentación dinámica y paneles analíticos reemplazando la vista de tarjetas básica.
+
+*   [x] **Backend - Query Optimizado:** Refactorización de `ObtenerClientesQuery` inyectando subconsultas planas O(1) in-memory para calcular en tiempo real el `TotalCompras`, `TotalGastado` y `CategoriaPreferida`.
+*   [x] **Frontend - Grilla Inteligente:** Reescritura absoluta de `ClientesPage.tsx` abandonando el modelo de Tarjetas e implementando una Tabla CRM con los saldos informados velozmente.
+*   [x] **Frontend - Filtros de Embudo (Funnel):** Integración de filtros condicionales avanzados (Gasto Mínimo, Cantidad Mínima y Categoría de Ropa favorita).
+*   [x] **Frontend - Modal 360 In-Line:** Refactorización de `PerfilClientePage.tsx` para funcionar re-utilizado dentro de una ventana Modal (Slide) sin forzar cambios de ruta.
 
 ---
 

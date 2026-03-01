@@ -4,6 +4,7 @@ public class CobrarTicketDto
 {
     public Guid MetodoPagoId { get; set; }
     public Guid? ClienteId { get; set; }
+    public bool UsarSaldoCliente { get; set; } = false;
     public decimal MontoTotalDeclarado { get; set; }
     public decimal DescuentoGlobalPct { get; set; } = 0;
     public decimal RecargoGlobalPct { get; set; } = 0;

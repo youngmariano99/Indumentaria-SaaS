@@ -17,4 +17,9 @@ public class ClienteDto
     public string PreferenciasJson { get; set; } = "{}";
     
     public decimal SaldoAFavor { get; set; }
+
+    // Métricas de Marketing / CRM
+    public int TotalCompras { get; set; }
+    public decimal TotalGastado { get; set; }
+    public string CategoriaPreferida { get; set; } = string.Empty;
 }

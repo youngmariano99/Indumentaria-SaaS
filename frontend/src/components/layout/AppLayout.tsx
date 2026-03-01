@@ -6,7 +6,8 @@ import {
     ChartLine,
     GearSix,
     Folder,
-    Users
+    Users,
+    Swap
 } from "@phosphor-icons/react";
 import styles from "./AppLayout.module.css";
 
@@ -84,6 +85,18 @@ export function AppLayout() {
                     >
                         <span className={styles.navItemIcon}>🛒</span>
                         <span>Punto de venta</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/devoluciones"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
+                    >
+                        <span className={styles.navItemIcon}>
+                            <Swap size={20} weight="bold" />
+                        </span>
+                        <span>Devoluciones</span>
                     </NavLink>
 
                     <button

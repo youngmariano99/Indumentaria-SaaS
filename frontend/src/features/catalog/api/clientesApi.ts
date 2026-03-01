@@ -11,6 +11,9 @@ export interface ClienteDto {
     condicionIva?: CondicionIva;
     preferenciasJson: string;
     saldoAFavor: number;
+    totalCompras: number;
+    totalGastado: number;
+    categoriaPreferida: string;
 }
 
 export interface CrearClienteDto {
@@ -34,11 +37,20 @@ export interface EditarClienteDto {
     preferenciasJson?: string;
 }
 
+export interface CompraRecienteDetalleDto {
+    varianteProductoId: string;
+    productoNombre: string;
+    varianteNombre: string;
+    cantidad: number;
+    precioUnitario: number;
+}
+
 export interface CompraRecienteDto {
     ventaId: string;
     fecha: string;
     montoTotal: number;
     identificadorTicket: string;
+    detalles: CompraRecienteDetalleDto[];
 }
 
 export interface Cliente360Dto extends ClienteDto {

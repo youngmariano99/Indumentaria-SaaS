@@ -28,8 +28,7 @@ public class DescontarSaldoClienteCommandHandler : IRequestHandler<DescontarSald
             .FirstOrDefaultAsync(c => c.Id == request.ClienteId && !c.IsDeleted, cancellationToken)
             ?? throw new KeyNotFoundException($"Cliente no encontrado con ID {request.ClienteId}");
 
-        if (cliente.SaldoAFavor < request.Monto)
-            throw new InvalidOperationException($"Saldo insuficiente. Saldo actual: ${cliente.SaldoAFavor}");
+        // SE ELIMINA LA RESTRICCIÓN: Ahora se permite saldo negativo (Deuda / Fiado)
 
         cliente.SaldoAFavor -= request.Monto;
 
