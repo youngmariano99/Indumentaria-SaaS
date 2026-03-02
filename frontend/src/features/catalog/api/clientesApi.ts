@@ -46,12 +46,13 @@ export interface CompraRecienteDetalleDto {
     posibleDevolucion?: boolean;
 }
 
-export interface CompraRecienteDto {
-    ventaId: string;
+export interface TransaccionHistoricoDto {
+    id: string;
     fecha: string;
+    tipo: string;
     montoTotal: number;
-    identificadorTicket: string;
-    detalles: CompraRecienteDetalleDto[];
+    descripcion: string;
+    detalles?: CompraRecienteDetalleDto[];
 }
 
 export interface Cliente360Dto extends ClienteDto {
@@ -59,7 +60,7 @@ export interface Cliente360Dto extends ClienteDto {
     cantidadComprasHistoricas: number;
     fechaUltimaCompra?: string;
     ticketPromedio: number;
-    comprasRecientes: CompraRecienteDto[];
+    historialTransacciones: TransaccionHistoricoDto[];
 }
 
 export const clientesApi = {
@@ -89,17 +90,13 @@ export const clientesApi = {
         await apiClient.delete(`/Clientes/${id}`);
     },
 
-    agregarSaldo: async (id: string, monto: number): Promise<number> => {
-        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, monto, {
-            headers: { 'Content-Type': 'application/json' }
-        });
+    agregarSaldo: async (id: string, monto: number, descripcion: string): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, { monto, descripcion });
         return response.data;
     },
 
-    descontarSaldo: async (id: string, monto: number): Promise<number> => {
-        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/restar`, monto, {
-            headers: { 'Content-Type': 'application/json' }
-        });
+    descontarSaldo: async (id: string, monto: number, descripcion: string): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/restar`, { monto, descripcion });
         return response.data;
     }
 }

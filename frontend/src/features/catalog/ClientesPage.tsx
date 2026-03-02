@@ -313,7 +313,7 @@ export function ClientesPage() {
             {/* Modal Perfil 360 */}
             {clienteModalId && (
                 <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", zIndex: 100 }}>
-                    <div style={{ backgroundColor: "#f9fafb", width: "100%", maxWidth: "800px", height: "100%", overflowY: "auto", boxShadow: "-4px 0 15px rgba(0,0,0,0.1)", animation: "slideInRight 0.3s ease-out" }}>
+                    <div style={{ backgroundColor: "#f9fafb", width: "100%", maxWidth: "1050px", height: "100%", overflowY: "auto", boxShadow: "-4px 0 15px rgba(0,0,0,0.1)", animation: "slideInRight 0.3s ease-out" }}>
                         <div style={{ position: "sticky", top: 0, padding: "1rem", backgroundColor: "white", borderBottom: "1px solid #e5e7eb", zIndex: 10 }}>
                             <h2 style={{ margin: 0, fontSize: "1.2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 Vista Rápida del Cliente

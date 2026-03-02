@@ -51,13 +51,23 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
         var ticketPromedio = cantidadCompras > 0 ? totalGastado / cantidadCompras : 0;
         var ultimaCompra = ventas.FirstOrDefault()?.CreatedAt;
 
-        // Compras más recientes para DataGrid (limitando a 10 para rápida lectura del perfil CRM)
-        var comprasRecientes = ventas.Take(10).Select(v => new CompraRecienteDto
+        // Optimizamos para no traer miles, traemos tope 100 de cada o todas si son pocas, el Front end paginará.
+        var movimientos = await _context.MovimientosSaldosClientes
+            .AsNoTracking()
+            .Where(m => m.ClienteId == request.ClienteId)
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var historialUnificado = new List<TransaccionHistoricoDto>();
+
+        // Mapear Ventas
+        historialUnificado.AddRange(ventas.Select(v => new TransaccionHistoricoDto
         {
-            VentaId = v.Id,
+            Id = v.Id,
             Fecha = v.CreatedAt,
+            Tipo = "Venta",
             MontoTotal = v.MontoTotal,
-            IdentificadorTicket = v.IdentificadorTicket,
+            Descripcion = v.IdentificadorTicket,
             Detalles = v.Detalles.Select(d => new CompraRecienteDetalleDto 
             {
                 VarianteProductoId = d.VarianteProductoId,
@@ -67,7 +77,20 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
                 VarianteNombre = $"{d.VarianteProducto.Talle} / {d.VarianteProducto.Color}".Trim(' ', '/'),
                 ProductoNombre = productosDict.TryGetValue(d.VarianteProducto.ProductId, out var n) ? n : "Producto Borrado"
             }).ToList()
-        }).ToList();
+        }));
+
+        // Mapear Movimientos de Billetera
+        historialUnificado.AddRange(movimientos.Select(m => new TransaccionHistoricoDto
+        {
+            Id = m.Id,
+            Fecha = m.CreatedAt,
+            Tipo = m.Tipo == Core.Entities.TipoMovimientoSaldo.Ingreso ? "Ingreso de Saldo" : "Egreso de Saldo",
+            MontoTotal = m.Monto,
+            Descripcion = m.Descripcion,
+            Detalles = null
+        }));
+
+        historialUnificado = historialUnificado.OrderByDescending(x => x.Fecha).ToList();
 
         return new Cliente360Dto
         {
@@ -86,7 +109,7 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             CantidadComprasHistoricas = cantidadCompras,
             TicketPromedio = ticketPromedio,
             FechaUltimaCompra = ultimaCompra,
-            ComprasRecientes = comprasRecientes
+            HistorialTransacciones = historialUnificado
         };
         }
         catch (Exception ex)

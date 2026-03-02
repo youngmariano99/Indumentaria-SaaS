@@ -26,5 +26,6 @@ public class VarianteEdicionDto
     public Guid Id { get; set; }                            // Identificador para mapear a DB
     public decimal PrecioCosto { get; set; }
     public decimal? PrecioOverride { get; set; }
+    public int StockInicial { get; set; }
     public Dictionary<string, string> Atributos { get; set; } = new();
 }

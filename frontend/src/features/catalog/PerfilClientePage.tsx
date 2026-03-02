@@ -13,8 +13,15 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
     // Estado Saldo
     const [showSaldoModal, setShowSaldoModal] = useState(false);
     const [montoSaldo, setMontoSaldo] = useState<number | string>('');
+    const [descripcionSaldo, setDescripcionSaldo] = useState('');
     const [operacionSaldo, setOperacionSaldo] = useState<'sumar' | 'restar'>('sumar');
     const [savingSaldo, setSavingSaldo] = useState(false);
+
+    // Estado Detalles de Transacción y Paginación
+    const [detalleTxSeleccionada, setDetalleTxSeleccionada] = useState<any | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6;
 
     const condicionIvaLabels: Record<number, string> = {
         0: 'Consumidor Final',
@@ -44,20 +51,36 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
         }
     };
 
+    const historialFiltrado = (cliente?.historialTransacciones || []).filter(tx => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (tx.descripcion && tx.descripcion.toLowerCase().includes(term)) ||
+            (tx.tipo && tx.tipo.toLowerCase().includes(term)) ||
+            tx.montoTotal.toString().includes(term) ||
+            new Date(tx.fecha).toLocaleDateString('es-AR').includes(term);
+    });
+
+    const totalPages = Math.ceil(historialFiltrado.length / itemsPerPage);
+    const paginatedHistorial = historialFiltrado.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     const handleProcesarSaldo = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!cliente || !montoSaldo || isNaN(Number(montoSaldo)) || Number(montoSaldo) <= 0) return;
+        if (!cliente || !montoSaldo || isNaN(Number(montoSaldo)) || Number(montoSaldo) <= 0 || !descripcionSaldo.trim()) {
+            alert('Por favor ingrese un monto válido y un motivo.');
+            return;
+        }
 
         setSavingSaldo(true);
         try {
             if (operacionSaldo === 'sumar') {
-                await clientesApi.agregarSaldo(cliente.id, Number(montoSaldo));
+                await clientesApi.agregarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo);
             } else {
-                await clientesApi.descontarSaldo(cliente.id, Number(montoSaldo));
+                await clientesApi.descontarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo);
             }
             alert(`Saldo ${operacionSaldo === 'sumar' ? 'agregado' : 'descontado'} correctamente.`);
             setShowSaldoModal(false);
             setMontoSaldo('');
+            setDescripcionSaldo('');
             loadPerfil(cliente.id); // Recargar
         } catch (error: any) {
             console.error('Error al procesar saldo:', error);
@@ -121,14 +144,14 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                         <button
-                            onClick={() => { setOperacionSaldo('sumar'); setMontoSaldo(''); setShowSaldoModal(true); }}
+                            onClick={() => { setOperacionSaldo('sumar'); setMontoSaldo(''); setDescripcionSaldo(''); setShowSaldoModal(true); }}
                             style={{ flex: 1, padding: '0.5rem', backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
                             title="Ingresar dinero a la cuenta del cliente"
                         >
                             <PlusCircle size={16} /> Sumar
                         </button>
                         <button
-                            onClick={() => { setOperacionSaldo('restar'); setMontoSaldo(''); setShowSaldoModal(true); }}
+                            onClick={() => { setOperacionSaldo('restar'); setMontoSaldo(''); setDescripcionSaldo(''); setShowSaldoModal(true); }}
                             style={{ flex: 1, padding: '0.5rem', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
                             title="Descontar o registrar un cobro no pagado (fiado)"
                         >
@@ -199,37 +222,107 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                     </ul>
                 </div>
 
-                {/* Historial de Compras (Grid/List) */}
+                {/* Historial Unificado de Transacciones (Ventas y Billetera) */}
                 <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 1rem', color: '#111827' }}>Historial de Transacciones (Últimas 10)</h2>
-                    {cliente.comprasRecientes.length === 0 ? (
-                        <p style={{ color: '#6b7280' }}>No hay ventas registradas para este cliente aún.</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0, color: '#111827' }}>Historial de Movimientos</h2>
+                        <input
+                            type="text"
+                            placeholder="Buscar ticket, tipo o monto..."
+                            value={searchTerm}
+                            onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                            style={{ padding: '0.5rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '0.375rem', fontSize: '0.875rem', width: '250px' }}
+                        />
+                    </div>
+                    {historialFiltrado.length === 0 ? (
+                        <p style={{ color: '#6b7280' }}>
+                            {searchTerm ? 'No hay resultados para la búsqueda.' : 'No existen movimientos registrados para este cliente aún.'}
+                        </p>
                     ) : (
-                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflowX: 'auto', width: '100%' }}>
+                            <table style={{ width: '100%', minWidth: '700px', borderCollapse: 'collapse', textAlign: 'left' }}>
                                 <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
                                     <tr>
                                         <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Fecha</th>
-                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Ticket</th>
+                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Tipo</th>
+                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Descripción / Referencia</th>
                                         <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem', textAlign: 'right' }}>Total</th>
+                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {cliente.comprasRecientes.map((compra, idx) => (
-                                        <tr key={compra.ventaId} style={{ borderBottom: idx < cliente.comprasRecientes.length - 1 ? '1px solid #e5e7eb' : 'none' }}>
+                                    {paginatedHistorial.map((tx, idx) => (
+                                        <tr key={tx.id} style={{ borderBottom: idx < paginatedHistorial.length - 1 ? '1px solid #e5e7eb' : 'none', backgroundColor: tx.tipo === 'Venta' ? '#ffffff' : '#f8fafc' }}>
                                             <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem' }}>
-                                                {new Date(compra.fecha).toLocaleString()}
+                                                {new Date(tx.fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
                                             </td>
                                             <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem' }}>
-                                                {compra.identificadorTicket || 'N/A'}
+                                                <span style={{
+                                                    padding: '0.25rem 0.5rem',
+                                                    borderRadius: '9999px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 500,
+                                                    backgroundColor: tx.tipo === 'Venta' ? '#eff6ff' : (tx.tipo === 'Ingreso de Saldo' ? '#dcfce7' : '#fee2e2'),
+                                                    color: tx.tipo === 'Venta' ? '#1d4ed8' : (tx.tipo === 'Ingreso de Saldo' ? '#166534' : '#991b1b')
+                                                }}>
+                                                    {tx.tipo}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {tx.descripcion || '-'}
+                                                {tx.tipo === 'Venta' && tx.detalles && (
+                                                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                                                        {tx.detalles.length} artículo(s)
+                                                    </div>
+                                                )}
                                             </td>
                                             <td style={{ padding: '0.75rem 1rem', color: '#111827', fontWeight: 500, fontSize: '0.875rem', textAlign: 'right' }}>
-                                                ${compra.montoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                <span style={{ color: tx.tipo === 'Egreso de Saldo' ? '#dc2626' : (tx.tipo === 'Ingreso de Saldo' ? '#16a34a' : '#111827') }}>
+                                                    {tx.tipo === 'Ingreso de Saldo' ? '+' : (tx.tipo === 'Egreso de Saldo' ? '-' : '')}${tx.montoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                                                {tx.tipo === 'Venta' && (
+                                                    <button
+                                                        onClick={() => setDetalleTxSeleccionada(tx)}
+                                                        style={{
+                                                            background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
+                                                            fontSize: '0.75rem', fontWeight: 500, textDecoration: 'underline'
+                                                        }}
+                                                    >
+                                                        Ver Detalles
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+
+                            {/* Control de Paginación */}
+                            {totalPages > 1 && (
+                                <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, historialFiltrado.length)} de {historialFiltrado.length} movimientos
+                                    </span>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white', color: currentPage === 1 ? '#9ca3af' : '#374151', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            Anterior
+                                        </button>
+                                        <button
+                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: currentPage === totalPages ? '#f3f4f6' : 'white', color: currentPage === totalPages ? '#9ca3af' : '#374151', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                                        >
+                                            Siguiente
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -255,6 +348,15 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
                                     placeholder="Ej: 1500.00"
                                 />
+                                <label style={{ display: 'block', margin: '1rem 0 0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Motivo / Descripción</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={descripcionSaldo}
+                                    onChange={e => setDescripcionSaldo(e.target.value)}
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
+                                    placeholder="Ej: Ajuste manual, Devolución, etc."
+                                />
                                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
                                     {operacionSaldo === 'sumar' ? 'Se sumará al favor del cliente.' : 'Se restará, pudiendo enviarlo a negativo (Deuda).'}
                                 </p>
@@ -276,6 +378,49 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Detalles de Venta */}
+            {detalleTxSeleccionada && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: '1rem' }}>
+                    <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+                        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f9fafb', borderRadius: '0.75rem 0.75rem 0 0' }}>
+                            <div>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', margin: 0 }}>Ticket de Compra</h2>
+                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                                    {detalleTxSeleccionada.descripcion} • {new Date(detalleTxSeleccionada.fecha).toLocaleString()}
+                                </p>
+                            </div>
+                            <button onClick={() => setDetalleTxSeleccionada(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#9ca3af', padding: 0, lineHeight: 1 }}>&times;</button>
+                        </div>
+                        <div style={{ padding: '1.5rem', overflowY: 'auto' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {detalleTxSeleccionada.detalles?.map((item: any, i: number) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '1rem', borderBottom: i < detalleTxSeleccionada.detalles.length - 1 ? '1px dashed #e5e7eb' : 'none' }}>
+                                        <div>
+                                            <p style={{ margin: '0 0 0.25rem', fontWeight: 500, color: '#111827', fontSize: '0.875rem' }}>{item.productoNombre}</p>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>
+                                                Variante: <span style={{ color: '#4b5563', fontWeight: 500 }}>{item.varianteNombre}</span> • Cantidad: {item.cantidad}
+                                            </p>
+                                            {item.posibleDevolucion && (
+                                                <span style={{ display: 'inline-block', marginTop: '0.35rem', padding: '0.15rem 0.4rem', backgroundColor: '#fef3c7', color: '#d97706', fontSize: '0.65rem', borderRadius: '0.25rem', fontWeight: 600 }}>Posible Devolución Marcada</span>
+                                            )}
+                                        </div>
+                                        <div style={{ textAlign: 'right', fontWeight: 500, color: '#111827', fontSize: '0.875rem' }}>
+                                            ${(item.precioUnitario * item.cantidad).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid #e5e7eb', backgroundColor: '#f9fafb', borderRadius: '0 0 0.75rem 0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '1rem', fontWeight: 500, color: '#4b5563' }}>Total Abonado</span>
+                            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1d4ed8' }}>
+                                ${detalleTxSeleccionada.montoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                            </span>
+                        </div>
                     </div>
                 </div>
             )}

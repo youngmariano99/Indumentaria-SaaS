@@ -7,17 +7,19 @@ public class Cliente360Dto : ClienteDto
     public DateTime? FechaUltimaCompra { get; set; }
     public decimal TicketPromedio { get; set; }
     
-    public List<CompraRecienteDto> ComprasRecientes { get; set; } = new();
+    public List<TransaccionHistoricoDto> HistorialTransacciones { get; set; } = new();
 }
 
-public class CompraRecienteDto
+public class TransaccionHistoricoDto
 {
-    public Guid VentaId { get; set; }
+    public Guid Id { get; set; }
     public DateTime Fecha { get; set; }
+    public string Tipo { get; set; } = string.Empty; // "Venta", "Ajuste a Favor", "Deuda"
     public decimal MontoTotal { get; set; }
-    public string IdentificadorTicket { get; set; } = string.Empty;
+    public string Descripcion { get; set; } = string.Empty; // Ej: "TCK-2026...", "Ajuste manual", "Devolución"
     
-    public List<CompraRecienteDetalleDto> Detalles { get; set; } = new();
+    // Solo si aplica (cuando Tipo == "Venta")
+    public List<CompraRecienteDetalleDto>? Detalles { get; set; }
 }
 
 public class CompraRecienteDetalleDto

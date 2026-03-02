@@ -49,6 +49,11 @@ public class EditarProductoCommandHandler : IRequestHandler<EditarProductoComman
                 .Where(v => v.ProductId == request.ProductoId)
                 .ToListAsync(cancellationToken);
 
+            // Cargar los inventarios globales (StoreId = Guid.Empty) de las variantes actuales
+            var inventariosExistentes = await _dbContext.Inventarios
+                .Where(i => variantesExistentes.Select(v => v.Id).Contains(i.ProductVariantId) && i.StoreId == Guid.Empty)
+                .ToListAsync(cancellationToken);
+
             foreach (var inputVar in request.Payload.Variantes)
             {
                 var target = variantesExistentes.FirstOrDefault(v => v.Id == inputVar.Id);
@@ -59,6 +64,25 @@ public class EditarProductoCommandHandler : IRequestHandler<EditarProductoComman
                     target.AtributosJson = inputVar.Atributos != null && inputVar.Atributos.Count > 0
                         ? JsonSerializer.Serialize(inputVar.Atributos)
                         : "{}";
+                    
+                    // Actualizar Stock de la variante
+                    var invTarget = inventariosExistentes.FirstOrDefault(i => i.ProductVariantId == inputVar.Id);
+                    if (invTarget != null)
+                    {
+                        invTarget.StockActual = inputVar.StockInicial;
+                    }
+                    else
+                    {
+                        // Si por algún motivo no existía su registro de inventario, lo generamos en caliente
+                        _dbContext.Inventarios.Add(new Core.Entities.Inventario
+                        {
+                            TenantId = target.TenantId,
+                            StoreId = Guid.Empty,
+                            ProductVariantId = target.Id,
+                            StockActual = inputVar.StockInicial,
+                            StockMinimo = 0
+                        });
+                    }
                 }
             }
 
