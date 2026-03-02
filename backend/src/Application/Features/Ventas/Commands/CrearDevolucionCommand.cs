@@ -80,6 +80,19 @@ public class CrearDevolucionCommandHandler : IRequestHandler<CrearDevolucionComm
             // Si la diferencia es negativa, quedó debiendo. Se la deducimos llevándole a "Deuda" la wallet.
             cliente.SaldoAFavor += diferenciaNeto;
 
+            if (diferenciaNeto != 0)
+            {
+                var movimiento = new Core.Entities.MovimientoSaldoCliente
+                {
+                    TenantId = tenantId,
+                    ClienteId = cliente.Id,
+                    Monto = Math.Abs(diferenciaNeto),
+                    Tipo = diferenciaNeto > 0 ? Core.Entities.TipoMovimientoSaldo.Ingreso : Core.Entities.TipoMovimientoSaldo.Egreso,
+                    Descripcion = diferenciaNeto > 0 ? "Saldo a favor por Devolución de producto(s)." : "Deuda por Cambio por producto(s) de mayor valor."
+                };
+                _context.MovimientosSaldosClientes.Add(movimiento);
+            }
+
             // 4. Todo: Guardar registro documental de la 'DevolucionEntity' para no perderlo.
             // Por el momento nos saltamos el historial detallado para no abrumar el MVP,
             // pero se asegura integridad del Saldo.

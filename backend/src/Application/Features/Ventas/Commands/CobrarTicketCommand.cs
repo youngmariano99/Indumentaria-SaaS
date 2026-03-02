@@ -103,6 +103,16 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                     venta.Notas = string.IsNullOrWhiteSpace(venta.Notas) 
                         ? $"Abonó ${descuentoAplicable} con Billetera." 
                         : venta.Notas + $" | Abonó ${descuentoAplicable} con Billetera.";
+                    
+                    _context.MovimientosSaldosClientes.Add(new MovimientoSaldoCliente
+                    {
+                        TenantId = tenantId,
+                        ClienteId = clienteDb.Id,
+                        Monto = descuentoAplicable,
+                        Tipo = TipoMovimientoSaldo.Egreso,
+                        Descripcion = $"Uso de saldo a favor para abonar Ticket {venta.IdentificadorTicket}",
+                        VentaIdAsociada = venta.Id // Referencia para futuras consultas
+                    });
                 }
                 else if (clienteDb.SaldoAFavor < 0)
                 {
@@ -114,6 +124,16 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                     venta.Notas = string.IsNullOrWhiteSpace(venta.Notas) 
                         ? $"Saldó deuda anterior de ${deudaACobrar}." 
                         : venta.Notas + $" | Saldó deuda anterior de ${deudaACobrar}.";
+
+                    _context.MovimientosSaldosClientes.Add(new MovimientoSaldoCliente
+                    {
+                        TenantId = tenantId,
+                        ClienteId = clienteDb.Id,
+                        Monto = deudaACobrar,
+                        Tipo = TipoMovimientoSaldo.Ingreso, // Ingresa la plata para cancelar la deuda vieja
+                        Descripcion = $"Cancelación de deuda previa en Ticket {venta.IdentificadorTicket}",
+                        VentaIdAsociada = venta.Id
+                    });
                 }
             }
 

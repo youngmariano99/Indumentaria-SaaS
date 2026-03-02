@@ -1,0 +1,7 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/features/pos/DevolucionesPage.tsx(3,45): error TS2724: '"../catalog/api/clientesApi"' has no exported member named 'CompraRecienteDto'. Did you mean 'CrearClienteDto'?
+src/features/pos/DevolucionesPage.tsx(64,51): error TS2339: Property 'comprasRecientes' does not exist on type 'Cliente360Dto'.
+src/features/pos/DevolucionesPage.tsx(254,105): error TS7006: Parameter 'd' implicitly has an 'any' type.

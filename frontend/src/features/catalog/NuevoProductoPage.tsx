@@ -68,6 +68,7 @@ export function NuevoProductoPage() {
     const [bulkPrecio, setBulkPrecio] = useState("");
     const [bulkCosto, setBulkCosto] = useState("");
     const [bulkStock, setBulkStock] = useState("");
+    const [bulkSku, setBulkSku] = useState("");
 
     // ── Atributos adicionales (pares clave/valor comunes a todas las variantes) ─
     const [atributos, setAtributos] = useState<Array<{ clave: string; valor: string }>>([]);
@@ -250,18 +251,57 @@ export function NuevoProductoPage() {
 
     // ── Aplicar valores masivos a las filas seleccionadas ──────────────────────
     const aplicarASeleccionadas = () => {
-        setFilas(prev => prev.map((f, i) => {
-            if (!seleccionadas.has(i)) return f;
-            return {
-                ...f,
-                ...(bulkPrecio !== "" ? { precioOverride: bulkPrecio } : {}),
-                ...(bulkCosto !== "" ? { precioCosto: bulkCosto } : {}),
-                ...(bulkStock !== "" ? { stockInicial: bulkStock } : {}),
-            };
-        }));
+        // Primero ordenamos los índices seleccionados para iterar en el mismo orden visual de la tabla
+        const seleccionadasArray = Array.from(seleccionadas).sort((a, b) => a - b);
+
+        setFilas(prev => {
+            const nextFilas = [...prev];
+
+            let skuCounter = 0;
+            let baseSkuPrefix = "";
+            let baseSkuPadding = 0;
+            let isAutoIncrementSku = false;
+
+            // Detectar si el SKU masivo introducido termina en un número escalable (ej: REM-01, ART-005)
+            if (bulkSku.trim()) {
+                const match = bulkSku.trim().match(/^(.*?)(\d+)$/);
+                if (match) {
+                    isAutoIncrementSku = true;
+                    baseSkuPrefix = match[1];
+                    baseSkuPadding = match[2].length;
+                    skuCounter = parseInt(match[2], 10);
+                }
+            }
+
+            // Solo iterar por las filas seleccionadas, en orden
+            for (let j = 0; j < seleccionadasArray.length; j++) {
+                const i = seleccionadasArray[j];
+                const f = nextFilas[i];
+                let nextSku = f.sku;
+
+                if (bulkSku.trim()) {
+                    if (isAutoIncrementSku) {
+                        nextSku = `${baseSkuPrefix}${skuCounter.toString().padStart(baseSkuPadding, '0')}`;
+                        skuCounter++;
+                    } else {
+                        nextSku = bulkSku.trim();
+                    }
+                }
+
+                nextFilas[i] = {
+                    ...f,
+                    ...(bulkPrecio !== "" ? { precioOverride: bulkPrecio } : {}),
+                    ...(bulkCosto !== "" ? { precioCosto: bulkCosto } : {}),
+                    ...(bulkStock !== "" ? { stockInicial: bulkStock } : {}),
+                    ...(bulkSku.trim() !== "" ? { sku: nextSku } : {}),
+                };
+            }
+            return nextFilas;
+        });
         setBulkPrecio("");
         setBulkCosto("");
         setBulkStock("");
+        setBulkSku("");
     };
 
     // ── Atributos adicionales ──────────────────────────────────────────────────
@@ -317,6 +357,7 @@ export function NuevoProductoPage() {
                         id: f.id, // Enviar si viene de DB
                         precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
                         precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
+                        stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
                         atributos: atributosMap,
                     })).filter(f => f.id) // Solo enviamos las filas pre-existentes que tienen ID a EditarProductoCommand
                 });
@@ -682,11 +723,21 @@ export function NuevoProductoPage() {
                                             onChange={e => setBulkStock(e.target.value)}
                                         />
                                     </div>
+                                    <div className={styles.bulkField}>
+                                        <label className={styles.bulkFieldLabel}>SKU <span title="Escalado automático habilitado si termina en número" style={{ cursor: 'help' }}>(Auto)</span></label>
+                                        <input
+                                            className={styles.tableInput}
+                                            type="text"
+                                            placeholder="ej: REM-01"
+                                            value={bulkSku}
+                                            onChange={e => setBulkSku(e.target.value.toUpperCase())}
+                                        />
+                                    </div>
                                     <button
                                         type="button"
                                         className={styles.bulkApplyBtn}
                                         onClick={aplicarASeleccionadas}
-                                        disabled={bulkPrecio === "" && bulkCosto === "" && bulkStock === ""}
+                                        disabled={bulkPrecio === "" && bulkCosto === "" && bulkStock === "" && bulkSku === ""}
                                     >
                                         <CheckCircle size={15} weight="bold" />
                                         Aplicar

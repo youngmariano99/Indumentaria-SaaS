@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { posApi, type ProductoLayerPosDto, type VarianteLayerPosDto } from "../pos/api/posApi";
-import { clientesApi, type ClienteDto, type CompraRecienteDto, type CompraRecienteDetalleDto } from "../catalog/api/clientesApi";
+import { clientesApi, type ClienteDto, type TransaccionHistoricoDto, type CompraRecienteDetalleDto } from "../catalog/api/clientesApi";
 import { MagnifyingGlass, Swap, Plus, Minus, Trash, User, CheckCircle } from "@phosphor-icons/react";
 import styles from "../pos/PosPage.module.css"; // Reutilizamos CSS del POS
 
@@ -49,7 +49,7 @@ export function DevolucionesPage() {
     const [procesando, setProcesando] = useState(false);
     const [exitoMsg, setExitoMsg] = useState<string | null>(null);
 
-    const [comprasRecientesCliente, setComprasRecientesCliente] = useState<CompraRecienteDto[]>([]);
+    const [comprasRecientesCliente, setComprasRecientesCliente] = useState<TransaccionHistoricoDto[]>([]);
     const [fetchingCliente, setFetchingCliente] = useState(false);
 
     useEffect(() => {
@@ -61,7 +61,7 @@ export function DevolucionesPage() {
             setFetchingCliente(true);
             try {
                 const perfil = await clientesApi.getPerfil360(clienteSeleccionadoId);
-                setComprasRecientesCliente(perfil.comprasRecientes || []);
+                setComprasRecientesCliente(perfil.historialTransacciones || []);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -266,7 +266,9 @@ export function DevolucionesPage() {
                                     </label>
                                 </h3>
                                 {(() => {
-                                    let historial = comprasRecientesCliente.flatMap(c => c.detalles.map(d => ({ ...d, fechaCompra: c.fecha })));
+                                    let historial = comprasRecientesCliente
+                                        .filter(c => c.tipo === 'Venta' && c.detalles && c.detalles.length > 0)
+                                        .flatMap(c => c.detalles!.map((d: any) => ({ ...d, fechaCompra: c.fecha })));
                                     const hayPosibles = historial.some(d => d.posibleDevolucion);
                                     if (!verTodasLasVentas && hayPosibles) {
                                         historial = historial.filter(d => d.posibleDevolucion);

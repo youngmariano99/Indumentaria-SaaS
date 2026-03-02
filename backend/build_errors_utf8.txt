@@ -1,0 +1,24 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  Core.UnitTests -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\Core.UnitTests\bin\Debug\net9.0\Core.UnitTests.dll
+  Application.UnitTests -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\tests\Application.UnitTests\bin\Debug\net9.0\Application.UnitTests.dll
+  Core -> C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Core\bin\Debug\net9.0\Core.dll
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\AgregarSaldoClienteCommand.cs(7,60): error CS1514: Se esperaba { [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\AgregarSaldoClienteCommand.cs(7,60): error CS1513: Se esperaba } [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\AgregarSaldoClienteCommand.cs(11,1): error CS1022: Se esperaba una definici├│n de tipo o espacio de nombres, o el fin del archivo [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\DescontarSaldoClienteCommand.cs(7,62): error CS1514: Se esperaba { [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\DescontarSaldoClienteCommand.cs(7,62): error CS1513: Se esperaba } [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\DescontarSaldoClienteCommand.cs(11,1): error CS1022: Se esperaba una definici├│n de tipo o espacio de nombres, o el fin del archivo [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+
+ERROR al compilar.
+
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\AgregarSaldoClienteCommand.cs(7,60): error CS1514: Se esperaba { [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\AgregarSaldoClienteCommand.cs(7,60): error CS1513: Se esperaba } [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\AgregarSaldoClienteCommand.cs(11,1): error CS1022: Se esperaba una definici├│n de tipo o espacio de nombres, o el fin del archivo [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\DescontarSaldoClienteCommand.cs(7,62): error CS1514: Se esperaba { [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\DescontarSaldoClienteCommand.cs(7,62): error CS1513: Se esperaba } [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Features\CRM\Commands\DescontarSaldoClienteCommand.cs(11,1): error CS1022: Se esperaba una definici├│n de tipo o espacio de nombres, o el fin del archivo [C:\Users\mari_\OneDrive\Escritorio\Indumentaria-SaaS\backend\src\Application\Application.csproj]
+    0 Advertencia(s)
+    6 Errores
+
+Tiempo transcurrido 00:00:03.52
