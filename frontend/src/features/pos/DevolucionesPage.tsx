@@ -114,10 +114,25 @@ export function DevolucionesPage() {
     }, []);
 
     const productosFiltrados = productos.filter((p) => {
-        const q = busqueda.trim().toLowerCase();
+        const q = busqueda.trim();
         if (!q) return true;
-        if (p.nombre.toLowerCase().includes(q)) return true;
-        return false; // se podria extender a sku/codigo barra
+        const qLower = q.toLowerCase();
+
+        // Nombre del producto
+        if (p.nombre.toLowerCase().includes(qLower)) return true;
+
+        // Código de barras (EAN13) — suele ser numérico, se busca tal cual
+        if (p.ean13 && p.ean13.includes(q)) return true;
+
+        // SKU / combinaciones talle-color
+        if (p.variantes?.some(v =>
+            v.sku?.toLowerCase().includes(qLower) ||
+            v.sizeColor?.toLowerCase().includes(qLower)
+        )) {
+            return true;
+        }
+
+        return false;
     });
 
     const totalPaginas = Math.max(1, Math.ceil(productosFiltrados.length / PAGE_SIZE));
@@ -215,7 +230,7 @@ export function DevolucionesPage() {
     if (loadingInitial) return <div style={{ padding: '2rem' }}>Cargando Catálogo de Devoluciones...</div>;
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '100%', maxWidth: '100%', margin: '0 auto', padding: '1.5rem 1.5rem 2rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
             <header style={{ marginBottom: '1.5rem' }}>
                 <h1 style={{ fontSize: '1.8rem', fontWeight: 'bold', margin: '0 0 0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Swap size={28} /> Cambios y Devoluciones</h1>
                 <p style={{ color: '#6b7280', margin: 0 }}>Registrá prendas que entran al local y, opcionalmente, prendas que salen por cambio directo.</p>
@@ -230,7 +245,7 @@ export function DevolucionesPage() {
                             <MagnifyingGlass size={20} color="#9ca3af" />
                             <input
                                 type="search"
-                                placeholder="Buscar prenda (catálogo general)..."
+                                placeholder="Buscar por nombre, código de barras o SKU..."
                                 value={busqueda}
                                 onChange={e => setBusqueda(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem' }}
@@ -288,17 +303,36 @@ export function DevolucionesPage() {
                         {/* SECCIÓN DEL CATÁLOGO GENERAL */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <h3 style={{ margin: 0, fontSize: '1rem', color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Catálogo General</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', alignContent: 'start' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem', alignContent: 'start' }}>
                                 {productosPagina.map(p => (
-                                    <div key={p.id} style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                                        <div style={{ backgroundColor: '#f3f4f6', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>
-                                            Sin Imagen
+                                    <div
+                                        key={p.id}
+                                        style={{
+                                            border: '1px solid #e5e7eb',
+                                            borderRadius: '0.5rem',
+                                            padding: '0.75rem',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '0.5rem',
+                                            backgroundColor: '#ffffff'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
+                                            <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#111827', fontWeight: 600 }}>{p.nombre}</h4>
+                                            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>
+                                                ${p.precioBase?.toLocaleString("es-AR")}
+                                            </span>
                                         </div>
-                                        <div style={{ padding: '0.75rem', flex: 1 }}>
-                                            <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.9rem', color: '#111827' }}>{p.nombre}</h4>
-                                            <p style={{ margin: '0 0 0.75rem', fontSize: '0.8rem', color: '#4b5563', fontWeight: 600 }}>${p.precioBase?.toLocaleString("es-AR")}</p>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#6b7280' }}>
+                                            {p.ean13 && <span>EAN: {p.ean13}</span>}
+                                            {p.variantes?.length > 0 && (
+                                                <span style={{ marginLeft: p.ean13 ? '0.5rem' : 0 }}>
+                                                    {p.variantes.length} variante{p.variantes.length !== 1 ? 's' : ''}
+                                                </span>
+                                            )}
+                                        </p>
 
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
                                                 <button
                                                     onClick={() => seleccionarProducto(p, 'devuelve')}
                                                     style={{ flex: 1, padding: '0.25rem', fontSize: '0.7rem', backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: 600 }}
@@ -311,7 +345,6 @@ export function DevolucionesPage() {
                                                 >
                                                     + Se Lleva
                                                 </button>
-                                            </div>
                                         </div>
                                     </div>
                                 ))}
