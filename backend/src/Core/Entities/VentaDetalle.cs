@@ -23,4 +23,7 @@ public class VentaDetalle : BaseEntity, IMustHaveTenant
     // Navigation Properties
     public Venta Venta { get; set; } = null!;
     public VarianteProducto VarianteProducto { get; set; } = null!;
+
+    // Indica si el producto fue marcado en el POS como posible cambio
+    public bool PosibleDevolucion { get; set; } = false;
 }

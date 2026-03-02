@@ -63,6 +63,7 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
                 VarianteProductoId = d.VarianteProductoId,
                 Cantidad = d.Cantidad,
                 PrecioUnitario = d.PrecioUnitarioAplicado,
+                PosibleDevolucion = d.PosibleDevolucion,
                 VarianteNombre = $"{d.VarianteProducto.Talle} / {d.VarianteProducto.Color}".Trim(' ', '/'),
                 ProductoNombre = productosDict.TryGetValue(d.VarianteProducto.ProductId, out var n) ? n : "Producto Borrado"
             }).ToList()

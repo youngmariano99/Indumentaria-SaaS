@@ -27,6 +27,7 @@ export interface CobrarTicketDetalleDto {
     varianteProductoId: string;
     cantidad: number;
     precioUnitarioDeclarado: number;
+    posibleDevolucion?: boolean;
 }
 
 export interface CobrarTicketDto {

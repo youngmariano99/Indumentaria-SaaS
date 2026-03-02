@@ -19,4 +19,5 @@ public class CobrarTicketDetalleDto
     public Guid VarianteProductoId { get; set; }
     public int Cantidad { get; set; }
     public decimal PrecioUnitarioDeclarado { get; set; }
+    public bool PosibleDevolucion { get; set; } = false;
 }

@@ -43,6 +43,7 @@ export interface CompraRecienteDetalleDto {
     varianteNombre: string;
     cantidad: number;
     precioUnitario: number;
+    posibleDevolucion?: boolean;
 }
 
 export interface CompraRecienteDto {

@@ -75,7 +75,8 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                     VarianteProductoId = variante.Id,
                     Cantidad = detalleDto.Cantidad,
                     PrecioUnitarioAplicado = precioReal,
-                    SubtotalLinea = subtotalReal
+                    SubtotalLinea = subtotalReal,
+                    PosibleDevolucion = detalleDto.PosibleDevolucion
                 });
 
                 // Descuento de stock pospuesto: Requiere consultar la tabla Inventario

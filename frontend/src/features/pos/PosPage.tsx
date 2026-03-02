@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   MagnifyingGlass,
   Plus,
@@ -9,7 +9,8 @@ import {
   Wallet,
   Receipt,
   CheckCircle,
-  X,
+  Keyboard,
+  Money,
 } from "@phosphor-icons/react";
 import { posApi } from "./api/posApi";
 import type { MetodoPagoDto, ProductoLayerPosDto, VarianteLayerPosDto } from "./api/posApi";
@@ -28,6 +29,7 @@ type LineItem = {
   cantidad: number;
   descuentoPct: number;
   recargoPct: number;
+  posibleDevolucion: boolean;
 };
 
 /** Acepta respuestas en camelCase o PascalCase del API */
@@ -98,8 +100,7 @@ function normalizarProductoPos(raw: Record<string, unknown>): ProductoLayerPosDt
 export function PosPage() {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<LineItem[]>([]);
-  const [descuentoGlobalPct, setDescuentoGlobalPct] = useState("");
-  const [recargoGlobalPct, setRecargoGlobalPct] = useState("");
+  const [ajusteGlobal, setAjusteGlobal] = useState("");
 
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [productos, setProductos] = useState<ProductoLayerPosDto[]>([]);
@@ -109,16 +110,44 @@ export function PosPage() {
   const [clientes, setClientes] = useState<ClienteDto[]>([]);
   const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState<string>("");
 
+  // Referencias para enfoque
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Al cargar la vista el foco principal debe estar siempre en la barra de búsqueda para la lectura del código láser.
+    searchInputRef.current?.focus();
+  }, []);
+
   const [usarSaldoCliente, setUsarSaldoCliente] = useState<boolean>(false);
 
   const [procesandoCobro, setProcesandoCobro] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState<string | null>(null);
 
-  /** Producto abierto en el modal para elegir variante (talle/color) */
-  const [productoModal, setProductoModal] = useState<ProductoLayerPosDto | null>(null);
+  /** ID del producto expandido para elegir variante (talle/color) in-situ */
+  const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
 
   /** Paginación de la lista de productos */
   const [paginaActual, setPaginaActual] = useState(1);
+
+  // Listeners de teclado (Barra de comandos)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // [F2] o [Ctrl+K] -> Enfocar barra de busqueda
+      if (e.key === "F2" || (e.ctrlKey && e.key.toLowerCase() === "k")) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+
+      // [F10] -> Procesar cobro si disponible
+      if (e.key === "F10") {
+        e.preventDefault();
+        document.getElementById('btnCobrarF10')?.click();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -199,10 +228,11 @@ export function PosPage() {
           cantidad: 1,
           descuentoPct: 0,
           recargoPct: 0,
+          posibleDevolucion: false,
         },
       ]);
     }
-    setProductoModal(null);
+    setExpandedProductId(null);
   };
 
   const onSeleccionarProducto = (producto: ProductoLayerPosDto) => {
@@ -210,7 +240,7 @@ export function PosPage() {
     if (producto.variantes.length === 1) {
       agregarVarianteAlCarrito(producto, producto.variantes[0]);
     } else {
-      setProductoModal(producto);
+      setExpandedProductId(prev => prev === producto.id ? null : producto.id);
     }
   };
 
@@ -230,8 +260,18 @@ export function PosPage() {
     setCarrito((prev) => prev.filter((i) => i.id !== lineId));
   };
 
-  const descuentoNum = parseFloat(descuentoGlobalPct.replace(",", ".")) || 0;
-  const recargoNum = parseFloat(recargoGlobalPct.replace(",", ".")) || 0;
+  const togglePosibleDevolucion = (lineId: string) => {
+    setCarrito((prev) =>
+      prev.map((i) =>
+        i.id === lineId ? { ...i, posibleDevolucion: !i.posibleDevolucion } : i
+      )
+    );
+  };
+
+  const ajusteNum = parseFloat(ajusteGlobal.replace(",", ".")) || 0;
+  // Negativo = descuento, Positivo = recargo
+  const descuentoNum = ajusteNum < 0 ? Math.abs(ajusteNum) : 0;
+  const recargoNum = ajusteNum > 0 ? ajusteNum : 0;
 
   const subtotal = carrito.reduce(
     (acc, i) => acc + i.precioUnitario * i.cantidad,
@@ -240,6 +280,34 @@ export function PosPage() {
   const descuentoMonto = (subtotal * descuentoNum) / 100;
   const recargoMonto = (subtotal * recargoNum) / 100;
   const total = subtotal - descuentoMonto + recargoMonto;
+
+  const getSugerenciasPago = (monto: number): number[] => {
+    if (monto <= 0) return [];
+    const sugerencias = new Set<number>();
+    sugerencias.add(monto); // Exacto
+
+    // Billetes comunes en ARS
+    const billetes = [1000, 2000, 5000, 10000, 20000];
+
+    // Si el monto ya es redondo a 1000, sugerir el próximo billete grande
+    const ceil1000 = Math.ceil(monto / 1000) * 1000;
+    if (ceil1000 > monto) sugerencias.add(ceil1000);
+
+    for (const b of billetes) {
+      if (b > monto) {
+        sugerencias.add(b);
+      } else {
+        const multiplo = Math.ceil(monto / b) * b;
+        if (multiplo > monto && multiplo - monto <= b * 2) {
+          sugerencias.add(multiplo);
+        }
+      }
+    }
+
+    return Array.from(sugerencias).sort((a, b) => a - b).slice(0, 4); // Max 4 sugerencias
+  };
+
+  const sugerenciasPago = getSugerenciasPago(total);
 
   const handleCobrar = async () => {
     if (carrito.length === 0 || (!metodoPagoActivo && total > 0)) return;
@@ -270,14 +338,14 @@ export function PosPage() {
           varianteProductoId: i.varianteId,
           cantidad: i.cantidad,
           precioUnitarioDeclarado: i.precioUnitario,
+          posibleDevolucion: i.posibleDevolucion,
         })),
       };
 
       const res = await posApi.cobrarTicket(payload);
 
       setCarrito([]);
-      setDescuentoGlobalPct("");
-      setRecargoGlobalPct("");
+      setAjusteGlobal("");
       setClienteSeleccionadoId("");
       setUsarSaldoCliente(false); // reseteamos billetera
       setCobroExitoso(`¡Cobro completado! Ticket: ${res.ventaId.split('-')[0]}`);
@@ -306,13 +374,17 @@ export function PosPage() {
           <div className={styles.searchWrap}>
             <MagnifyingGlass size={20} className={styles.searchIcon} />
             <input
+              ref={searchInputRef}
               type="search"
               className={styles.searchInput}
-              placeholder="Buscar por nombre, talle, SKU o código de barra..."
+              placeholder="Escanear producto o [F2] Buscar..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              aria-label="Buscar productos"
+              aria-label="Buscar o escanear productos"
             />
+            <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '0.25rem' }}>
+              <span style={{ fontSize: '0.65rem', backgroundColor: '#e5e7eb', color: '#6b7280', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}> <Keyboard size={12} /> F2</span>
+            </div>
           </div>
 
           <div className={styles.productList}>
@@ -330,40 +402,66 @@ export function PosPage() {
                   const hayTalles = tallesUnicos.length > 0;
                   const hayColores = coloresUnicos.length > 0;
                   const hayAlgo = hayTalles || hayColores;
+                  const isExpanded = expandedProductId === p.id;
                   return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={styles.productCard}
-                      onClick={() => onSeleccionarProducto(p)}
-                      aria-label={`Agregar ${p.nombre}`}
-                    >
-                      <div className={styles.productCardBody}>
-                        <span className={styles.productName}>{p.nombre}</span>
-                        <div className={styles.productTallesColores}>
-                          {hayTalles && (
-                            <>
-                              <span className={styles.productTallesColoresLabel}>Talles:</span>
-                              <span className={styles.productTallesColoresVal}>{tallesUnicos.slice(0, 10).join(", ")}{tallesUnicos.length > 10 ? "…" : ""}</span>
-                            </>
-                          )}
-                          {hayTalles && hayColores && <span className={styles.productTallesColoresSep}> · </span>}
-                          {hayColores && (
-                            <>
-                              <span className={styles.productTallesColoresLabel}>Colores:</span>
-                              <span className={styles.productTallesColoresVal}>{coloresUnicos.slice(0, 8).join(", ")}{coloresUnicos.length > 8 ? "…" : ""}</span>
-                            </>
-                          )}
-                          {!hayAlgo && p.variantes.length > 0 && (
-                            <span className={styles.productTallesColoresVal}>{p.variantes.length} variante{p.variantes.length !== 1 ? "s" : ""} (sin talle/color cargado)</span>
-                          )}
+                    <div key={p.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                      <button
+                        type="button"
+                        className={styles.productCard}
+                        style={isExpanded ? { borderBottomLeftRadius: 0, borderBottomRightRadius: 0, borderColor: 'var(--color-primary)' } : {}}
+                        onClick={() => onSeleccionarProducto(p)}
+                        aria-label={`Agregar ${p.nombre}`}
+                      >
+                        <div className={styles.productCardBody}>
+                          <span className={styles.productName}>{p.nombre}</span>
+                          <div className={styles.productTallesColores}>
+                            {hayTalles && (
+                              <>
+                                <span className={styles.productTallesColoresLabel}>Talles:</span>
+                                <span className={styles.productTallesColoresVal}>{tallesUnicos.slice(0, 10).join(", ")}{tallesUnicos.length > 10 ? "…" : ""}</span>
+                              </>
+                            )}
+                            {hayTalles && hayColores && <span className={styles.productTallesColoresSep}> · </span>}
+                            {hayColores && (
+                              <>
+                                <span className={styles.productTallesColoresLabel}>Colores:</span>
+                                <span className={styles.productTallesColoresVal}>{coloresUnicos.slice(0, 8).join(", ")}{coloresUnicos.length > 8 ? "…" : ""}</span>
+                              </>
+                            )}
+                            {!hayAlgo && p.variantes.length > 0 && (
+                              <span className={styles.productTallesColoresVal}>{p.variantes.length} variante{p.variantes.length !== 1 ? "s" : ""} (sin talle/color cargado)</span>
+                            )}
+                          </div>
+                          <span className={styles.productPrice}>
+                            ${p.precioBase.toLocaleString("es-AR")}
+                          </span>
                         </div>
-                        <span className={styles.productPrice}>
-                          ${p.precioBase.toLocaleString("es-AR")}
-                        </span>
-                      </div>
-                      <Plus size={20} weight="bold" className={styles.productAddIcon} />
-                    </button>
+                        <Plus size={20} weight="bold" className={styles.productAddIcon} style={isExpanded ? { transform: 'rotate(45deg)', transition: 'transform 0.2s' } : { transition: 'transform 0.2s' }} />
+                      </button>
+
+                      {isExpanded && (
+                        <div style={{ padding: '0.75rem', backgroundColor: '#f9fafb', borderBottomLeftRadius: '0.5rem', borderBottomRightRadius: '0.5rem', border: '1px solid var(--color-primary)', borderTop: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.5rem', boxShadow: 'var(--shadow-sm)' }}>
+                          {p.variantes.map(v => {
+                            const stock = getStockActual(v);
+                            const sinStock = stock < 1;
+                            return (
+                              <button
+                                key={v.varianteId}
+                                type="button"
+                                disabled={sinStock}
+                                onClick={() => agregarVarianteAlCarrito(p, v)}
+                                style={{ padding: '0.5rem', fontSize: '0.8rem', backgroundColor: sinStock ? '#f3f4f6' : 'white', border: '1px solid #d1d5db', borderRadius: '0.375rem', cursor: sinStock ? 'not-allowed' : 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: sinStock ? 0.6 : 1, transition: 'all 0.15s ease' }}
+                                onMouseOver={(e) => { if (!sinStock) e.currentTarget.style.borderColor = 'var(--color-primary)'; }}
+                                onMouseOut={(e) => { if (!sinStock) e.currentTarget.style.borderColor = '#d1d5db'; }}
+                              >
+                                <span style={{ fontWeight: 600, color: sinStock ? '#9ca3af' : '#111827' }}>{v.sizeColor}</span>
+                                <span style={{ color: sinStock ? '#d1d5db' : '#6b7280', fontSize: '0.7rem', marginTop: '0.2rem' }}>{getSku(v) && `${getSku(v)} • `}Stk: {stock}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
                 {totalPaginas > 1 && (
@@ -396,67 +494,6 @@ export function PosPage() {
           </div>
         </section>
 
-        {/* Modal: elegir variante (talle/color) cuando el producto tiene varias */}
-        {productoModal && (
-          <div
-            className={styles.modalOverlay}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-variantes-title"
-            onClick={() => setProductoModal(null)}
-          >
-            <div
-              className={styles.modalContent}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={styles.modalHeader}>
-                <h2 id="modal-variantes-title" className={styles.modalTitle}>
-                  {productoModal.nombre}
-                </h2>
-                <button
-                  type="button"
-                  className={styles.modalClose}
-                  onClick={() => setProductoModal(null)}
-                  aria-label="Cerrar"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-              <p className={styles.modalSubtitle}>
-                Todas las variantes cargadas y su stock. Elegí una para agregar al carrito.
-              </p>
-              <ul className={styles.varianteList}>
-                {productoModal.variantes.map((v) => {
-                  const stock = getStockActual(v);
-                  const sinStock = stock < 1;
-                  return (
-                    <li key={v.varianteId}>
-                      <button
-                        type="button"
-                        className={`${styles.varianteCard} ${sinStock ? styles.varianteCardSinStock : ""}`}
-                        onClick={() => !sinStock && agregarVarianteAlCarrito(productoModal, v)}
-                        disabled={sinStock}
-                        aria-label={sinStock ? `${v.sizeColor} sin stock` : `Agregar ${v.sizeColor} (stock: ${stock})`}
-                      >
-                        <span className={styles.varianteTalleColor}>{v.sizeColor}</span>
-                        {getSku(v) && (
-                          <span className={styles.varianteSku}>{getSku(v)}</span>
-                        )}
-                        <span className={styles.varianteStock} title="Stock">
-                          Stock: {stock}
-                        </span>
-                        <span className={styles.variantePrecio}>
-                          ${productoModal.precioBase.toLocaleString("es-AR")}
-                        </span>
-                        {!sinStock && <Plus size={18} weight="bold" className={styles.productAddIcon} />}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
-        )}
 
         {/* ── Zona carrito + cliente + totales + pago ─────────────────────── */}
         <aside className={styles.cartSection} aria-label="Venta en curso">
@@ -534,9 +571,19 @@ export function PosPage() {
                         </span>
                       </div>
                       <div className={styles.cartItemBottom}>
-                        <span className={styles.cartItemDetail}>
-                          ${line.precioUnitario.toLocaleString("es-AR")} × {line.cantidad}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <span className={styles.cartItemDetail}>
+                            ${line.precioUnitario.toLocaleString("es-AR")} × {line.cantidad}
+                          </span>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#4b5563', cursor: 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={line.posibleDevolucion}
+                              onChange={() => togglePosibleDevolucion(line.id)}
+                            />
+                            Posible Devolución
+                          </label>
+                        </div>
                         <div className={styles.cartItemActions}>
                           <button
                             type="button"
@@ -571,30 +618,22 @@ export function PosPage() {
               )}
             </div>
 
-            {/* Descuento / Recargo global */}
-            <div className={styles.adjustmentsRow}>
+            {/* Ajuste Global (Descuento/Recargo) */}
+            <div className={styles.adjustmentsRow} style={{ gridTemplateColumns: '1fr' }}>
               <div className={styles.adjustmentField}>
-                <label className={styles.adjustmentLabel}>Descuento %</label>
+                <label className={styles.adjustmentLabel}>Ajuste Global (%) — Usar - para descuento</label>
                 <input
                   type="text"
                   className={styles.adjustmentInput}
-                  placeholder="0"
-                  value={descuentoGlobalPct}
-                  onChange={(e) => setDescuentoGlobalPct(e.target.value)}
+                  placeholder="Ej: -10 (Descuento) o 10 (Recargo)"
+                  value={ajusteGlobal}
+                  onChange={(e) => {
+                    // Permitir solo numeros y el signo menos
+                    const val = e.target.value.replace(/[^\d.,-]/g, '');
+                    setAjusteGlobal(val);
+                  }}
                   inputMode="decimal"
-                  aria-label="Descuento global en porcentaje"
-                />
-              </div>
-              <div className={styles.adjustmentField}>
-                <label className={styles.adjustmentLabel}>Recargo %</label>
-                <input
-                  type="text"
-                  className={styles.adjustmentInput}
-                  placeholder="0"
-                  value={recargoGlobalPct}
-                  onChange={(e) => setRecargoGlobalPct(e.target.value)}
-                  inputMode="decimal"
-                  aria-label="Recargo global en porcentaje"
+                  aria-label="Ajuste global (+ recargo / - descuento)"
                 />
               </div>
             </div>
@@ -660,6 +699,29 @@ export function PosPage() {
                   })()}
                 </span>
               </div>
+
+              {/* Sugerencias de Efectivo Visuales */}
+              {sugerenciasPago.length > 0 && (
+                <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#6b7280', textTransform: 'uppercase' }}>Cobro rápido (Efectivo)</span>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                    {sugerenciasPago.map((sug, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          const efectivo = metodosPago.find(m => m.nombre.toLowerCase().includes('efectivo'));
+                          if (efectivo) setMetodoPagoActivo(efectivo.id);
+                        }}
+                        style={{ padding: '0.3rem 0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem', backgroundColor: '#f9fafb', fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}
+                        aria-label={`Sugerencia de cobro: $${sug}`}
+                      >
+                        <Money size={14} /> ${sug.toLocaleString("es-AR")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Métodos de pago */}

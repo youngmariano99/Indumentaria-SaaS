@@ -35,6 +35,11 @@ export function DevolucionesPage() {
     const [modalVariantesPage, setModalVariantesPage] = useState(1);
     const LIMIT_VARIANTES_MODAL = 5;
 
+    const PAGE_SIZE = 20;
+    const [paginaActual, setPaginaActual] = useState(1);
+    const [verTodasLasVentas, setVerTodasLasVentas] = useState(false);
+    const [clienteInput, setClienteInput] = useState("");
+
     const [clienteSeleccionadoId, setClienteSeleccionadoId] = useState<string>("");
 
     // Las dos listas
@@ -114,6 +119,14 @@ export function DevolucionesPage() {
         if (p.nombre.toLowerCase().includes(q)) return true;
         return false; // se podria extender a sku/codigo barra
     });
+
+    const totalPaginas = Math.max(1, Math.ceil(productosFiltrados.length / PAGE_SIZE));
+    const indiceInicio = (paginaActual - 1) * PAGE_SIZE;
+    const productosPagina = productosFiltrados.slice(indiceInicio, indiceInicio + PAGE_SIZE);
+
+    useEffect(() => {
+        setPaginaActual(1);
+    }, [busqueda]);
 
     const agregarLista = (prod: ProductoLayerPosDto, variante: VarianteLayerPosDto, tipo: 'devuelve' | 'lleva') => {
         const newItem: DevLineItem = {
@@ -230,29 +243,45 @@ export function DevolucionesPage() {
                         {/* SECCIÓN DEL HISTORIAL DEL CLIENTE (Si hay cliente seleccionado y tiene compras) */}
                         {clienteSeleccionadoId && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <h3 style={{ margin: 0, fontSize: '1rem', color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>
-                                    Compras Recientes del Cliente {fetchingCliente && <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>(Cargando...)</span>}
+                                <h3 style={{ margin: 0, fontSize: '1rem', color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Compras Recientes del Cliente {fetchingCliente && <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>(Cargando...)</span>}</span>
+                                    <label style={{ fontSize: '0.85rem', fontWeight: 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={verTodasLasVentas} onChange={e => setVerTodasLasVentas(e.target.checked)} />
+                                        Ver todas las ventas
+                                    </label>
                                 </h3>
-                                {comprasRecientesCliente.length === 0 && !fetchingCliente && (
-                                    <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>No hay historial reciente para este cliente.</p>
-                                )}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
-                                    {comprasRecientesCliente.flatMap(c => c.detalles.map(d => ({ ...d, fechaCompra: c.fecha }))).slice(0, 15).map((d, idx) => (
-                                        <div key={`hist-${idx}`} style={{ border: '1px solid #dbeafe', backgroundColor: '#eff6ff', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0.75rem' }}>
-                                            <div style={{ marginBottom: '0.5rem' }}>
-                                                <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.85rem', color: '#1e3a8a' }}>{d.productoNombre}</h4>
-                                                <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#3b82f6', fontWeight: 600 }}>Talle/Color: {d.varianteNombre || "Única"}</p>
-                                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: '#60a5fa' }}>Comprado el {new Date(d.fechaCompra).toLocaleDateString()}</p>
-                                            </div>
-                                            <button
-                                                onClick={() => agregarDesdeHistorial(d)}
-                                                style={{ marginTop: 'auto', padding: '0.35rem', fontSize: '0.75rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: 600 }}
-                                            >
-                                                Devolver Prenda
-                                            </button>
+                                {(() => {
+                                    let historial = comprasRecientesCliente.flatMap(c => c.detalles.map(d => ({ ...d, fechaCompra: c.fecha })));
+                                    const hayPosibles = historial.some(d => d.posibleDevolucion);
+                                    if (!verTodasLasVentas && hayPosibles) {
+                                        historial = historial.filter(d => d.posibleDevolucion);
+                                    }
+
+                                    if (historial.length === 0 && !fetchingCliente) {
+                                        return <p style={{ fontSize: '0.85rem', color: '#6b7280' }}>No hay historial reciente para este cliente o no hay prendas marcadas como posible devolución.</p>;
+                                    }
+
+                                    return (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem' }}>
+                                            {historial.slice(0, 15).map((d, idx) => (
+                                                <div key={`hist-${idx}`} style={{ border: '1px solid #dbeafe', backgroundColor: '#eff6ff', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0.75rem' }}>
+                                                    <div style={{ marginBottom: '0.5rem' }}>
+                                                        <h4 style={{ margin: '0 0 0.25rem', fontSize: '0.85rem', color: '#1e3a8a' }}>{d.productoNombre}</h4>
+                                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', color: '#3b82f6', fontWeight: 600 }}>Talle/Color: {d.varianteNombre || "Única"}</p>
+                                                        <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: '#60a5fa' }}>Comprado el {new Date(d.fechaCompra).toLocaleDateString()}</p>
+                                                        {d.posibleDevolucion && <span style={{ display: 'inline-block', backgroundColor: '#dcfce7', color: '#166534', padding: '0.1rem 0.4rem', borderRadius: '0.25rem', fontSize: '0.65rem', marginBottom: '0.5rem', fontWeight: 600 }}>🌟 Posible Cambio</span>}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => agregarDesdeHistorial(d)}
+                                                        style={{ marginTop: 'auto', padding: '0.35rem', fontSize: '0.75rem', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: 600 }}
+                                                    >
+                                                        Devolver Prenda
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })()}
                             </div>
                         )}
 
@@ -260,7 +289,7 @@ export function DevolucionesPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <h3 style={{ margin: 0, fontSize: '1rem', color: '#111827', borderBottom: '2px solid #e5e7eb', paddingBottom: '0.5rem' }}>Catálogo General</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem', alignContent: 'start' }}>
-                                {productosFiltrados.slice(0, 50).map(p => (
+                                {productosPagina.map(p => (
                                     <div key={p.id} style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ backgroundColor: '#f3f4f6', height: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: '0.8rem' }}>
                                             Sin Imagen
@@ -287,6 +316,28 @@ export function DevolucionesPage() {
                                     </div>
                                 ))}
                             </div>
+
+                            {totalPaginas > 1 && (
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
+                                    <button
+                                        disabled={paginaActual <= 1}
+                                        onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
+                                        style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', background: 'white', cursor: paginaActual <= 1 ? 'not-allowed' : 'pointer', opacity: paginaActual <= 1 ? 0.5 : 1 }}
+                                    >
+                                        Anterior
+                                    </button>
+                                    <span style={{ alignSelf: 'center', fontSize: '0.875rem' }}>
+                                        Página {paginaActual} de {totalPaginas}
+                                    </span>
+                                    <button
+                                        disabled={paginaActual >= totalPaginas}
+                                        onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
+                                        style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', background: 'white', cursor: paginaActual >= totalPaginas ? 'not-allowed' : 'pointer', opacity: paginaActual >= totalPaginas ? 0.5 : 1 }}
+                                    >
+                                        Siguiente
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -298,14 +349,21 @@ export function DevolucionesPage() {
                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>
                             <User size={18} /> Cliente (Obligatorio)
                         </label>
-                        <select
-                            value={clienteSeleccionadoId}
-                            onChange={e => setClienteSeleccionadoId(e.target.value)}
+                        <input
+                            type="text"
+                            list="lista-clientes-dev"
+                            placeholder="Buscar por nombre o doc..."
+                            value={clienteInput}
+                            onChange={e => {
+                                setClienteInput(e.target.value);
+                                const found = clientes.find(c => `${c.nombre} (${c.documento || 'SD'})` === e.target.value);
+                                setClienteSeleccionadoId(found ? found.id : "");
+                            }}
                             style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
-                        >
-                            <option value="">Seleccione un cliente...</option>
-                            {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre} {c.documento ? `(${c.documento})` : ''}</option>)}
-                        </select>
+                        />
+                        <datalist id="lista-clientes-dev">
+                            {clientes.map(c => <option key={c.id} value={`${c.nombre} (${c.documento || 'SD'})`} />)}
+                        </datalist>
                     </div>
 
                     <div style={{ flex: 1, backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
