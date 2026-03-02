@@ -101,6 +101,7 @@ export function PosPage() {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<LineItem[]>([]);
   const [ajusteGlobal, setAjusteGlobal] = useState("");
+  const [montoRecibidoStr, setMontoRecibidoStr] = useState("");
 
   const [loadingInitial, setLoadingInitial] = useState(true);
   const [productos, setProductos] = useState<ProductoLayerPosDto[]>([]);
@@ -309,6 +310,22 @@ export function PosPage() {
 
   const sugerenciasPago = getSugerenciasPago(total);
 
+  const montoRecibido = parseFloat(montoRecibidoStr.replace(",", ".")) || 0;
+
+  let totalFinal = total;
+  const c = clientes.find(x => x.id === clienteSeleccionadoId);
+  if (usarSaldoCliente && c && c.saldoAFavor !== 0) {
+    if (c.saldoAFavor > 0) {
+      totalFinal -= Math.min(total, c.saldoAFavor);
+    } else {
+      totalFinal += Math.abs(c.saldoAFavor);
+    }
+  }
+  const totalAPagar = Math.max(0, totalFinal);
+
+  const vuelto = montoRecibido > totalAPagar ? (montoRecibido - totalAPagar) : 0;
+  const esEfectivoActivo = metodosPago.find(m => m.id === metodoPagoActivo)?.nombre.toLowerCase().includes('efectivo');
+
   const handleCobrar = async () => {
     if (carrito.length === 0 || (!metodoPagoActivo && total > 0)) return;
 
@@ -347,6 +364,7 @@ export function PosPage() {
       setCarrito([]);
       setAjusteGlobal("");
       setClienteSeleccionadoId("");
+      setMontoRecibidoStr("");
       setUsarSaldoCliente(false); // reseteamos billetera
       setCobroExitoso(`¡Cobro completado! Ticket: ${res.ventaId.split('-')[0]}`);
 
@@ -382,7 +400,7 @@ export function PosPage() {
               onChange={(e) => setBusqueda(e.target.value)}
               aria-label="Buscar o escanear productos"
             />
-            <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '0.25rem' }}>
+            <div style={{ right: '1rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '0.25rem', position: 'absolute' }}>
               <span style={{ fontSize: '0.65rem', backgroundColor: '#e5e7eb', color: '#6b7280', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}> <Keyboard size={12} /> F2</span>
             </div>
           </div>
@@ -684,21 +702,32 @@ export function PosPage() {
               })()}
               <div className={`${styles.totalRow} ${styles.totalRowFinal}`}>
                 <span>Total</span>
-                <span>
-                  ${(() => {
-                    let totalFinal = total;
-                    const c = clientes.find(x => x.id === clienteSeleccionadoId);
-                    if (usarSaldoCliente && c && c.saldoAFavor !== 0) {
-                      if (c.saldoAFavor > 0) {
-                        totalFinal -= Math.min(total, c.saldoAFavor);
-                      } else {
-                        totalFinal += Math.abs(c.saldoAFavor);
-                      }
-                    }
-                    return Math.max(0, totalFinal).toLocaleString("es-AR");
-                  })()}
-                </span>
+                <span>${totalAPagar.toLocaleString("es-AR")}</span>
               </div>
+
+              {/* Input Dinámico de Vuelto si es efectivo */}
+              {esEfectivoActivo && (
+                <div style={{ marginTop: '0.75rem', backgroundColor: '#f0fdf4', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #bbf7d0', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534' }}>Recibe: $</label>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={montoRecibidoStr}
+                      onChange={(e) => setMontoRecibidoStr(e.target.value.replace(/[^\d.,]/g, ''))}
+                      onFocus={(e) => e.target.select()}
+                      placeholder="0"
+                      style={{ width: '100px', textAlign: 'right', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', border: '1px solid #86efac', outline: 'none' }}
+                    />
+                  </div>
+                  {vuelto > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #bbf7d0', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#16a34a' }}>Vuelto:</span>
+                      <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#15803d' }}>${vuelto.toLocaleString("es-AR")}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Sugerencias de Efectivo Visuales */}
               {sugerenciasPago.length > 0 && (
@@ -712,6 +741,7 @@ export function PosPage() {
                         onClick={() => {
                           const efectivo = metodosPago.find(m => m.nombre.toLowerCase().includes('efectivo'));
                           if (efectivo) setMetodoPagoActivo(efectivo.id);
+                          setMontoRecibidoStr(sug.toString());
                         }}
                         style={{ padding: '0.3rem 0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem', backgroundColor: '#f9fafb', fontSize: '0.8rem', fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}
                         aria-label={`Sugerencia de cobro: $${sug}`}

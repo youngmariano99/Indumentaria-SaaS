@@ -633,7 +633,16 @@
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+  z-index: 10;
+  position: relative;
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+
+.paymentChipActive {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 @media (min-width: 480px) {
