@@ -396,8 +396,6 @@ export function DashboardPage() {
 
             </section>
 
-            {/* Bloque de texto: esta es la sección Dashboard */}
-
 
             {/* Segunda fila: ventas por día + top productos */}
             <section className={styles.grid} aria-label="Detalles de ventas">
