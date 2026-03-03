@@ -11,11 +11,8 @@ import {
   CheckCircle,
   Keyboard,
   Money,
-  QrCode,
-  Scan,
   Circle
 } from "@phosphor-icons/react";
-import { CameraScanner } from "./components/CameraScanner";
 import { posApi } from "./api/posApi";
 import type { MetodoPagoDto, ProductoLayerPosDto, VarianteLayerPosDto } from "./api/posApi";
 import { clientesApi } from "../catalog/api/clientesApi";
@@ -134,8 +131,6 @@ export function PosPage() {
 
   /** Paginación de la lista de productos */
   const [paginaActual, setPaginaActual] = useState(1);
-
-  const [mostrarCamara, setMostrarCamara] = useState(false);
   const [scannerHidActivo, setScannerHidActivo] = useState(true); // Siempre activo por el hook
 
   // Listeners de teclado (Barra de comandos)
@@ -247,8 +242,18 @@ export function PosPage() {
   }, [busqueda]);
 
   const agregarVarianteAlCarrito = (producto: ProductoLayerPosDto, variante: VarianteLayerPosDto) => {
+    const stock = getStockActual(variante);
+    if (stock <= 0) {
+      alert(`No hay stock disponible para ${producto.nombre} (${variante.sizeColor})`);
+      return;
+    }
+
     const existente = carrito.find((i) => i.varianteId === variante.varianteId);
     if (existente) {
+      if (existente.cantidad >= stock) {
+        alert(`No podés agregar más de este producto. Stock disponible: ${stock}`);
+        return;
+      }
       setCarrito((prev) =>
         prev.map((i) =>
           i.id === existente.id ? { ...i, cantidad: i.cantidad + 1 } : i
@@ -443,18 +448,9 @@ export function PosPage() {
                 <Circle size={8} weight="fill" color={scannerHidActivo ? '#10b981' : '#9ca3af'} />
                 Scanner Pistola
               </div>
-              <button
-                onClick={() => setMostrarCamara(true)}
-                className={styles.cameraToggle}
-                title="Usar cámara del celular"
-              >
-                <QrCode size={20} />
-              </button>
               <div style={{ fontSize: '0.65rem', backgroundColor: '#e5e7eb', color: '#6b7280', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}> <Keyboard size={12} /> F2</div>
             </div>
           </div>
-
-          {mostrarCamara && <CameraScanner onScan={handleScannedCode} onClose={() => setMostrarCamara(false)} />}
 
           <div className={styles.productList}>
             {loadingInitial ? (

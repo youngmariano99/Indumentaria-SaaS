@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { CaretLeft, ShoppingBag, Money, CalendarBlank, UserGear, Wallet, WhatsappLogo, PlusCircle, MinusCircle } from '@phosphor-icons/react';
 import { clientesApi } from './api/clientesApi';
 import type { Cliente360Dto } from './api/clientesApi';
+import { posApi, type MetodoPagoDto } from '../pos/api/posApi';
 
 export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp?: string, onCloseModal?: () => void }) {
     const { id } = useParams<{ id: string }>();
@@ -16,6 +17,8 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
     const [descripcionSaldo, setDescripcionSaldo] = useState('');
     const [operacionSaldo, setOperacionSaldo] = useState<'sumar' | 'restar'>('sumar');
     const [savingSaldo, setSavingSaldo] = useState(false);
+    const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
+    const [metodoPagoId, setMetodoPagoId] = useState('');
 
     // Estado Detalles de Transacción y Paginación
     const [detalleTxSeleccionada, setDetalleTxSeleccionada] = useState<any | null>(null);
@@ -35,7 +38,18 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
         if (effectiveId) {
             loadPerfil(effectiveId);
         }
+        loadMetodosPago();
     }, [effectiveId]);
+
+    const loadMetodosPago = async () => {
+        try {
+            const data = await posApi.obtenerMetodosPago();
+            setMetodosPago(data);
+            if (data.length > 0) setMetodoPagoId(data[0].id);
+        } catch (error) {
+            console.error('Error al cargar métodos de pago:', error);
+        }
+    };
 
     const loadPerfil = async (clienteId: string) => {
         setLoading(true);
@@ -73,9 +87,9 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
         setSavingSaldo(true);
         try {
             if (operacionSaldo === 'sumar') {
-                await clientesApi.agregarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo);
+                await clientesApi.agregarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo, metodoPagoId);
             } else {
-                await clientesApi.descontarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo);
+                await clientesApi.descontarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo, metodoPagoId);
             }
             alert(`Saldo ${operacionSaldo === 'sumar' ? 'agregado' : 'descontado'} correctamente.`);
             setShowSaldoModal(false);
@@ -357,8 +371,24 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
                                     placeholder="Ej: Ajuste manual, Devolución, etc."
                                 />
+
+                                <label style={{ display: 'block', margin: '1rem 0 0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Método de Pago</label>
+                                <select
+                                    value={metodoPagoId}
+                                    onChange={e => setMetodoPagoId(e.target.value)}
+                                    required
+                                    style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: 'white' }}
+                                >
+                                    <option value="">Seleccione un método...</option>
+                                    {metodosPago.map(m => (
+                                        <option key={m.id} value={m.id}>{m.nombre}</option>
+                                    ))}
+                                </select>
+
                                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
-                                    {operacionSaldo === 'sumar' ? 'Se sumará al favor del cliente.' : 'Se restará, pudiendo enviarlo a negativo (Deuda).'}
+                                    {operacionSaldo === 'sumar'
+                                        ? 'Se sumará al favor del cliente (Ingreso de caja).'
+                                        : 'Se restará (Salida de caja / Pago realizado).'}
                                 </p>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>

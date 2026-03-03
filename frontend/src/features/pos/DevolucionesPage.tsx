@@ -144,6 +144,13 @@ export function DevolucionesPage() {
     }, [busqueda]);
 
     const agregarLista = (prod: ProductoLayerPosDto, variante: VarianteLayerPosDto, tipo: 'devuelve' | 'lleva') => {
+        const stock = (variante as any).stockActual ?? (variante as any).StockActual ?? 0;
+
+        if (tipo === 'lleva' && stock <= 0) {
+            alert(`No hay stock disponible de ${prod.nombre} (${getVarianteLabel(variante)})`);
+            return;
+        }
+
         const newItem: DevLineItem = {
             id: `dev-${tipo}-${Date.now()}-${Math.random()}`,
             productId: prod.id,
@@ -164,6 +171,10 @@ export function DevolucionesPage() {
         } else {
             const ex = prendasLlevadas.find(i => i.varianteId === variante.varianteId);
             if (ex) {
+                if (ex.cantidad >= stock) {
+                    alert(`No podés llevar más unidades de las disponibles (${stock}).`);
+                    return;
+                }
                 setPrendasLlevadas(prev => prev.map(i => i.id === ex.id ? { ...i, cantidad: i.cantidad + 1 } : i));
             } else {
                 setPrendasLlevadas(prev => [...prev, newItem]);
@@ -190,6 +201,18 @@ export function DevolucionesPage() {
         if (tipo === 'devuelve') {
             setPrendasDevueltas(prev => prev.map(i => i.id === id ? { ...i, cantidad: Math.max(0, i.cantidad + delta) } : i).filter(i => i.cantidad > 0));
         } else {
+            const item = prendasLlevadas.find(i => i.id === id);
+            if (item && delta > 0) {
+                // Buscar stock actual en el catálogo para validar
+                const pOrig = productos.find(p => p.id === item.productId);
+                const vOrig = pOrig?.variantes?.find(v => v.varianteId === item.varianteId);
+                const stock = (vOrig as any)?.stockActual ?? (vOrig as any)?.StockActual ?? 0;
+
+                if (item.cantidad + delta > stock) {
+                    alert(`Stock insuficiente. Solo quedan ${stock} unidades.`);
+                    return;
+                }
+            }
             setPrendasLlevadas(prev => prev.map(i => i.id === id ? { ...i, cantidad: Math.max(0, i.cantidad + delta) } : i).filter(i => i.cantidad > 0));
         }
     };
@@ -335,18 +358,12 @@ export function DevolucionesPage() {
                                         </p>
 
                                         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                                                <button
-                                                    onClick={() => seleccionarProducto(p, 'devuelve')}
-                                                    style={{ flex: 1, padding: '0.25rem', fontSize: '0.7rem', backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: 600 }}
-                                                >
-                                                    + Devuelve
-                                                </button>
-                                                <button
-                                                    onClick={() => seleccionarProducto(p, 'lleva')}
-                                                    style={{ flex: 1, padding: '0.25rem', fontSize: '0.7rem', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: 600 }}
-                                                >
-                                                    + Se Lleva
-                                                </button>
+                                            <button
+                                                onClick={() => seleccionarProducto(p, 'lleva')}
+                                                style={{ flex: 1, padding: '0.25rem', fontSize: '0.7rem', backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '0.25rem', cursor: 'pointer', fontWeight: 600 }}
+                                            >
+                                                + Se Lleva
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -495,21 +512,26 @@ export function DevolucionesPage() {
             {productoModal && (
                 <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
                     <div style={{ backgroundColor: "white", padding: "1.5rem", borderRadius: "0.5rem", width: "100%", maxWidth: "400px" }}>
-                        <h3 style={{ margin: "0 0 1rem" }}>{productoModal.type === 'devuelve' ? 'Devuelve:' : 'Lleva:'} {productoModal.prod.nombre}</h3>
+                        <h3 style={{ margin: "0 0 1rem" }}>Seleccionar Variante para Cambio: {productoModal.prod.nombre}</h3>
                         <p style={{ fontSize: "0.85rem", color: "#666", marginBottom: "1rem" }}>Seleccioná la variante exacta (talle/color).</p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "300px", overflowY: "auto" }}>
                             {productoModal.prod.variantes
                                 .slice((modalVariantesPage - 1) * LIMIT_VARIANTES_MODAL, modalVariantesPage * LIMIT_VARIANTES_MODAL)
-                                .map((v) => (
-                                    <button
-                                        key={v.varianteId}
-                                        onClick={() => { agregarLista(productoModal.prod, v, productoModal.type); setProductoModal(null); }}
-                                        style={{ display: "flex", justifyContent: "space-between", padding: "0.75rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", background: "#f9fafb", cursor: "pointer", textAlign: "left" }}
-                                    >
-                                        <span style={{ fontWeight: 500 }}>{getVarianteLabel(v)}</span>
-                                        <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>Stock: {((v as any).stockActual || (v as any).StockActual || 0)}</span>
-                                    </button>
-                                ))}
+                                .map((v) => {
+                                    const stock = (v as any).stockActual || (v as any).StockActual || 0;
+                                    const isDisabled = productoModal.type === 'lleva' && stock <= 0;
+                                    return (
+                                        <button
+                                            key={v.varianteId}
+                                            disabled={isDisabled}
+                                            onClick={() => { agregarLista(productoModal.prod, v, productoModal.type); setProductoModal(null); }}
+                                            style={{ display: "flex", justifyContent: "space-between", padding: "0.75rem", border: "1px solid #e5e7eb", borderRadius: "0.375rem", background: isDisabled ? "#f3f4f6" : "#f9fafb", cursor: isDisabled ? "not-allowed" : "pointer", textAlign: "left", opacity: isDisabled ? 0.6 : 1 }}
+                                        >
+                                            <span style={{ fontWeight: 500 }}>{getVarianteLabel(v)}</span>
+                                            <span style={{ fontSize: "0.85rem", color: isDisabled ? "#9ca3af" : "#6b7280" }}>Stock: {stock}</span>
+                                        </button>
+                                    );
+                                })}
                         </div>
 
                         {/* Paginación de Variantes */}

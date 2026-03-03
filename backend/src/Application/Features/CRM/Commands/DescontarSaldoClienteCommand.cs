@@ -11,6 +11,7 @@ public class DescontarSaldoClienteCommand : IRequest<decimal>
     public Guid ClienteId { get; set; }
     public decimal Monto { get; set; }
     public string Descripcion { get; set; } = string.Empty;
+    public Guid? MetodoPagoId { get; set; }
 }
 
 public class DescontarSaldoClienteCommandHandler : IRequestHandler<DescontarSaldoClienteCommand, decimal>
@@ -46,7 +47,8 @@ public class DescontarSaldoClienteCommandHandler : IRequestHandler<DescontarSald
             ClienteId = cliente.Id,
             Monto = request.Monto, // Monto abs, el tipo lo define como Egreso
             Tipo = Core.Entities.TipoMovimientoSaldo.Egreso,
-            Descripcion = request.Descripcion
+            Descripcion = request.Descripcion,
+            MetodoPagoId = request.MetodoPagoId
         };
 
         _context.MovimientosSaldosClientes.Add(movimiento);

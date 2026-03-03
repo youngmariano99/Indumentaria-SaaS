@@ -75,3 +75,14 @@ Infraestructura: Iniciar con niveles gratuitos (Free Tier) de Oracle Cloud o Azu
 Eficiencia de Datos: Implementar índices compuestos (tenant_id + fecha_emision) y particionamiento de tablas para grandes cadenas de locales.
 
 Telemetría: Crear una tabla de Uso para registrar cada acción cobrable (facturas, talles cargados), fundamental para su modelo de facturación híbrida.
+
+7. Estrategia de Etiquetado e Impresión Industrial
+
+Generación de Etiquetas: Se utiliza un motor dual que renderiza códigos de barras (1D) para logística interna y QR (2D) para interacción del cliente, garantizando la trazabilidad por variante única.
+
+Motor de Renderizado PDF: A diferencia del `window.print()` convencional, se optó por una estrategia de captura DOM via `html2canvas` y orquestación con `jsPDF`. Esto permite:
+- Control MILIMÉTRICO de márgenes para impresoras térmicas (Zebra/Brother).
+- Paginación inteligente automática para lotes de cientos de etiquetas.
+- Descarga directa asíncrona que no bloquea el hilo principal de la UI.
+
+Estandarización de Grillas: Uso de CSS Grid calculado dinámicamente para ajustar N-etiquetas por fila según el soporte físico (Térmico, A4 o A3).

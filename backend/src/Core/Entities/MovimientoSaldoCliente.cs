@@ -27,5 +27,10 @@ public class MovimientoSaldoCliente : BaseEntity, IMustHaveTenant
     public Guid? VentaIdAsociada { get; set; }
     public Venta? VentaAsociada { get; set; }
 
+    // Relación opcional con el método de pago (Efectivo, Transferencia, etc.) 
+    // Útil para arqueo de caja en ajustes manuales
+    public Guid? MetodoPagoId { get; set; }
+    public MetodoPago? MetodoPago { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

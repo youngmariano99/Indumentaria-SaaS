@@ -79,8 +79,23 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                     PosibleDevolucion = detalleDto.PosibleDevolucion
                 });
 
-                // Descuento de stock pospuesto: Requiere consultar la tabla Inventario
-                // TO-DO: Implementar Domain Event -> InventarioCalculatedEvent
+                // 2. Actualizar Stock en el Inventario (Sucursal Global por ahora)
+                var inventario = await _context.Inventarios
+                    .FirstOrDefaultAsync(i => i.ProductVariantId == variante.Id && i.TenantId == tenantId, cancellationToken);
+                
+                if (inventario != null)
+                {
+                    if (inventario.StockActual < detalleDto.Cantidad)
+                    {
+                        throw new Exception($"Stock insuficiente para '{productoPadre.Nombre} - {variante.Talle} / {variante.Color}'. Disponible: {inventario.StockActual}, Requerido: {detalleDto.Cantidad}");
+                    }
+                    inventario.StockActual -= detalleDto.Cantidad;
+                }
+                else
+                {
+                    // Si no existe el registro de inventario, lanzamos error (no se puede vender algo que no existe en inventario)
+                    throw new Exception($"No se encontró registro de inventario para '{productoPadre.Nombre} - {variante.Talle} / {variante.Color}'. No se puede realizar la venta.");
+                }
             }
 
             // 1. Calculamos los extra globales

@@ -4,6 +4,8 @@ import { Printer, X, QrCode } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Barcode from 'react-barcode';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 /**
  * Propósito: Generar una vista previa e impresión de etiquetas térmicas para SKUs seleccionados.
@@ -25,15 +27,78 @@ interface Props {
 }
 
 export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
-    const [formato, setFormato] = useState<'termico' | 'a4'>('termico');
+    const [formato, setFormato] = useState<'termico' | 'a4' | 'a3'>('termico');
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const handlePrint = () => {
         window.print();
     };
 
     const getEtiquetaUrl = (sku: string) => {
-        // En producción sería la URL real del producto o un endpoint de consulta rápida
         return `${window.location.origin}/pos?scan=${sku}`;
+    };
+
+    const handleDownloadPDF = async () => {
+        const area = document.getElementById('print-area');
+        if (!area) return;
+
+        setIsGenerating(true);
+        // Guardamos estilos originales para restaurar después
+        const originalStyle = area.style.cssText;
+
+        try {
+            // Forzamos que se muestre todo para la captura
+            area.style.maxHeight = 'none';
+            area.style.overflow = 'visible';
+            area.style.display = 'block';
+
+            const canvas = await html2canvas(area, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                windowWidth: area.scrollWidth,
+                windowHeight: area.scrollHeight
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdfFormat = formato === 'termico' ? [50, 30] : (formato === 'a3' ? 'a3' : 'a4');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: pdfFormat
+            });
+
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            // Calculamos cuánta "altura de imagen" entra en una página física de PDF
+            const imgHeightInPdf = (imgProps.height * pdfWidth) / imgProps.width;
+
+            let heightLeft = imgHeightInPdf;
+            let position = 0;
+
+            // Primera página
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightInPdf);
+            heightLeft -= pdfHeight;
+
+            // Páginas adicionales si sobran etiquetas
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeightInPdf;
+                pdf.addPage(pdfFormat);
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightInPdf);
+                heightLeft -= pdfHeight;
+            }
+
+            pdf.save(`etiquetas_${new Date().getTime()}.pdf`);
+        } catch (err) {
+            console.error("Error generating PDF:", err);
+            alert("Error al generar el PDF. Probá usando la opción Imprimir.");
+        } finally {
+            area.style.cssText = originalStyle;
+            setIsGenerating(false);
+        }
     };
 
     return (
@@ -53,6 +118,7 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                             <select value={formato} onChange={(e) => setFormato(e.target.value as any)}>
                                 <option value="termico">Ticketera Térmica (50x30mm)</option>
                                 <option value="a4">Hoja A4 (Grilla)</option>
+                                <option value="a3">Hoja A3 (Grilla)</option>
                             </select>
                         </div>
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-500)', fontSize: '0.8rem' }}>
@@ -60,9 +126,18 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                         </div>
                     </div>
 
-                    <div id="print-area" className={formato === 'termico' ? styles.previewContainer : styles.previewContainerA4}>
+                    <div
+                        id="print-area"
+                        className={
+                            formato === 'termico' ? styles.previewContainer :
+                                formato === 'a3' ? styles.previewContainerA3 : styles.previewContainerA4
+                        }
+                    >
                         {etiquetas.map((etique, idx) => (
-                            <div key={idx} className={formato === 'termico' ? styles.etiquetaIndividual : styles.etiquetaA4}>
+                            <div key={idx} className={
+                                formato === 'termico' ? styles.etiquetaIndividual :
+                                    formato === 'a3' ? styles.etiquetaA3 : styles.etiquetaA4
+                            }>
                                 <div className={styles.codesSection}>
                                     <div className={styles.barcodeWrap}>
                                         <Barcode
@@ -92,9 +167,17 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
 
                 <footer className={styles.footer}>
                     <Button variant="secundario" onClick={onClose}>Cancelar</Button>
+                    <Button
+                        variant="secundario"
+                        onClick={handleDownloadPDF}
+                        disabled={isGenerating}
+                        iconLeft={<QrCode size={20} />}
+                    >
+                        {isGenerating ? 'Generando...' : 'Descargar PDF'}
+                    </Button>
                     <Button onClick={handlePrint} className={styles.printBtn}>
                         <Printer size={20} weight="bold" />
-                        Imprimir Ahora
+                        Imprimir
                     </Button>
                 </footer>
             </div>

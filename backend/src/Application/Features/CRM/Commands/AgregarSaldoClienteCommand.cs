@@ -11,6 +11,7 @@ public class AgregarSaldoClienteCommand : IRequest<decimal>
     public Guid ClienteId { get; set; }
     public decimal Monto { get; set; }
     public string Descripcion { get; set; } = string.Empty;
+    public Guid? MetodoPagoId { get; set; }
 }
 
 public class AgregarSaldoClienteCommandHandler : IRequestHandler<AgregarSaldoClienteCommand, decimal>
@@ -44,7 +45,8 @@ public class AgregarSaldoClienteCommandHandler : IRequestHandler<AgregarSaldoCli
             ClienteId = cliente.Id,
             Monto = request.Monto,
             Tipo = Core.Entities.TipoMovimientoSaldo.Ingreso,
-            Descripcion = request.Descripcion
+            Descripcion = request.Descripcion,
+            MetodoPagoId = request.MetodoPagoId
         };
 
         _context.MovimientosSaldosClientes.Add(movimiento);

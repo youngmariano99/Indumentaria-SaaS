@@ -257,7 +257,7 @@ export function CategoriasPage() {
                     {/* Barra de búsqueda y filtros */}
                     <div className={baseStyles.searchBar}>
                         <div className={baseStyles.searchInputWrap}>
-                            <MagnifyingGlass size={18} className={baseStyles.searchIcon} weight="magnifying-glass" />
+                            <MagnifyingGlass size={18} className={baseStyles.searchIcon} />
                             <input
                                 className={baseStyles.searchInput}
                                 type="text"

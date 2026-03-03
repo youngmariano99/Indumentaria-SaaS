@@ -55,7 +55,25 @@ public class CrearDevolucionCommandHandler : IRequestHandler<CrearDevolucionComm
                 var precioUnidad = varianteDb.PrecioOverride ?? prod.PrecioBase;
                 totalDevueltoALaTienda += precioUnidad * devuelto.Cantidad;
                 
-                // NOTA: La alteración de stock dependerá del evento de Inventario, pero por ahora lo inyectaremos
+                // Actualizar Stock: INCREMENTO (Vuelve a la tienda)
+                var inv = await _context.Inventarios
+                    .FirstOrDefaultAsync(i => i.ProductVariantId == varianteDb.Id && i.TenantId == tenantId, cancellationToken);
+                
+                if (inv != null)
+                {
+                    inv.StockActual += devuelto.Cantidad;
+                }
+                else
+                {
+                    _context.Inventarios.Add(new Inventario
+                    {
+                        TenantId = tenantId,
+                        StoreId = Guid.Empty,
+                        ProductVariantId = varianteDb.Id,
+                        StockActual = devuelto.Cantidad,
+                        StockMinimo = 0
+                    });
+                }
             }
 
             // 2. Procesar lo que SE LLEVA el cliente nuevo (Restamos de su favor y perdemos stock)
@@ -71,6 +89,23 @@ public class CrearDevolucionCommandHandler : IRequestHandler<CrearDevolucionComm
 
                 var precioUnidad = varianteDb.PrecioOverride ?? prod.PrecioBase;
                 totalLlevadoDeLaTienda += precioUnidad * llevado.Cantidad;
+
+                // Actualizar Stock: DECREMENTO (Se lo lleva el cliente)
+                var inv = await _context.Inventarios
+                    .FirstOrDefaultAsync(i => i.ProductVariantId == varianteDb.Id && i.TenantId == tenantId, cancellationToken);
+                
+                if (inv != null)
+                {
+                    if (inv.StockActual < llevado.Cantidad)
+                    {
+                        throw new Exception($"Stock insuficiente para el cambio: '{prod.Nombre} - {varianteDb.Talle} / {varianteDb.Color}'. Disponible: {inv.StockActual}, Requerido: {llevado.Cantidad}");
+                    }
+                    inv.StockActual -= llevado.Cantidad;
+                }
+                else
+                {
+                    throw new Exception($"No se encontró registro de inventario para el cambio: '{prod.Nombre} - {varianteDb.Talle} / {varianteDb.Color}'.");
+                }
             }
 
             // 3. Matemáticas de cruce

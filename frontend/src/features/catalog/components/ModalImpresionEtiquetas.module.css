@@ -100,7 +100,8 @@
   overflow-y: auto;
 }
 
-.previewContainerA4 {
+.previewContainerA4,
+.previewContainerA3 {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 10px;
@@ -111,10 +112,15 @@
   overflow-y: auto;
 }
 
+.previewContainerA3 {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
 /* ── DISEÑO DE ETIQUETA ─────────────────────────────────────────── */
 
 .etiquetaIndividual,
-.etiquetaA4 {
+.etiquetaA4,
+.etiquetaA3 {
   background: white;
   border: 1px dashed #ccc;
   padding: 8px;
@@ -122,9 +128,11 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  width: 200px;
-  /* Base width */
+  width: 100%;
+  /* Tomar el ancho del grid */
+  max-width: 200px;
   position: relative;
+  page-break-inside: avoid;
 }
 
 .etiquetaIndividual {
@@ -200,70 +208,77 @@
 
 /* ── PRINT LOGIC ─────────────────────────────────────────────────── */
 @media print {
-  body * {
-    visibility: hidden;
+
+  /* No ocultar el body completamente, solo elementos disruptivos */
+  .overlay {
+    background: white !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    backdrop-filter: none !important;
   }
 
-  .previewContainer,
-  .previewContainer * {
-    visibility: visible;
+  .modal {
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
-  .previewContainer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    background: white;
-    padding: 0;
-    display: block;
-    /* Imprimir una debajo de otra o según flujo */
-  }
-
-  .etiquetaIndividual {
-    width: 50mm;
-    /* Ajustar según papel térmico común */
-    height: 30mm;
-    border: none;
-    margin-bottom: 5mm;
-    page-break-inside: avoid;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid black;
-    /* Borde muy fino para corte */
-  }
-
-  /* Ocultar elementos de la UI del modal durante impresión */
-  .overlay,
+  /* Ocultar UI que no es el área de impresión */
   .header,
   .footer,
-  .content>p,
   .optionsBar {
     display: none !important;
   }
 
-  /* Formato A4 */
-  .previewContainerA4 {
+  .content {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #print-area {
     display: block !important;
-    visibility: visible !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 210mm;
-    /* A4 width */
-    height: auto;
+    overflow: visible !important;
+    background: white !important;
     padding: 0 !important;
     margin: 0 !important;
+    max-height: none !important;
+    width: 100% !important;
+  }
+
+  .previewContainer {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .previewContainerA4,
+  .previewContainerA3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    /* Ajuste para A4/A3 */
+    gap: 5mm !important;
     border: none !important;
   }
 
-  .etiquetaA4 {
-    visibility: visible !important;
-    float: left;
-    margin: 0.2cm;
+  .etiquetaIndividual {
+    width: 50mm;
+    height: 30mm;
+    border: 0.1mm solid #eee !important;
+    margin: 0;
+    page-break-after: always;
+  }
+
+  .etiquetaA4,
+  .etiquetaA3 {
+    border: 0.1mm solid #eee !important;
     page-break-inside: avoid;
-    border: 1px solid #ddd !important;
   }
 }

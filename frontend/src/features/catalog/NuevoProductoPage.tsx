@@ -75,6 +75,11 @@ export function NuevoProductoPage() {
     const [inputAtributoClave, setInputAtributoClave] = useState("");
     const [inputAtributoValor, setInputAtributoValor] = useState("");
 
+    // ── Atributos específicos por variante (Modal) ──
+    const [modalFilaIdx, setModalFilaIdx] = useState<number | null>(null);
+    const [bulkAtributoClave, setBulkAtributoClave] = useState("");
+    const [bulkAtributoValor, setBulkAtributoValor] = useState("");
+
     // ── Estado UI ──────────────────────────────────────────────────────────────
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -143,21 +148,27 @@ export function NuevoProductoPage() {
             setTalles(Array.from(tallesUnicos));
             setColores(Array.from(coloresUnicos));
 
-            // Poblar las filas con los IDs de DB preexistentes
+            // Poblar las filas con los IDs de DB preexistentes y sus atributos
             const mapper: FilaVariante[] = prod.variantes.map(v => {
+                let specificAttrs: Record<string, string> = {};
+                try {
+                    specificAttrs = JSON.parse(v.atributosJson || "{}");
+                } catch { }
+
                 return {
-                    id: v.id, // importante para mandar al PUT
+                    id: v.id,
                     talle: v.talle,
                     color: v.color,
                     sku: v.sku || "",
                     precioCosto: String(v.precioCosto || 0),
                     precioOverride: v.precioOverride ? String(v.precioOverride) : "",
-                    stockInicial: String(v.stockActual || 0)
+                    stockInicial: String(v.stockActual || 0),
+                    atributos: specificAttrs
                 };
             });
             setFilas(mapper);
 
-            // Tratar de derivar atributos extra (solo lo hacemos del primer item si existen, simplificación)
+            // Cargar atributos globales del primer item solo como base visual si corresponde
             if (prod.variantes.length > 0) {
                 try {
                     const firstAttrs = JSON.parse(prod.variantes[0].atributosJson || "{}");
@@ -181,7 +192,7 @@ export function NuevoProductoPage() {
             for (const color of colores) {
                 const existente = filas.find(f => f.talle === talle && f.color === color);
                 nuevasFilas.push(
-                    existente ?? { talle, color, sku: "", precioCosto: "", precioOverride: "", stockInicial: "0" }
+                    existente ?? { talle, color, sku: "", precioCosto: "", precioOverride: "", stockInicial: "0", atributos: {} }
                 );
             }
         }
@@ -302,6 +313,45 @@ export function NuevoProductoPage() {
         setBulkCosto("");
         setBulkStock("");
         setBulkSku("");
+        setBulkAtributoClave("");
+        setBulkAtributoValor("");
+    };
+
+    // ── Aplicar atributos masivos ──────────────────────────────────────────
+    const aplicarAtributoMasivo = () => {
+        const c = bulkAtributoClave.trim();
+        const v = bulkAtributoValor.trim();
+        if (!c) return;
+
+        const seleccionadasArray = Array.from(seleccionadas);
+        setFilas(prev => {
+            const next = [...prev];
+            for (const i of seleccionadasArray) {
+                const attrs = { ...(next[i].atributos || {}) };
+                attrs[c] = v;
+                next[i] = { ...next[i], atributos: attrs };
+            }
+            return next;
+        });
+        setBulkAtributoClave("");
+        setBulkAtributoValor("");
+    };
+
+    const quitarAtributoEspecifico = (filaIdx: number, clave: string) => {
+        setFilas(prev => prev.map((f, i) => {
+            if (i !== filaIdx) return f;
+            const nextAttrs = { ...(f.atributos || {}) };
+            delete nextAttrs[clave];
+            return { ...f, atributos: nextAttrs };
+        }));
+    };
+
+    const agregarAtributoEspecifico = (filaIdx: number, clave: string, valor: string) => {
+        if (!clave.trim()) return;
+        setFilas(prev => prev.map((f, i) => {
+            if (i !== filaIdx) return f;
+            return { ...f, atributos: { ...(f.atributos || {}), [clave.trim()]: valor.trim() } };
+        }));
     };
 
     // ── Atributos adicionales ──────────────────────────────────────────────────
@@ -376,15 +426,19 @@ export function NuevoProductoPage() {
                     ean13: ean13.trim(),
                     origen: origen.trim(),
                     escalaTalles: escalaTalles.trim(),
-                    variantes: filas.map(f => ({
-                        talle: f.talle,
-                        color: f.color,
-                        sku: f.sku.trim(),
-                        precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
-                        precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
-                        stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
-                        atributos: atributosMap,
-                    })),
+                    variantes: filas.map(f => {
+                        // Fusionar atributos globales del formulario con atributos específicos de la fila
+                        const finalAttrs = { ...atributosMap, ...(f.atributos || {}) };
+                        return {
+                            talle: f.talle,
+                            color: f.color,
+                            sku: f.sku.trim(),
+                            precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
+                            precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
+                            stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
+                            atributos: finalAttrs,
+                        };
+                    }),
                 });
                 setSuccess(`¡Producto creado! ID: ${resp.id} — ${filas.length} variantes guardadas.`);
                 setNombre(""); setDescripcion(""); setPrecioBase(""); setTemporada("");
@@ -689,59 +743,8 @@ export function NuevoProductoPage() {
                         {/* ── Barra de edición masiva ──────────────────────────────────── */}
                         {seleccionadas.size > 0 && (
                             <div className={styles.bulkBar}>
-                                <span className={styles.bulkLabel}>
-                                    Aplicar a {seleccionadas.size} fila{seleccionadas.size !== 1 ? "s" : ""}:
-                                </span>
-                                <div className={styles.bulkFields}>
-                                    <div className={styles.bulkField}>
-                                        <label className={styles.bulkFieldLabel}>Precio esp. $</label>
-                                        <input
-                                            className={styles.tableInput}
-                                            type="number" min="0" step="0.01"
-                                            placeholder="ej: 25000"
-                                            value={bulkPrecio}
-                                            onChange={e => setBulkPrecio(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className={styles.bulkField}>
-                                        <label className={styles.bulkFieldLabel}>Costo $</label>
-                                        <input
-                                            className={styles.tableInput}
-                                            type="number" min="0" step="0.01"
-                                            placeholder="ej: 12000"
-                                            value={bulkCosto}
-                                            onChange={e => setBulkCosto(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className={styles.bulkField}>
-                                        <label className={styles.bulkFieldLabel}>Stock inicial</label>
-                                        <input
-                                            className={styles.tableInput}
-                                            type="number" min="0" step="1"
-                                            placeholder="ej: 10"
-                                            value={bulkStock}
-                                            onChange={e => setBulkStock(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className={styles.bulkField}>
-                                        <label className={styles.bulkFieldLabel}>SKU <span title="Escalado automático habilitado si termina en número" style={{ cursor: 'help' }}>(Auto)</span></label>
-                                        <input
-                                            className={styles.tableInput}
-                                            type="text"
-                                            placeholder="ej: REM-01"
-                                            value={bulkSku}
-                                            onChange={e => setBulkSku(e.target.value.toUpperCase())}
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className={styles.bulkApplyBtn}
-                                        onClick={aplicarASeleccionadas}
-                                        disabled={bulkPrecio === "" && bulkCosto === "" && bulkStock === "" && bulkSku === ""}
-                                    >
-                                        <CheckCircle size={15} weight="bold" />
-                                        Aplicar
-                                    </button>
+                                <div className={styles.bulkHeader}>
+                                    <span className={styles.bulkLabel}>Acción masiva ({seleccionadas.size} variantes seleccionadas)</span>
                                     <button
                                         type="button"
                                         className={styles.bulkCancelBtn}
@@ -749,6 +752,97 @@ export function NuevoProductoPage() {
                                     >
                                         Deseleccionar
                                     </button>
+                                </div>
+
+                                <div className={styles.bulkSection}>
+                                    {/* Grupo 1: Precios y Stock */}
+                                    <div className={styles.bulkGroup}>
+                                        <div className={styles.bulkGroupTitle}>
+                                            <Tag size={12} weight="bold" /> Valores Generales
+                                        </div>
+                                        <div className={styles.bulkFields}>
+                                            <div className={styles.bulkField}>
+                                                <span className={styles.bulkFieldLabel}>Precio $</span>
+                                                <input
+                                                    className={styles.tableInput}
+                                                    type="number"
+                                                    placeholder="ej: 15000"
+                                                    value={bulkPrecio}
+                                                    onChange={e => setBulkPrecio(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className={styles.bulkField}>
+                                                <span className={styles.bulkFieldLabel}>Costo $</span>
+                                                <input
+                                                    className={styles.tableInput}
+                                                    type="number"
+                                                    placeholder="ej: 12000"
+                                                    value={bulkCosto}
+                                                    onChange={e => setBulkCosto(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className={styles.bulkField}>
+                                                <span className={styles.bulkFieldLabel}>Stock</span>
+                                                <input
+                                                    className={styles.tableInput}
+                                                    type="number"
+                                                    placeholder="ej: 20"
+                                                    value={bulkStock}
+                                                    onChange={e => setBulkStock(e.target.value)}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={styles.bulkApplyBtn}
+                                                onClick={aplicarASeleccionadas}
+                                                disabled={!bulkPrecio && !bulkCosto && !bulkStock}
+                                                title="Aplicar valores a seleccionadas"
+                                            >
+                                                <CheckCircle size={14} weight="bold" />
+                                                Aplicar
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.bulkDivider}></div>
+
+                                    {/* Grupo 2: Detalles/Atributos */}
+                                    <div className={styles.bulkGroup}>
+                                        <div className={styles.bulkGroupTitle}>
+                                            <Plus size={12} weight="bold" /> Detalles Específicos
+                                        </div>
+                                        <div className={styles.bulkFields}>
+                                            <div className={styles.bulkField}>
+                                                <span className={styles.bulkFieldLabel}>Clave</span>
+                                                <input
+                                                    className={styles.tableInput}
+                                                    placeholder="ej: Estampa"
+                                                    value={bulkAtributoClave}
+                                                    onChange={e => setBulkAtributoClave(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className={styles.bulkField}>
+                                                <span className={styles.bulkFieldLabel}>Valor</span>
+                                                <input
+                                                    className={styles.tableInput}
+                                                    placeholder="ej: Dragon"
+                                                    value={bulkAtributoValor}
+                                                    onChange={e => setBulkAtributoValor(e.target.value)}
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={styles.bulkApplyBtn}
+                                                style={{ backgroundColor: '#6366f1' }}
+                                                onClick={aplicarAtributoMasivo}
+                                                disabled={!bulkAtributoClave.trim()}
+                                                title="Asignar detalle a seleccionadas"
+                                            >
+                                                <Plus size={14} weight="bold" />
+                                                Asignar
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -765,6 +859,7 @@ export function NuevoProductoPage() {
                                 <table className={styles.table}>
                                     <thead>
                                         <tr>
+                                            <th style={{ width: 100 }}>Detalles</th>
                                             <th style={{ width: 32, textAlign: "center" }}>
                                                 <input
                                                     type="checkbox"
@@ -791,6 +886,28 @@ export function NuevoProductoPage() {
                                                 onClick={() => toggleFila(idx)}
                                                 style={{ cursor: "pointer" }}
                                             >
+                                                <td onClick={e => e.stopPropagation()}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setModalFilaIdx(idx)}
+                                                        className={styles.detailsBtn}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            fontSize: '0.7rem',
+                                                            padding: '2px 6px',
+                                                            backgroundColor: Object.keys(fila.atributos || {}).length > 0 ? '#eff6ff' : '#f3f4f6',
+                                                            color: Object.keys(fila.atributos || {}).length > 0 ? '#2563eb' : '#6b7280',
+                                                            border: '1px solid',
+                                                            borderColor: Object.keys(fila.atributos || {}).length > 0 ? '#bfdbfe' : '#d1d5db',
+                                                            borderRadius: '4px'
+                                                        }}
+                                                    >
+                                                        <PlusCircle size={12} />
+                                                        {Object.keys(fila.atributos || {}).length > 0 ? `${Object.keys(fila.atributos || {}).length} detalles` : "Añadir"}
+                                                    </button>
+                                                </td>
                                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
                                                     <input
                                                         type="checkbox"
@@ -1002,6 +1119,100 @@ export function NuevoProductoPage() {
 
                 </form>
             </div>
+            {/* ── Modal de Atributos Específicos ── */}
+            {modalFilaIdx !== null && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(2px)' }}>
+                    <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.75rem', width: '100%', maxWidth: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Detalles de Variante: {filas[modalFilaIdx].talle} / {filas[modalFilaIdx].color}</h3>
+                            <button type="button" onClick={() => setModalFilaIdx(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#6b7280' }}>
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1.25rem' }}>
+                            Agregá características únicas para esta variante (ej: Estampa: "Dragon"). Estos valores sobreescriben los globales del producto.
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                            {Object.entries(filas[modalFilaIdx].atributos || {}).map(([clave, valor]) => (
+                                <div key={clave} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                                    <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#374151', minWidth: '80px' }}>{clave}:</span>
+                                    <span style={{ fontSize: '0.8rem', color: '#6b7280', flex: 1 }}>{valor}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => quitarAtributoEspecifico(modalFilaIdx, clave)}
+                                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', padding: '2px' }}
+                                    >
+                                        <Trash size={14} />
+                                    </button>
+                                </div>
+                            ))}
+                            {Object.keys(filas[modalFilaIdx].atributos || {}).length === 0 && (
+                                <div style={{ textAlign: 'center', padding: '1rem', color: '#9ca3af', fontSize: '0.8rem', border: '2px dashed #e5e7eb', borderRadius: '8px' }}>
+                                    No hay detalles específicos cargados.
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+                            <input
+                                id="modalAttrClave"
+                                className={styles.tableInput}
+                                placeholder="Clave (ej: Estampa)"
+                                style={{ flex: 1 }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const val = (document.getElementById('modalAttrValor') as HTMLInputElement).value;
+                                        agregarAtributoEspecifico(modalFilaIdx, e.currentTarget.value, val);
+                                        e.currentTarget.value = "";
+                                        (document.getElementById('modalAttrValor') as HTMLInputElement).value = "";
+                                        e.currentTarget.focus();
+                                    }
+                                }}
+                            />
+                            <input
+                                id="modalAttrValor"
+                                className={styles.tableInput}
+                                placeholder="Valor"
+                                style={{ flex: 1 }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const clave = (document.getElementById('modalAttrClave') as HTMLInputElement).value;
+                                        agregarAtributoEspecifico(modalFilaIdx, clave, e.currentTarget.value);
+                                        (document.getElementById('modalAttrClave') as HTMLInputElement).value = "";
+                                        e.currentTarget.value = "";
+                                        document.getElementById('modalAttrClave')?.focus();
+                                    }
+                                }}
+                            />
+                            <button
+                                type="button"
+                                className={styles.addAtributoBtn}
+                                onClick={() => {
+                                    const c = (document.getElementById('modalAttrClave') as HTMLInputElement).value;
+                                    const v = (document.getElementById('modalAttrValor') as HTMLInputElement).value;
+                                    agregarAtributoEspecifico(modalFilaIdx, c, v);
+                                    (document.getElementById('modalAttrClave') as HTMLInputElement).value = "";
+                                    (document.getElementById('modalAttrValor') as HTMLInputElement).value = "";
+                                }}
+                            >
+                                <Plus size={14} />
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setModalFilaIdx(null)}
+                            style={{ width: '100%', marginTop: '1.5rem', padding: '0.6rem', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                            Listo
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

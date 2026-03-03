@@ -192,6 +192,28 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
+## Sprint 4.6: Atributos Dinámicos y Refinamiento UI (Completado)
+**Fecha de Finalización:** 03/03/2026
+**Objetivo:** Permitir personalización profunda por variante y pulir la experiencia de usuario en la matriz de carga.
+
+*   [x] **Frontend:** Modal de "Detalles Extra" por variante en la matriz de productos.
+*   [x] **Frontend:** Refactor de la Barra de Edición Masiva (Bulk Edit) modular y estética.
+*   [x] **Frontend:** Bloqueo de ventas con stock 0 y alertas de inventario POS.
+*   [x] **Frontend:** Refinamiento del origen de devoluciones.
+
+---
+
+## Sprint 4.7: Métodos de Pago en Ajustes de Saldo (Completado)
+**Fecha de Finalización:** 03/03/2026
+**Objetivo:** Garantizar la integridad del arqueo de caja permitiendo trazar el medio de pago en cargas manuales de dinero.
+
+*   [x] **Backend:** Extensión de `MovimientoSaldoCliente` con `MetodoPagoId`.
+*   [x] **Backend:** Actualización de comandos MediatR para persistencia de origen financiero.
+*   [x] **Frontend:** Selector dinámico de métodos de pago en Modal de Saldo del Perfil 360.
+
+---
+
+
 ## Sprint 5: Middleware Fiscal "Nexo" (ARCA/AFIP)
 **Objetivo:** Desarrollar una API independiente para la gestión del ciclo de vida fiscal (ARCA) con alta disponibilidad.
 

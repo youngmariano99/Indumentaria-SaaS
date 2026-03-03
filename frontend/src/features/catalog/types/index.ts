@@ -91,4 +91,5 @@ export interface FilaVariante {
     precioCosto: string;    // string para el input controlado; se convierte a number al enviar
     precioOverride: string; // string; "" = no override
     stockInicial: string;   // string; se convierte a int al enviar
+    atributos?: Record<string, string>;
 }

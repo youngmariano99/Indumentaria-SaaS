@@ -90,13 +90,13 @@ export const clientesApi = {
         await apiClient.delete(`/Clientes/${id}`);
     },
 
-    agregarSaldo: async (id: string, monto: number, descripcion: string): Promise<number> => {
-        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, { monto, descripcion });
+    agregarSaldo: async (id: string, monto: number, descripcion: string, metodoPagoId?: string): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, { monto, descripcion, metodoPagoId });
         return response.data;
     },
 
-    descontarSaldo: async (id: string, monto: number, descripcion: string): Promise<number> => {
-        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/restar`, { monto, descripcion });
+    descontarSaldo: async (id: string, monto: number, descripcion: string, metodoPagoId?: string): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/restar`, { monto, descripcion, metodoPagoId });
         return response.data;
     }
 }
