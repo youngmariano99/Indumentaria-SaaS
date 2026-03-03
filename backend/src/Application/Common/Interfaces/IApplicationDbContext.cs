@@ -10,6 +10,9 @@ public interface IApplicationDbContext
     DbSet<Categoria> Categorias { get; }
     DbSet<Producto> Productos { get; }
     DbSet<VarianteProducto> VariantesProducto { get; }
+    DbSet<Usuario> Usuarios { get; }
+    DbSet<ModuloSuscripcion> ModulosSuscripcion { get; }
+    DbSet<LogAuditoria> LogsAuditoria { get; }
     DbSet<Inventario> Inventarios { get; }
 
     DatabaseFacade Database { get; }

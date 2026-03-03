@@ -6,6 +6,7 @@ namespace Core.Entities;
 public class Producto : BaseEntity, IMustHaveTenant, ISoftDelete
 {
     public Guid TenantId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public string Nombre { get; set; } = string.Empty;
     public string Descripcion { get; set; } = string.Empty;

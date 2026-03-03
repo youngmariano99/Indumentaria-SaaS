@@ -17,6 +17,13 @@ public class VentaDetalle : BaseEntity, IMustHaveTenant
     // Congela el precio pagado en caso de inflación futura
     public decimal PrecioUnitarioAplicado { get; set; }
     
+    // Congela el costo al momento de la venta para reportes de rentabilidad exactos
+    public decimal CostoUnitarioAplicado { get; set; }
+
+    // Desglose impositivo para reporte de IVA Digital
+    public decimal AlicuotaIvaPct { get; set; } = 21; // Por defecto 21%
+    public decimal MontoIvaTotal { get; set; }
+
     // Cantidad * PrecioUnitarioAplicado
     public decimal SubtotalLinea { get; set; }
     

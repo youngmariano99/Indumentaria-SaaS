@@ -118,15 +118,17 @@ export function AppLayout() {
                         <span>Devoluciones</span>
                     </NavLink>
 
-                    <button
-                        type="button"
-                        className={styles.navItem}
+                    <NavLink
+                        to="/reportes"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
                     >
                         <span className={styles.navItemIcon}>
                             <ChartLine size={20} weight="bold" />
                         </span>
                         <span>Reportes</span>
-                    </button>
+                    </NavLink>
 
                     <NavLink
                         to="/clientes"

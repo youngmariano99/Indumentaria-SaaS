@@ -69,12 +69,21 @@ public class CobrarTicketCommandHandler : IRequestHandler<CobrarTicketCommand, G
                 var subtotalReal = precioReal * detalleDto.Cantidad;
                 montoRealCalculado += subtotalReal;
 
+                // Cálculo automático de IVA (Asumimos 21% por defecto para indumentaria)
+                // Se guarda el desglose para reportes fiscales sin intervención del usuario
+                decimal alicuotaIva = 21m;
+                decimal baseImponible = subtotalReal / (1 + (alicuotaIva / 100m));
+                decimal montoIva = subtotalReal - baseImponible;
+
                 venta.Detalles.Add(new VentaDetalle
                 {
                     TenantId = tenantId,
                     VarianteProductoId = variante.Id,
                     Cantidad = detalleDto.Cantidad,
                     PrecioUnitarioAplicado = precioReal,
+                    CostoUnitarioAplicado = variante.PrecioCosto, 
+                    AlicuotaIvaPct = alicuotaIva,
+                    MontoIvaTotal = Math.Round(montoIva, 2),
                     SubtotalLinea = subtotalReal,
                     PosibleDevolucion = detalleDto.PosibleDevolucion
                 });

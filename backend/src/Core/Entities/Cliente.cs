@@ -8,6 +8,7 @@ namespace Core.Entities;
 public class Cliente : BaseEntity, IMustHaveTenant, ISoftDelete
 {
     public Guid TenantId { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public string Documento { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;

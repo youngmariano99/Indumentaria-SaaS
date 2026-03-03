@@ -1,41 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Storefront, UserPlus } from "@phosphor-icons/react";
+import { reportsApi, type DashboardDto } from "../reports/api/reportsApi";
 import styles from "./DashboardPage.module.css";
 
-const salesLast7Days = [
-  { day: "Lun", value: 18_500 },
-  { day: "Mar", value: 21_200 },
-  { day: "Mié", value: 19_800 },
-  { day: "Jue", value: 24_100 },
-  { day: "Vie", value: 28_900 },
-  { day: "Sáb", value: 31_400 },
-  { day: "Dom", value: 17_600 },
-];
-
-const paymentByMethodToday = [
-  { label: "Efectivo", amount: 120_000, color: "#22c55e" },
-  { label: "Tarjeta débito", amount: 85_000, color: "#3b82f6" },
-  { label: "Tarjeta crédito", amount: 64_000, color: "#a855f7" },
-  { label: "QR / billetera", amount: 41_000, color: "#f97316" },
-];
-
-const topProducts = [
-  { name: "Jean Mom Azul", sold: 82, revenue: 945_000 },
-  { name: "Remera Oversize Blanca", sold: 64, revenue: 512_000 },
-  { name: "Campera Cargo Verde", sold: 37, revenue: 666_000 },
-];
-
-const carteraClientes = {
-  clientesConDeuda: 32,
-  clientesActivos: 156,
-  deudaTotal: 1_250_000,
-};
-
-const productosStatsMock = {
-  nuevosHoy: 3,
-  sinStock: 12,
-  stockBajo: 7,
+const PAYMENT_COLORS: Record<string, string> = {
+  "Efectivo": "#22c55e",
+  "Tarjeta débito": "#3b82f6",
+  "Tarjeta crédito": "#a855f7",
+  "QR / billetera": "#f97316",
+  "Transferencia": "#06b6d4"
 };
 
 const modulosDisponibles = [
@@ -138,16 +112,48 @@ export function DashboardPage() {
   const [hoveredDayIndex, setHoveredDayIndex] = useState<number | null>(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
 
-  const totalProductos = contexto === "saas" ? 324 : 187;
+  const [data, setData] = useState<DashboardDto | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const totalIngresosHoy = paymentByMethodToday.reduce(
-    (acc, m) => acc + m.amount,
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const dashboardData = await reportsApi.getDashboard();
+        setData(dashboardData);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <div className={styles.loading}>Cargando dashboard...</div>;
+  }
+
+  if (!data) {
+    return <div className={styles.error}>Error al cargar los datos del dashboard.</div>;
+  }
+
+  // Mapeo selectivo según contexto (por ahora solo Saas tiene datos reales)
+  const totalProductos = contexto === "saas" ? data.totalProductos : 0;
+
+  const totalIngresosHoy = data.metodosPagoHoy.reduce(
+    (acc, m) => acc + m.montoTotal,
     0,
   );
 
-  const paymentSegments = paymentByMethodToday.map((m) => ({
+  const paymentByMethodTodayFormatted = data.metodosPagoHoy.map(m => ({
+    label: m.nombre,
+    amount: m.montoTotal,
+    color: PAYMENT_COLORS[m.nombre] || "#94a3b8"
+  }));
+
+  const paymentSegments = paymentByMethodTodayFormatted.map((m) => ({
     ...m,
-    pct: (m.amount / totalIngresosHoy) * 100,
+    pct: totalIngresosHoy > 0 ? (m.amount / totalIngresosHoy) * 100 : 0,
   }));
 
   let offsetAcc = 25;
@@ -157,9 +163,8 @@ export function DashboardPage() {
     return { ...seg, offset: currentOffset };
   });
 
-  const maxSales = Math.max(...salesLast7Days.map((d) => d.value));
+  const maxSales = Math.max(...data.ventasUltimos7Dias.map((d) => d.valor), 1);
   const esTiendaOnline = contexto === "tienda";
-  const diasRestantesMembresia = 30;
 
   return (
     <>
@@ -177,15 +182,15 @@ export function DashboardPage() {
                 className={`${styles.userMetricPill} ${styles.userMetricPillActive}`}
               >
                 <span className={styles.userMetricLabel}>Activos</span>
-                <span className={styles.userMetricValue}>—</span>
+                <span className={styles.userMetricValue}>{data.usuariosActivos}</span>
               </div>
               <div className={styles.userMetricPill}>
                 <span className={styles.userMetricLabel}>Registrados</span>
-                <span className={styles.userMetricValue}>—</span>
+                <span className={styles.userMetricValue}>{data.usuariosRegistrados}</span>
               </div>
             </div>
             <div className={styles.userMetricsFootnote}>
-              {diasRestantesMembresia} días de servicio restantes
+              {data.diasRestantesMembresia} días de servicio restantes
             </div>
           </div>
 
@@ -257,13 +262,13 @@ export function DashboardPage() {
                     <div className={styles.cardMiniRow}>
                       <span className={styles.cardMiniLabel}>Nuevos hoy</span>
                       <span className={styles.cardMiniValue}>
-                        {productosStatsMock.nuevosHoy}
+                        {data.productosNuevosHoy}
                       </span>
                     </div>
                     <div className={styles.cardMiniRow}>
                       <span className={styles.cardMiniLabel}>Sin stock</span>
                       <span className={styles.cardMiniValue}>
-                        {productosStatsMock.sinStock}
+                        {data.productosSinStock}
                       </span>
                     </div>
                     <div className={styles.cardMiniRow}>
@@ -271,7 +276,7 @@ export function DashboardPage() {
                         Stock bajo (menos de 5)
                       </span>
                       <span className={styles.cardMiniValue}>
-                        {productosStatsMock.stockBajo}
+                        {data.productosStockBajo}
                       </span>
                     </div>
                   </div>
@@ -365,7 +370,7 @@ export function DashboardPage() {
                   <div className={styles.carteraStats}>
                     <div className={styles.carteraStatMain}>
                       <span className={styles.carteraStatValue}>
-                        {carteraClientes.clientesConDeuda}
+                        {data.carteraClientes.clientesConDeuda}
                       </span>
                       <span className={styles.carteraStatLabel}>
                         clientes con saldo pendiente
@@ -374,13 +379,13 @@ export function DashboardPage() {
                     <div className={styles.carteraStatRow}>
                       <span className={styles.carteraStatLabel}>Clientes activos</span>
                       <span className={styles.carteraStatValueSmall}>
-                        {carteraClientes.clientesActivos}
+                        {data.carteraClientes.clientesActivos}
                       </span>
                     </div>
                     <div className={styles.carteraStatRow}>
                       <span className={styles.carteraStatLabel}>Deuda total</span>
                       <span className={styles.carteraStatValueSmall}>
-                        ${carteraClientes.deudaTotal.toLocaleString("es-AR")}
+                        ${data.carteraClientes.deudaTotal.toLocaleString("es-AR")}
                       </span>
                     </div>
                   </div>
@@ -443,10 +448,10 @@ export function DashboardPage() {
                       <polyline
                         fill="url(#areaGradient)"
                         stroke="none"
-                        points={`${salesLast7Days
+                        points={`${data.ventasUltimos7Dias
                           .map((d, idx) => {
                             const x = (idx / 6) * 100;
-                            const y = 40 - (d.value / maxSales) * 28 - 4;
+                            const y = 40 - (d.valor / maxSales) * 28 - 4;
                             return `${x},${y}`;
                           })
                           .join(" ")} 100,40 0,40`}
@@ -455,22 +460,22 @@ export function DashboardPage() {
                         fill="none"
                         stroke="#6366f1"
                         strokeWidth="1.5"
-                        points={salesLast7Days
+                        points={data.ventasUltimos7Dias
                           .map((d, idx) => {
                             const x = (idx / 6) * 100;
-                            const y = 40 - (d.value / maxSales) * 28 - 4;
+                            const y = 40 - (d.valor / maxSales) * 28 - 4;
                             return `${x},${y}`;
                           })
                           .join(" ")}
                       />
-                      {salesLast7Days.map((d, idx) => {
+                      {data.ventasUltimos7Dias.map((d, idx) => {
                         const x = (idx / 6) * 100;
-                        const y = 40 - (d.value / maxSales) * 28 - 4;
+                        const y = 40 - (d.valor / maxSales) * 28 - 4;
                         const isActive =
                           idx === (selectedDayIndex ?? hoveredDayIndex ?? -1);
                         return (
                           <circle
-                            key={d.day}
+                            key={d.dia + idx}
                             cx={x}
                             cy={y}
                             r={isActive ? 2.1 : 1.4}
@@ -499,15 +504,16 @@ export function DashboardPage() {
                       if (idx != null) {
                         return (
                           <>
-                            {salesLast7Days[idx].day}: $
-                            {salesLast7Days[idx].value.toLocaleString("es-AR")}
+                            {data.ventasUltimos7Dias[idx].dia}: $
+                            {data.ventasUltimos7Dias[idx].valor.toLocaleString("es-AR")}
                           </>
                         );
                       }
+                      const total7Dias = data.ventasUltimos7Dias.reduce((acc, v) => acc + v.valor, 0);
                       return (
                         <>
                           Promedio diario: $
-                          {Math.round(totalIngresosHoy / 7).toLocaleString(
+                          {Math.round(total7Dias / 7).toLocaleString(
                             "es-AR",
                           )}
                           .
@@ -531,29 +537,33 @@ export function DashboardPage() {
                     </div>
                   </div>
                   <div className={styles.topProductsList}>
-                    {topProducts.map((p, idx) => {
-                      const maxSold = topProducts[0].sold;
-                      const width = Math.round((p.sold / maxSold) * 100);
-                      return (
-                        <div key={p.name} className={styles.topProductRow}>
-                          <div className={styles.topProductMeta}>
-                            <span className={styles.topProductName}>
-                              {idx + 1}. {p.name}
-                            </span>
-                            <span className={styles.topProductSub}>
-                              {p.sold} unidades · $
-                              {p.revenue.toLocaleString("es-AR")}
-                            </span>
+                    {data.topProductosSemana.length > 0 ? (
+                      data.topProductosSemana.map((p, idx) => {
+                        const maxSold = data.topProductosSemana[0].cantidadVendida;
+                        const width = Math.round((p.cantidadVendida / maxSold) * 100);
+                        return (
+                          <div key={p.nombre} className={styles.topProductRow}>
+                            <div className={styles.topProductMeta}>
+                              <span className={styles.topProductName}>
+                                {idx + 1}. {p.nombre}
+                              </span>
+                              <span className={styles.topProductSub}>
+                                {p.cantidadVendida} unidades · $
+                                {p.totalMonto.toLocaleString("es-AR")}
+                              </span>
+                            </div>
+                            <div className={styles.topProductBarOuter}>
+                              <div
+                                className={styles.topProductBarInner}
+                                style={{ width: `${width}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className={styles.topProductBarOuter}>
-                            <div
-                              className={styles.topProductBarInner}
-                              style={{ width: `${width}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <p className={styles.cardSub}>No hay ventas registradas en los últimos 7 días.</p>
+                    )}
                   </div>
                 </div>
               </div>
