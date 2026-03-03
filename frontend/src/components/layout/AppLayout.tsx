@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
     House,
@@ -7,7 +7,8 @@ import {
     GearSix,
     Folder,
     Users,
-    Swap
+    Swap,
+    UserCircle
 } from "@phosphor-icons/react";
 import styles from "./AppLayout.module.css";
 
@@ -19,22 +20,40 @@ import styles from "./AppLayout.module.css";
 export function AppLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         if (typeof window === "undefined") return true;
+        // En mobile el sidebar arranca siempre colapsado (solo iconos)
         return window.innerWidth > 768;
     });
+
+    // Cerrar automáticamente el sidebar cuando el viewport baja a mobile,
+    // y reabrirlo por defecto cuando vuelve a desktop.
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        const handleResize = () => {
+            if (window.innerWidth <= 768) {
+                setSidebarOpen(false);
+            } else {
+                setSidebarOpen(true);
+            }
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     return (
         <div className={`${styles.shell} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
             <aside className={`${styles.sidebar} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
                 <div className={styles.sidebarHeader}>
-                    <NavLink to="/dashboard" className={styles.sidebarLogo}>
-                        <div className={styles.sidebarLogoMark}>PI</div>
-                        <span>POS Indumentaria</span>
-                    </NavLink>
+                    {/* Logo minimal: solo usamos el espacio para el toggle, sin marca visual */}
+                    <div className={styles.sidebarLogo} />
                     <button
                         type="button"
                         className={styles.sidebarToggle}
                         aria-label={sidebarOpen ? "Colapsar menú" : "Expandir menú"}
-                        onClick={() => setSidebarOpen(v => !v)}
+                        onClick={() => {
+                            // En mobile no permitimos expandir el sidebar (solo iconos)
+                            if (typeof window !== "undefined" && window.innerWidth <= 768) return;
+                            setSidebarOpen(v => !v);
+                        }}
                     >
                         ☰
                     </button>
@@ -119,6 +138,18 @@ export function AppLayout() {
                             <Users size={20} weight="bold" />
                         </span>
                         <span>Clientes y CRM</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/cuenta"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
+                    >
+                        <span className={styles.navItemIcon}>
+                            <UserCircle size={20} weight="bold" />
+                        </span>
+                        <span>Mi cuenta</span>
                     </NavLink>
 
                     <NavLink

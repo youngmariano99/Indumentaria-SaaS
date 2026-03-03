@@ -104,9 +104,6 @@ export function AjustesPage() {
                         Talles por tipo
                     </button>
                     <button type="button" className={styles.tab} disabled>
-                        Mi cuenta <span className={styles.tabBadge}>Próximamente</span>
-                    </button>
-                    <button type="button" className={styles.tab} disabled>
                         Notificaciones <span className={styles.tabBadge}>Próximamente</span>
                     </button>
                 </div>
