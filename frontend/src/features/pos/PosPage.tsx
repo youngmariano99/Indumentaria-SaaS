@@ -11,12 +11,17 @@ import {
   CheckCircle,
   Keyboard,
   Money,
+  QrCode,
+  Scan,
+  Circle
 } from "@phosphor-icons/react";
+import { CameraScanner } from "./components/CameraScanner";
 import { posApi } from "./api/posApi";
 import type { MetodoPagoDto, ProductoLayerPosDto, VarianteLayerPosDto } from "./api/posApi";
 import { clientesApi } from "../catalog/api/clientesApi";
 import type { ClienteDto } from "../catalog/api/clientesApi";
 import styles from "./PosPage.module.css";
+import { useBarcodeScanner } from "../../hooks/useBarcodeScanner";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
 type LineItem = {
@@ -130,6 +135,9 @@ export function PosPage() {
   /** Paginación de la lista de productos */
   const [paginaActual, setPaginaActual] = useState(1);
 
+  const [mostrarCamara, setMostrarCamara] = useState(false);
+  const [scannerHidActivo, setScannerHidActivo] = useState(true); // Siempre activo por el hook
+
   // Listeners de teclado (Barra de comandos)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -149,6 +157,36 @@ export function PosPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  useBarcodeScanner((scannedValue) => {
+    const val = scannedValue.trim();
+    if (!val) return;
+
+    // Feedback visual de que el scanner leyó algo
+    setScannerHidActivo(false);
+    setTimeout(() => setScannerHidActivo(true), 500);
+
+    // Buscar el producto...
+    handleScannedCode(val);
+  });
+
+  const handleScannedCode = (val: string) => {
+    const pFound = productos.find(p =>
+      getEan13(p) === val || p.variantes.some(v => getSku(v) === val)
+    );
+
+    if (pFound) {
+      const vFound = pFound.variantes.find(v => getSku(v) === val);
+      if (vFound) {
+        agregarVarianteAlCarrito(pFound, vFound);
+      } else if (pFound.variantes.length === 1) {
+        agregarVarianteAlCarrito(pFound, pFound.variantes[0]);
+      } else {
+        setExpandedProductId(pFound.id);
+        setBusqueda("");
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -400,10 +438,23 @@ export function PosPage() {
               onChange={(e) => setBusqueda(e.target.value)}
               aria-label="Buscar o escanear productos"
             />
-            <div style={{ right: '1rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '0.25rem', position: 'absolute' }}>
-              <span style={{ fontSize: '0.65rem', backgroundColor: '#e5e7eb', color: '#6b7280', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}> <Keyboard size={12} /> F2</span>
+            <div style={{ right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '0.5rem', position: 'absolute', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: scannerHidActivo ? '#10b981' : '#9ca3af', fontWeight: 600, padding: '2px 6px', backgroundColor: scannerHidActivo ? '#f0fdf4' : '#f3f4f6', borderRadius: '4px' }}>
+                <Circle size={8} weight="fill" color={scannerHidActivo ? '#10b981' : '#9ca3af'} />
+                Scanner Pistola
+              </div>
+              <button
+                onClick={() => setMostrarCamara(true)}
+                className={styles.cameraToggle}
+                title="Usar cámara del celular"
+              >
+                <QrCode size={20} />
+              </button>
+              <div style={{ fontSize: '0.65rem', backgroundColor: '#e5e7eb', color: '#6b7280', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}> <Keyboard size={12} /> F2</div>
             </div>
           </div>
+
+          {mostrarCamara && <CameraScanner onScan={handleScannedCode} onClose={() => setMostrarCamara(false)} />}
 
           <div className={styles.productList}>
             {loadingInitial ? (

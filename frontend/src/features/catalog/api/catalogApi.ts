@@ -43,5 +43,14 @@ export const catalogApi = {
      */
     eliminarProducto: async (id: string): Promise<void> => {
         await apiClient.delete(`/productos/${id}`);
+    },
+
+    /**
+     * Importa un lote de productos.
+     * Endpoint: POST /api/productos/batch
+     */
+    importarBatch: async (data: any[]): Promise<number> => {
+        const response = await apiClient.post<number>('/productos/batch', data);
+        return response.data;
     }
 };

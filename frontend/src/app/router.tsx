@@ -12,6 +12,7 @@ import { CategoriasPage } from "../features/catalog/CategoriasPage";
 import { ClientesPage } from "../features/catalog/ClientesPage";
 import { PerfilClientePage } from "../features/catalog/PerfilClientePage";
 import { DevolucionesPage } from "../features/pos/DevolucionesPage";
+import { ImportarCatalogoPage } from "../features/catalog/ImportarCatalogoPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
       { path: "/catalogo", element: <CatalogoPage /> },
       { path: "/catalogo/nuevo", element: <NuevoProductoPage /> },
       { path: "/catalogo/editar/:id", element: <NuevoProductoPage /> },
+      { path: "/catalogo/importar", element: <ImportarCatalogoPage /> },
       { path: "/categorias", element: <CategoriasPage /> },
       { path: "/ajustes", element: <AjustesPage /> },
       { path: "/pos", element: <PosPage /> },

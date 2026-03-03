@@ -18,6 +18,22 @@
   flex-direction: column;
   gap: var(--space-3);
   overflow-x: hidden;
+  padding-bottom: 5rem;
+  /* Espacio para el botón de cobrar fijo en mobile */
+}
+
+@media (max-width: 899px) {
+  .cobrarBtn {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1rem;
+    right: 1rem;
+    width: calc(100% - 2rem) !important;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    height: 60px;
+    font-size: 1.1rem;
+  }
 }
 
 /* Pantallas muy chicas */

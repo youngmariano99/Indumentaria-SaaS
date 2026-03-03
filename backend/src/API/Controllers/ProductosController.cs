@@ -42,6 +42,17 @@ public class ProductosController : ControllerBase
     }
 
     /// <summary>
+    /// Crea múltiples productos con sus variantes en un solo lote.
+    /// POST /api/productos/batch
+    /// </summary>
+    [HttpPost("batch")]
+    public async Task<IActionResult> CrearProductosBatch([FromBody] List<CrearProductoDto> request)
+    {
+        var productosCreados = await _mediator.Send(new CrearProductosBatchCommand { Productos = request });
+        return Ok(new { Count = productosCreados });
+    }
+
+    /// <summary>
     /// Obtiene un producto por ID (para usar como ruta de CreatedAtAction).
     /// GET /api/productos/{id}
     /// </summary>

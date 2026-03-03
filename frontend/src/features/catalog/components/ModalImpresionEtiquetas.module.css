@@ -1,0 +1,269 @@
+/* frontend/src/features/catalog/components/ModalImpresionEtiquetas.module.css */
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: white;
+  width: 90%;
+  max-width: 600px;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+.header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h3 {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  color: var(--gray-900);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+.content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.optionsBar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: 8px;
+  align-items: center;
+}
+
+.optionField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.optionField label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.optionField select {
+  padding: 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--gray-300);
+}
+
+.previewContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.previewContainerA4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #eee;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+/* ── DISEÑO DE ETIQUETA ─────────────────────────────────────────── */
+
+.etiquetaIndividual,
+.etiquetaA4 {
+  background: white;
+  border: 1px dashed #ccc;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 200px;
+  /* Base width */
+  position: relative;
+}
+
+.etiquetaIndividual {
+  width: 50mm;
+  height: 30mm;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.codesSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4px;
+}
+
+.barcodeWrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.qrWrap {
+  flex-shrink: 0;
+}
+
+.textSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  text-align: center;
+}
+
+.labelNombre {
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.labelSpecs {
+  display: flex;
+  gap: 8px;
+  font-size: 0.65rem;
+  color: #444;
+}
+
+.labelPrecio {
+  font-weight: 800;
+  color: #000;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.footer {
+  padding: 1.5rem;
+  border-top: 1px solid var(--gray-100);
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.printBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── PRINT LOGIC ─────────────────────────────────────────────────── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .previewContainer,
+  .previewContainer * {
+    visibility: visible;
+  }
+
+  .previewContainer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white;
+    padding: 0;
+    display: block;
+    /* Imprimir una debajo de otra o según flujo */
+  }
+
+  .etiquetaIndividual {
+    width: 50mm;
+    /* Ajustar según papel térmico común */
+    height: 30mm;
+    border: none;
+    margin-bottom: 5mm;
+    page-break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid black;
+    /* Borde muy fino para corte */
+  }
+
+  /* Ocultar elementos de la UI del modal durante impresión */
+  .overlay,
+  .header,
+  .footer,
+  .content>p,
+  .optionsBar {
+    display: none !important;
+  }
+
+  /* Formato A4 */
+  .previewContainerA4 {
+    display: block !important;
+    visibility: visible !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    /* A4 width */
+    height: auto;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  .etiquetaA4 {
+    visibility: visible !important;
+    float: left;
+    margin: 0.2cm;
+    page-break-inside: avoid;
+    border: 1px solid #ddd !important;
+  }
+}

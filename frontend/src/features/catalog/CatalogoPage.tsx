@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     Package,
+    Plus,
     PlusCircle,
     WarningCircle,
     MagnifyingGlass,
@@ -13,12 +14,16 @@ import {
     PencilSimple,
     ArrowSquareOut,
     Trash,
+    UploadSimple,
+    Printer
 } from "@phosphor-icons/react";
 import { catalogApi } from "./api/catalogApi";
 import type { ProductoConVariantes, VarianteResumen } from "./types";
 import { NOMBRE_TIPO } from "./data/tallesPorTipo";
 import layoutStyles from "../dashboard/DashboardPage.module.css";
 import styles from "./CatalogoPage.module.css";
+import { ModalImpresionEtiquetas } from "./components/ModalImpresionEtiquetas";
+import { Button } from "../../components/ui/Button";
 
 const fmt = (n: number) =>
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
@@ -84,6 +89,7 @@ function productoMatchFiltros(p: ProductoConVariantes, f: Filtros): boolean {
 // Componente principal
 // ──────────────────────────────────────────────────────────────────────────────
 export function CatalogoPage() {
+    const navigate = useNavigate();
     const [productos, setProductos] = useState<ProductoConVariantes[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -92,6 +98,7 @@ export function CatalogoPage() {
     const [productoModal, setProductoModal] = useState<ProductoConVariantes | null>(null);
     const [inputTalle, setInputTalle] = useState("");
     const [inputColor, setInputColor] = useState("");
+    const [etiquetasParaImprimir, setEtiquetasParaImprimir] = useState<any[] | null>(null);
 
     const cargarCatalogo = async () => {
         setLoading(true); setError(null);
@@ -345,15 +352,35 @@ export function CatalogoPage() {
                                 <>
                                     {/* Stats */}
                                     <div className={styles.statsBar}>
-                                        <span className={styles.statChip}>
-                                            <Package size={14} />
-                                            <strong>{productosFiltrados.length}</strong> producto{productosFiltrados.length !== 1 ? "s" : ""}
-                                            {filtrosActivos && <span className={styles.statOf}> de {productos.length}</span>}
-                                        </span>
-                                        <span className={styles.statChip}>
-                                            <Rows size={14} />
-                                            <strong>{totalVariantes}</strong> variante{totalVariantes !== 1 ? "s" : ""}
-                                        </span>
+                                        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                                            <span className={styles.statChip}>
+                                                <Package size={14} />
+                                                <strong>{productosFiltrados.length}</strong> producto{productosFiltrados.length !== 1 ? "s" : ""}
+                                                {filtrosActivos && <span className={styles.statOf}> de {productos.length}</span>}
+                                            </span>
+                                            <span className={styles.statChip}>
+                                                <Rows size={14} />
+                                                <strong>{totalVariantes}</strong> variante{totalVariantes !== 1 ? "s" : ""}
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                                            <Button
+                                                variant="secundario"
+                                                size="sm"
+                                                onClick={() => navigate('/catalogo/importar')}
+                                                iconLeft={<UploadSimple size={18} />}
+                                            >
+                                                Importar
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                onClick={() => navigate('/catalogo/nuevo')}
+                                                iconLeft={<Plus size={18} />}
+                                            >
+                                                Nuevo Producto
+                                            </Button>
+                                        </div>
                                     </div>
 
                                     <div className={styles.tableWrap}>
@@ -390,12 +417,19 @@ export function CatalogoPage() {
                 </div>
             </div>
 
-            {/* ── Modal de detalle ─────────────────────────────────────────────── */}
             {productoModal && (
                 <ProductoModal
                     producto={productoModal}
                     onClose={() => setProductoModal(null)}
                     onDelete={() => handleDelete(productoModal.id, productoModal.nombre)}
+                    onPrint={(etiquetas) => setEtiquetasParaImprimir(etiquetas)}
+                />
+            )}
+
+            {etiquetasParaImprimir && (
+                <ModalImpresionEtiquetas
+                    etiquetas={etiquetasParaImprimir}
+                    onClose={() => setEtiquetasParaImprimir(null)}
                 />
             )}
         </>
@@ -460,7 +494,7 @@ function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoCon
 // ──────────────────────────────────────────────────────────────────────────────
 // Modal de detalle
 // ──────────────────────────────────────────────────────────────────────────────
-function ProductoModal({ producto: p, onClose, onDelete }: { producto: ProductoConVariantes; onClose: () => void; onDelete: () => void }) {
+function ProductoModal({ producto: p, onClose, onDelete, onPrint }: { producto: ProductoConVariantes; onClose: () => void; onDelete: () => void; onPrint: (etiquetas: any[]) => void }) {
     const overlayRef = useRef<HTMLDivElement>(null);
     const [modalVariantesPage, setModalVariantesPage] = useState(1);
     const LIMIT_VARIANTES_MODAL = 5;
@@ -597,6 +631,22 @@ function ProductoModal({ producto: p, onClose, onDelete }: { producto: ProductoC
                     <div style={{ display: "flex", gap: "8px" }}>
                         <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>
                             Cerrar
+                        </button>
+                        <button
+                            type="button"
+                            className={styles.modalBtnSecondary}
+                            onClick={() => {
+                                const etiquetas = p.variantes.map(v => ({
+                                    sku: v.sku,
+                                    nombre: p.nombre,
+                                    talle: v.talle,
+                                    color: v.color,
+                                    precio: p.precioBase
+                                }));
+                                onPrint(etiquetas);
+                            }}
+                        >
+                            <Printer size={15} /> Imprimir Etiquetas
                         </button>
                         <button type="button" className={`${styles.modalBtnSecondary} ${styles.modalBtnDanger || ""}`} style={{ color: "var(--color-danger)", borderColor: "var(--color-danger)" }} onClick={onDelete}>
                             <Trash size={15} /> Eliminar

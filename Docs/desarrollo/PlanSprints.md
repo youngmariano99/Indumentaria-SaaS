@@ -169,13 +169,14 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 4.3: Operación Móvil y Etiquetado (Roadmap)
+## Sprint 4.3: Operación Móvil y Etiquetado (Completado)
+**Fecha de Finalización:** 03/03/2026
 **Objetivo:** Incrementar la eficiencia operativa en salón y depósito mediante hardware y movilidad.
 
-*   [ ] **Motor de Etiquetas Térmicas:** Generación de códigos 1D/QR para variantes de producto, compatible con impresoras Zebra y estándares industriales.
-*   [ ] **Escaneo Móvil de Consulta:** Aplicación para consulta instantánea de stock en depósito y sucursales remotas mediante cámara del celular.
-*   [ ] **Carga Masiva (Bulk Import) Pro:** Refactorización de la grilla de carga para procesamiento de altos volúmenes de mercadería.
-*   [ ] **Diseño "Thumb Zone":** Ajuste ergonómico de la UI del POS para operación con una sola mano en dispositivos móviles.
+*   [x] **Motor de Etiquetas Térmicas:** Generación de códigos 1D/QR para variantes de producto, compatible con impresoras Zebra y estándares industriales.
+*   [x] **Escaneo Móvil de Consulta:** Integración de `useBarcodeScanner` en POS para agregado automático por SKU/EAN13.
+*   [x] **Carga Masiva (Bulk Import) Pro:** Refactorización de la grilla de carga para procesamiento de altos volúmenes de mercadería via `CrearProductosBatchCommand`.
+*   [x] **Diseño "Thumb Zone":** Ajuste ergonómico de la UI del POS para operación con una sola mano en dispositivos móviles (botón cobrar fijo).
 
 ---
 
