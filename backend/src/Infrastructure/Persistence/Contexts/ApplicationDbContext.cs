@@ -94,6 +94,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<LogAuditoria> LogsAuditoria => Set<LogAuditoria>();
     public DbSet<TelemetriaUso> TelemetriasUso => Set<TelemetriaUso>();
+    public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
+    public DbSet<ArqueoCajaDetalle> ArqueosCajaDetalle => Set<ArqueoCajaDetalle>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -130,6 +132,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.RequestJson).HasColumnType("jsonb");
             entity.Property(e => e.ResponseJson).HasColumnType("jsonb");
+        });
+
+        builder.Entity<ArqueoCaja>(entity =>
+        {
+            entity.HasMany(x => x.Detalles).WithOne(x => x.ArqueoCaja).HasForeignKey(x => x.ArqueoCajaId);
+        });
+
+        builder.Entity<ArqueoCajaDetalle>(entity =>
+        {
+            entity.HasOne(x => x.MetodoPago).WithMany().HasForeignKey(x => x.MetodoPagoId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 

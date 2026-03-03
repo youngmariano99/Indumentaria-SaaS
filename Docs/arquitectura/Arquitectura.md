@@ -4,7 +4,7 @@ Vertical SaaS de Indumentaria, estructurada bajo una Clean Architecture y optimi
 Backend: .NET 8 (LTS). Es la versión recomendada para manejar sistemas distribuidos y servicios SOAP de alta densidad.
 
 
-Frontend: React con TypeScript y Vite. Permite un desarrollo ágil y tipado fuerte para interfaces POS complejas.
+Frontend: React con TypeScript y Vite. Permite un desarrollo ágil y tipado fuerte. Se utiliza **Recharts** para la visualización de datos de alto rendimiento y estética premium.
 
 
 Base de Datos: PostgreSQL con soporte para JSONB y Row Level Security (RLS) para el aislamiento de datos.
@@ -27,13 +27,16 @@ System.Security.Cryptography: Para la gestión de certificados RSA de 2048 bits 
 
 Source Generators (.NET): Para la serialización XML eficiente, reduciendo el uso de CPU y memoria en el middleware fiscal.
 
+
+Recharts (React): Librería de gráficos basada en componentes SVG para visualización de métricas en tiempo real con soporte para animaciones fluidas y tooltips dinámicos.
+
 3. Arquitectura Sugerida: Clean Architecture + Multi-tenancy
 Para soportar su modelo de negocio modular y multi-inquilino, la arquitectura debe dividirse en:
 
 
 Domain: Entidades puras (Producto, Matriz, Comprobante) y lógica de talles/colores.
 
-Application: Casos de uso y lógica de Feature Flags para habilitar módulos según la suscripción del tenant.
+Application: Casos de uso y lógica de Feature Flags. Incluye un motor de **Inteligencia de Negocio (BI)** que consolida métricas temporales (ventas de 7 días, ABC de inventario) mediante queries optimizadas que evitan el sobreprocesamiento en el cliente.
 
 Infrastructure:
 
@@ -86,3 +89,11 @@ Motor de Renderizado PDF: A diferencia del `window.print()` convencional, se opt
 - Descarga directa asíncrona que no bloquea el hilo principal de la UI.
 
 Estandarización de Grillas: Uso de CSS Grid calculado dinámicamente para ajustar N-etiquetas por fila según el soporte físico (Térmico, A4 o A3).
+
+8. Business Intelligence y Análisis Temporal
+
+Trazabilidad Nativa: Todas las entidades principales (`Producto`, `Cliente`, `Categoria`, `Venta`) implementan la propiedad `CreatedAt`. Esto garantiza una línea de tiempo coherente para métricas de "Nuevos hoy" y análisis de crecimiento sin depender de logs externos.
+
+Consolidación de Métricas: El sistema evita el "State Management Overload" en el frontend mediante el uso de DTOs de consolidación (`DashboardDto`). El backend es responsable de realizar los cálculos de agregación, promedios y agrupaciones (ej: métodos de pago), entregando al cliente datos listos para ser renderizados.
+
+Matriz ABC Automática: Implementación nativa de la Ley de Pareto (80/20) en el motor de reportes, clasificando el inventario dinámicamente según su impacto en la facturación y rentabilidad neta.

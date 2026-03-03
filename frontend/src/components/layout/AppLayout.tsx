@@ -8,7 +8,8 @@ import {
     Folder,
     Users,
     Swap,
-    UserCircle
+    UserCircle,
+    CashRegister
 } from "@phosphor-icons/react";
 import styles from "./AppLayout.module.css";
 
@@ -116,6 +117,18 @@ export function AppLayout() {
                             <Swap size={20} weight="bold" />
                         </span>
                         <span>Devoluciones</span>
+                    </NavLink>
+
+                    <NavLink
+                        to="/arqueo"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
+                    >
+                        <span className={styles.navItemIcon}>
+                            <CashRegister size={20} weight="bold" />
+                        </span>
+                        <span>Arqueo de Caja</span>
                     </NavLink>
 
                     <NavLink

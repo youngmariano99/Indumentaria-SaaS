@@ -14,6 +14,8 @@ public interface IApplicationDbContext
     DbSet<ModuloSuscripcion> ModulosSuscripcion { get; }
     DbSet<LogAuditoria> LogsAuditoria { get; }
     DbSet<Inventario> Inventarios { get; }
+    DbSet<ArqueoCaja> ArqueosCaja { get; }
+    DbSet<ArqueoCajaDetalle> ArqueosCajaDetalle { get; }
 
     DatabaseFacade Database { get; }
 

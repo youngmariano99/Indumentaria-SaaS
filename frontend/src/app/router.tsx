@@ -15,6 +15,7 @@ import { DevolucionesPage } from "../features/pos/DevolucionesPage";
 import { AccountPage } from "../features/account/AccountPage";
 import { ImportarCatalogoPage } from "../features/catalog/ImportarCatalogoPage";
 import { ReportesPage } from "../features/reports/ReportesPage";
+import { ArqueoPage } from "../features/arqueo/ArqueoPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
       { path: "/clientes", element: <ClientesPage /> },
       { path: "/clientes/:id", element: <PerfilClientePage /> },
       { path: "/devoluciones", element: <DevolucionesPage /> },
+      { path: "/arqueo", element: <ArqueoPage /> },
       {
         path: "/modulos",
         element: (
