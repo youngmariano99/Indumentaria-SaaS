@@ -1,0 +1,71 @@
+.tabBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: var(--color-gray-50);
+    border-top: 1px solid var(--color-gray-200);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tabBar.keyboardOpen {
+    transform: translateY(100%);
+}
+
+.tabItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    text-decoration: none;
+    color: var(--color-gray-500);
+    transition: color 0.2s ease;
+    gap: 4px;
+}
+
+.tabItemActive {
+    color: var(--color-primary);
+}
+
+.tabItem span {
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.posTabItem {
+    position: relative;
+    top: -12px;
+}
+
+.posButton {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-focus));
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    border: 3px solid var(--color-gray-50);
+    transition: transform 0.2s;
+}
+
+.posButton:active {
+    transform: scale(0.95);
+}
+
+@media (min-width: 769px) {
+    .tabBar {
+        display: none;
+    }
+}

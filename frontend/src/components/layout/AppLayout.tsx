@@ -9,8 +9,12 @@ import {
     Users,
     Swap,
     UserCircle,
-    CashRegister
+    CashRegister,
+    DownloadSimple
 } from "@phosphor-icons/react";
+import { ReloadPrompt } from "../ReloadPrompt";
+import { usePWAInstall } from "../../hooks/usePWAInstall";
+import { MobileTabBar } from "./MobileTabBar";
 import styles from "./AppLayout.module.css";
 
 /**
@@ -19,6 +23,8 @@ import styles from "./AppLayout.module.css";
  * El contenido de cada ruta se inyecta via <Outlet />.
  */
 export function AppLayout() {
+    const { isInstallable, promptInstall } = usePWAInstall();
+    const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         if (typeof window === "undefined") return true;
         // En mobile el sidebar arranca siempre colapsado (solo iconos)
@@ -34,15 +40,28 @@ export function AppLayout() {
                 setSidebarOpen(false);
             } else {
                 setSidebarOpen(true);
+                setMobileDrawerOpen(false);
             }
         };
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
+    const handleMobileNavClick = () => {
+        if (window.innerWidth <= 768) {
+            setMobileDrawerOpen(false);
+        }
+    };
+
     return (
         <div className={`${styles.shell} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
-            <aside className={`${styles.sidebar} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
+            {/* Overlay para móviles */}
+            <div
+                className={`${styles.mobileOverlay} ${mobileDrawerOpen ? styles.mobileOverlayActive : ""}`}
+                onClick={() => setMobileDrawerOpen(false)}
+            />
+
+            <aside className={`${styles.sidebar} ${sidebarOpen ? "" : styles.sidebarCollapsed} ${mobileDrawerOpen ? styles.mobileDrawerOpen : ""}`}>
                 <div className={styles.sidebarHeader}>
                     {/* Logo minimal: solo usamos el espacio para el toggle, sin marca visual */}
                     <div className={styles.sidebarLogo} />
@@ -66,6 +85,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <House size={20} weight="bold" />
@@ -78,6 +98,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <Package size={20} weight="bold" />
@@ -90,6 +111,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <Folder size={20} weight="bold" />
@@ -102,6 +124,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>🛒</span>
                         <span>Punto de venta</span>
@@ -112,6 +135,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <Swap size={20} weight="bold" />
@@ -124,6 +148,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <CashRegister size={20} weight="bold" />
@@ -136,6 +161,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <ChartLine size={20} weight="bold" />
@@ -148,6 +174,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <Users size={20} weight="bold" />
@@ -160,6 +187,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <UserCircle size={20} weight="bold" />
@@ -172,6 +200,7 @@ export function AppLayout() {
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                         }
+                        onClick={handleMobileNavClick}
                     >
                         <span className={styles.navItemIcon}>
                             <GearSix size={20} weight="bold" />
@@ -181,13 +210,41 @@ export function AppLayout() {
                 </nav>
 
                 <div className={styles.navFooter}>
+                    {isInstallable && (
+                        <button
+                            onClick={promptInstall}
+                            style={{
+                                width: '100%',
+                                background: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                color: '#e2e8f0',
+                                padding: '8px 12px',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '0.85rem',
+                                marginBottom: '12px',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent' }}
+                        >
+                            <DownloadSimple size={18} />
+                            {sidebarOpen && <span>Instalar App</span>}
+                        </button>
+                    )}
                     <div>Appy Studios</div>
                 </div>
             </aside>
 
             <div className={styles.main}>
                 <Outlet />
+                <ReloadPrompt />
             </div>
+
+            <MobileTabBar onOpenDrawer={() => setMobileDrawerOpen(true)} />
         </div>
     );
 }

@@ -38,4 +38,10 @@ public class ArqueoCajaController : ControllerBase
     {
         return Ok(await _mediator.Send(new CerrarCajaCommand(id, payload)));
     }
+
+    [HttpGet("historial/{storeId}")]
+    public async Task<ActionResult<List<ArqueoDto>>> GetHistorial(Guid storeId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _mediator.Send(new ObtenerHistorialArqueosQuery(storeId, page, pageSize)));
+    }
 }

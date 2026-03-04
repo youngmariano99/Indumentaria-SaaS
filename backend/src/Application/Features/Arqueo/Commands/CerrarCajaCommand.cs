@@ -101,6 +101,9 @@ public class CerrarCajaCommandHandler : IRequestHandler<CerrarCajaCommand, bool>
                     Diferencia = realCajero - esperadoTotal
                 };
 
+                // Agregamos explícitamente al contexto para que EF Core trace la entidad como 'Added' (INSERT)
+                // y no como 'Modified' (UPDATE) debido a que Id ya tiene un Guid.NewGuid() asignado por BaseEntity.
+                _context.ArqueosCajaDetalle.Add(detalle);
                 arqueo.Detalles.Add(detalle);
                 
                 totalVentasEsperado += ventasMonto;
@@ -116,13 +119,25 @@ public class CerrarCajaCommandHandler : IRequestHandler<CerrarCajaCommand, bool>
             arqueo.Estado = EstadoArqueo.Cerrado;
             arqueo.Observaciones = request.Payload.Observaciones;
 
-            await _context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                foreach (var entry in ex.Entries)
+                {
+                    Console.WriteLine($"CONCURRENCY ERROR ON ENTITY: {entry.Entity.GetType().Name}");
+                }
+                throw;
+            }
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"ERROR EN CERRAR CAJA: {ex.Message}");
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }

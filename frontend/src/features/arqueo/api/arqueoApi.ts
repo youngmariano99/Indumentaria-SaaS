@@ -53,5 +53,11 @@ export const arqueoApi = {
     cerrar: async (id: string, payload: CerrarCajaDto): Promise<boolean> => {
         const response = await apiClient.post<boolean>(`/arqueocaja/cerrar/${id}`, payload);
         return response.data;
+    },
+    getHistorial: async (storeId: string, page: number = 1, pageSize: number = 10): Promise<ArqueoDto[]> => {
+        const response = await apiClient.get<ArqueoDto[]>(`/arqueocaja/historial/${storeId}`, {
+            params: { page, pageSize }
+        });
+        return response.data;
     }
 };

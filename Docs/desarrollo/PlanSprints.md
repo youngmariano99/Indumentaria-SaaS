@@ -138,13 +138,13 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 4.1: Estabilización Offline-First (Roadmap)
-**Objetivo:** Garantizar la continuidad operativa del punto de venta ante inestabilidad de red.
+## Sprint 4.1: Estabilización Offline-First (PWA Nivel Local-First)
+**Objetivo:** Garantizar la continuidad operativa del punto de venta ante inestabilidad de red y lograr persistencia "invisible".
 
-*   [ ] **Arquitectura de Persistencia Local:** Implementación de base de datos embebida (SQLite/IndexedDB) para registro inmediato de ventas.
-*   [ ] **Sync Manager:** Motor de sincronización en segundo plano para subida diferida de comprobantes y resolución de conflictos de stock.
-*   [ ] **Resiliencia de Red (Mesh):** Configuración de redundancia para comunicación entre dispositivos vía Bluetooth o Wi-Fi Direct.
-*   [ ] **UX No Bloqueante:** Optimización de la interfaz React para operar sin latencia durante micro-cortes de conexión.
+*   [ ] **Arquitectura de Persistencia Local:** Implementación de base de datos embebida (RxDB, Loro CRDT o IndexedDB pura) en el frontend.
+*   [ ] **Sync Manager:** Sincronizador en segundo plano (PowerSync o custom) para replicar el WAL PostgreSQL, respetando RLS en cliente.
+*   [ ] **Resolución de Conflictos:** Uso de CRDT (Conflict-free Replicated Data Types) para inventarios conmutativos.
+*   [ ] **Resiliencia de Red:** Interfaz React reactiva a caídas de conexión sin bloqueo, manteniendo la caja a la espera de retorno a línea.
 
 ---
 
@@ -210,6 +210,36 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 *   [x] **Backend:** Extensión de `MovimientoSaldoCliente` con `MetodoPagoId`.
 *   [x] **Backend:** Actualización de comandos MediatR para persistencia de origen financiero.
 *   [x] **Frontend:** Selector dinámico de métodos de pago en Modal de Saldo del Perfil 360.
+
+---
+
+## Sprint 4.13: Fundación PWA y App Shell
+**Objetivo:** Transformar el proyecto Vite en una Progressive Web App instalable con estrategias de caché agresivas.
+
+*   [ ] **Infraestructura Vite PWA:** Instalación y configuración de `vite-plugin-pwa`.
+*   [ ] **Manifiesto Dinámico:** Generación de `manifest.json` con metadatos, iconos HD, y `display: standalone`.
+*   [ ] **Instalación Consciente:** Captura del evento `beforeinstallprompt` para ofrecer la instalación solo tras interacción valiosa y omitir el banner por defecto.
+*   [ ] **Shortcuts API:** Accesos directos nativos del OS para saltar directamente a "Punto de Venta" o "Stock".
+*   [ ] **Rendimiento Workbox:** Configuración de Service Worker con caché `CacheFirst` para imágenes estáticas, `StaleWhileRevalidate` para precios, y Precache del App Shell.
+
+---
+
+## Sprint 4.14: Ergonomía Móvil y UX Adaptativa
+**Objetivo:** Adaptar 100% la app a los pulgares y a flujos táctiles (Touch Targets 44px, navegación inferior).
+
+*   [ ] **Navegación Móvil:** Layout con "Bottom Tab Bar" para celulares (POS, Buscar, Stock, Perfil) ocultando el Drawer clásico.
+*   [ ] **Teclado y Viewport:** Uso de `VisualViewport API` para re-acomodar el layout y botón de "Cobrar" al abrir el teclado virtual telefónico.
+*   [ ] **Estética Funcional:** Integración de tema oscuro (Dark Mode) y adecuación a `prefers-reduced-motion`.
+
+---
+
+## Sprint 4.15: Integración Híbrida de Hardware
+**Objetivo:** Aprovechar capacidades nativas del celular/tablet directamente desde la web.
+
+*   [ ] **File System Access:** Implementación de acceso nativo de archivos para descarga/guardado local de reportes en PDF y planillas Excel sin intermediar descargas complejas.
+*   [ ] **Impresión Bluetooth Directa:** (Opcional) Exploración del `Web Bluetooth API` para emitir comandos ESC/POS directo a impresoras enlazadas al celular, o usar interfaz HID serial mejorada.
+*   [ ] **Barcode Scanner Nativo:** Maximizar el uso de `BarcodeDetector API` del dispositivo (`ShapeDetection`) para leer códigos en cámara ultrarrápido sin servidor.
+*   [ ] **Social Commerce Push:** Receptor `Web Share Target` para "compartir" imágenes del teléfono directo hacia el módulo de Catálogo para armar un producto.
 
 ---
 
