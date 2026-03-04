@@ -138,13 +138,13 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 4.1: Estabilización Offline-First (PWA Nivel Local-First)
+## Sprint 4.1: Estabilización Offline-First (Completado)
 **Objetivo:** Garantizar la continuidad operativa del punto de venta ante inestabilidad de red y lograr persistencia "invisible".
 
-*   [ ] **Arquitectura de Persistencia Local:** Implementación de base de datos embebida (RxDB, Loro CRDT o IndexedDB pura) en el frontend.
-*   [ ] **Sync Manager:** Sincronizador en segundo plano (PowerSync o custom) para replicar el WAL PostgreSQL, respetando RLS en cliente.
-*   [ ] **Resolución de Conflictos:** Uso de CRDT (Conflict-free Replicated Data Types) para inventarios conmutativos.
-*   [ ] **Resiliencia de Red:** Interfaz React reactiva a caídas de conexión sin bloqueo, manteniendo la caja a la espera de retorno a línea.
+*   [x] **Arquitectura de Persistencia Local:** Implementación de base de datos embebida (RxDB, Loro CRDT o IndexedDB pura) en el frontend.
+*   [x] **Sync Manager:** Sincronizador en segundo plano (PowerSync o custom) para replicar el WAL PostgreSQL, respetando RLS en cliente.
+*   [x] **Resolución de Conflictos:** Uso de CRDT (Conflict-free Replicated Data Types) para inventarios conmutativos.
+*   [x] **Resiliencia de Red:** Interfaz React reactiva a caídas de conexión sin bloqueo, manteniendo la caja a la espera de retorno a línea.
 
 ---
 
@@ -213,33 +213,33 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 
 ---
 
-## Sprint 4.13: Fundación PWA y App Shell
+## Sprint 4.13: Fundación PWA y App Shell (Completado)
 **Objetivo:** Transformar el proyecto Vite en una Progressive Web App instalable con estrategias de caché agresivas.
 
-*   [ ] **Infraestructura Vite PWA:** Instalación y configuración de `vite-plugin-pwa`.
-*   [ ] **Manifiesto Dinámico:** Generación de `manifest.json` con metadatos, iconos HD, y `display: standalone`.
-*   [ ] **Instalación Consciente:** Captura del evento `beforeinstallprompt` para ofrecer la instalación solo tras interacción valiosa y omitir el banner por defecto.
-*   [ ] **Shortcuts API:** Accesos directos nativos del OS para saltar directamente a "Punto de Venta" o "Stock".
-*   [ ] **Rendimiento Workbox:** Configuración de Service Worker con caché `CacheFirst` para imágenes estáticas, `StaleWhileRevalidate` para precios, y Precache del App Shell.
+*   [x] **Infraestructura Vite PWA:** Instalación y configuración de `vite-plugin-pwa`.
+*   [x] **Manifiesto Dinámico:** Generación de `manifest.json` con metadatos, iconos HD, y `display: standalone`.
+*   [x] **Instalación Consciente:** Captura del evento `beforeinstallprompt` para ofrecer la instalación solo tras interacción valiosa y omitir el banner por defecto.
+*   [x] **Shortcuts API:** Accesos directos nativos del OS para saltar directamente a "Punto de Venta" o "Stock".
+*   [x] **Rendimiento Workbox:** Configuración de Service Worker con caché `CacheFirst` para imágenes estáticas, `StaleWhileRevalidate` para precios, y Precache del App Shell.
 
 ---
 
-## Sprint 4.14: Ergonomía Móvil y UX Adaptativa
+## Sprint 4.14: Ergonomía Móvil y UX Adaptativa (Completado)
 **Objetivo:** Adaptar 100% la app a los pulgares y a flujos táctiles (Touch Targets 44px, navegación inferior).
 
-*   [ ] **Navegación Móvil:** Layout con "Bottom Tab Bar" para celulares (POS, Buscar, Stock, Perfil) ocultando el Drawer clásico.
-*   [ ] **Teclado y Viewport:** Uso de `VisualViewport API` para re-acomodar el layout y botón de "Cobrar" al abrir el teclado virtual telefónico.
-*   [ ] **Estética Funcional:** Integración de tema oscuro (Dark Mode) y adecuación a `prefers-reduced-motion`.
+*   [x] **Navegación Móvil:** Layout con "Bottom Tab Bar" para celulares (POS, Buscar, Stock, Perfil) ocultando el Drawer clásico.
+*   [x] **Teclado y Viewport:** Uso de `VisualViewport API` para re-acomodar el layout y botón de "Cobrar" al abrir el teclado virtual telefónico.
+*   [x] **Estética Funcional:** Integración de tema oscuro (Dark Mode) y adecuación a `prefers-reduced-motion`.
 
 ---
 
-## Sprint 4.15: Integración Híbrida de Hardware
+## Sprint 4.15: Integración Híbrida de Hardware (Completado)
 **Objetivo:** Aprovechar capacidades nativas del celular/tablet directamente desde la web.
 
-*   [ ] **File System Access:** Implementación de acceso nativo de archivos para descarga/guardado local de reportes en PDF y planillas Excel sin intermediar descargas complejas.
-*   [ ] **Impresión Bluetooth Directa:** (Opcional) Exploración del `Web Bluetooth API` para emitir comandos ESC/POS directo a impresoras enlazadas al celular, o usar interfaz HID serial mejorada.
-*   [ ] **Barcode Scanner Nativo:** Maximizar el uso de `BarcodeDetector API` del dispositivo (`ShapeDetection`) para leer códigos en cámara ultrarrápido sin servidor.
-*   [ ] **Social Commerce Push:** Receptor `Web Share Target` para "compartir" imágenes del teléfono directo hacia el módulo de Catálogo para armar un producto.
+*   [x] **File System Access:** Implementación de acceso nativo de archivos para descarga/guardado local de reportes en PDF y planillas Excel sin intermediar descargas complejas.
+*   [x] **Impresión Bluetooth Directa:** (Opcional) Exploración del `Web Bluetooth API` para emitir comandos ESC/POS directo a impresoras enlazadas al celular, o usar interfaz HID serial mejorada.
+*   [x] **Barcode Scanner Nativo:** Maximizar el uso de `BarcodeDetector API` del dispositivo (`ShapeDetection`) para leer códigos en cámara ultrarrápido sin servidor.
+*   [x] **Social Commerce Push:** Receptor `Web Share Target` para "compartir" imágenes del teléfono directo hacia el módulo de Catálogo para armar un producto.
 
 ---
 
@@ -270,3 +270,31 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 *   [ ] **Backend:** Middleware / Action Filters para medir el "Uso" (Facturas autorizadas, Prendas creadas) e impactar contadores eficientemente en Redis -> PostgreSQL.
 *   [ ] **QA:** Creación de Unit Tests de alto valor (facturas complejas).
 *   [ ] **Despliegue:** Contenedores (Docker) y configuraciones de CI/CD para producción.
+
+---
+
+## Sprint 8: Panel de Administración SaaS (SRE & Telemetría Global)
+**Objetivo General:** Construir el "Backoffice Centralizado" para el equipo interno, permitiendo monitoreo de salud (Health), auditoría transaccional, métricas comerciales y gestión de inquilinos (Tenants) en un entorno de alta densidad.
+
+### Sprint 8.1: Fundaciones del Backoffice y Bypass de Tenant
+*   [ ] **Backend (Seguridad):** Implementación de rol estricto `SuperAdmin` en Identity/JWT.
+*   [ ] **Backend (EF Core):** Mecanismo de "Bypass" temporal para deshabilitar el *Global Query Filter* (`IgnoreQueryFilters()`) solo en controladores del área de administración.
+*   [ ] **Frontend (Arquitectura):** Creación de un sub-enrutador `/admin` (o proyecto Vite aislado) protegido, con UI enfocada en densidad de datos.
+*   [ ] **Frontend (Gestión Básica):** ABM global de Tenants (Listar tiendas, Habilitar/Suspender servicio por falta de pago, Ver su plan activo).
+
+### Sprint 8.2: Telemetría de Salud e Infraestructura (SaaS Health)
+*   [ ] **Backend (Observabilidad):** Integración inicial de **OpenTelemetry** para medir latencia por Inquilino (detectar percentiles altos P95/P99 en carga de catálogo o POS).
+*   [ ] **Base de Datos (PostgreSQL):** Queries de infraestructura apuntando a vistas estándar (`pg_stat_activity`, tamaño de esquemas/tablas) para alertar sobre tiendas que requieren *VACUUM* o consumen mucha memoria.
+*   [ ] **Frontend (Dashboards):** Implementación de gráficos (Recharts/Nivo) mostrando la salud del hardware y cuellos de botella por tienda.
+*   [ ] **Sincronización PWA V2:** Endpoints para que el Backoffice vea en tiempo real la "Longitud de la cola pendiente" (Sync Queue) de las cajas offline de cada tienda.
+
+### Sprint 8.3: Centro de Auditoría y Debugger de Transacciones
+*   [ ] **Backend (Buscador JSONB):** Aprovechar los índices GIN de PostgreSQL sobre la tabla `LogsAuditoria` para crear un buscador global ultrarrápido (Ej: *"Buscar quién y cuándo le cambió el precio a la remera roja en la sucursal X"*).
+*   [ ] **Backend/Frontend (Transaction Debugger):** Interfaz para especialistas de soporte que toma un UUID de Venta e imprime todo su ciclo de vida cronológico, especialmente útil para fallos de sincronía offline o rechazos de AFIP/ARCA.
+*   [ ] **Alertas de Fraude:** Reglas Heurísticas automáticas (Ej: Ráfagas de devoluciones en menos de 10 minutos, o modificaciones de stock manuales en horarios de madrugada).
+
+### Sprint 8.4: Analítica de Producto Comercial (SaaS Insights)
+*   [ ] **Backend (Métricas MRR):** Cálculo de usuarios únicos diarios por tienda (DAU) y Churn Rate mensual para el equipo de Ventas.
+*   [ ] **Algoritmo de Inventario Fantasma:** Detección probabilística matemática de discrepancias "Sistemas vs Real" basada en que un producto rotaba siempre y de repente dejó de venderse.
+*   [ ] **Frontend:** Tablero comercial *Customer Success* dedicado a mejorar la retención (TTFV - Time to First Value).
+

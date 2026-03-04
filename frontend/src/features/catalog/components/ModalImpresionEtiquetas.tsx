@@ -91,7 +91,31 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                 heightLeft -= pdfHeight;
             }
 
-            pdf.save(`etiquetas_${new Date().getTime()}.pdf`);
+            // API de File System Access nativa (Desktop Chrome/Edge/Opera moderno)
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await (window as any).showSaveFilePicker({
+                        suggestedName: `etiquetas_${new Date().getTime()}.pdf`,
+                        types: [{
+                            description: 'Documento PDF',
+                            accept: { 'application/pdf': ['.pdf'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    // jsPDF.output('blob') returns exactly the PDF binary sequence
+                    await writable.write(pdf.output('blob'));
+                    await writable.close();
+                } catch (err: any) {
+                    if (err.name !== 'AbortError') {
+                        console.error('File System Access API failed', err);
+                        pdf.save(`etiquetas_${new Date().getTime()}.pdf`);
+                    }
+                }
+            } else {
+                // Caída elegante para Safari/iOS o navegadores que no soportan la API
+                pdf.save(`etiquetas_${new Date().getTime()}.pdf`);
+            }
+
         } catch (err) {
             console.error("Error generating PDF:", err);
             alert("Error al generar el PDF. Probá usando la opción Imprimir.");

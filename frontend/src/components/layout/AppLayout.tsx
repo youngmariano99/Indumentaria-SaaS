@@ -14,6 +14,7 @@ import {
 } from "@phosphor-icons/react";
 import { ReloadPrompt } from "../ReloadPrompt";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
+import { useSyncManager } from "../../hooks/useSyncManager";
 import { MobileTabBar } from "./MobileTabBar";
 import styles from "./AppLayout.module.css";
 
@@ -24,6 +25,7 @@ import styles from "./AppLayout.module.css";
  */
 export function AppLayout() {
     const { isInstallable, promptInstall } = usePWAInstall();
+    const { isOnline, isSyncing, pendingCount, syncNow } = useSyncManager();
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         if (typeof window === "undefined") return true;
@@ -240,6 +242,22 @@ export function AppLayout() {
             </aside>
 
             <div className={styles.main}>
+                {!isOnline && (
+                    <div style={{ background: '#f59e0b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
+                        Aviso: Estás operando sin conexión a Internet. {pendingCount > 0 && `(${pendingCount} pendientes)`}
+                    </div>
+                )}
+                {isOnline && isSyncing && (
+                    <div style={{ background: '#3b82f6', color: 'white', padding: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
+                        Sincronizando {pendingCount} operaciones pendientes...
+                    </div>
+                )}
+                {isOnline && pendingCount > 0 && !isSyncing && (
+                    <div style={{ background: '#10b981', color: 'white', padding: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600, display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}>
+                        Restablecida la red local. <button onClick={syncNow} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>Sincronizar Ya ({pendingCount})</button>
+                    </div>
+                )}
+
                 <Outlet />
                 <ReloadPrompt />
             </div>

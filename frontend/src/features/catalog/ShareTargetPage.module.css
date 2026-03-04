@@ -1,0 +1,115 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--color-gray-100);
+    padding: var(--space-4);
+}
+
+.card {
+    background: var(--color-gray-50);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--space-6);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-6);
+}
+
+.header h2 {
+    margin: 0;
+    color: var(--color-gray-900);
+    font-size: var(--text-xl);
+}
+
+.header p {
+    margin: 0;
+    color: var(--color-gray-500);
+    font-size: var(--text-sm);
+}
+
+.previewBox {
+    background: var(--color-gray-100);
+    border: 1px dashed var(--color-gray-300);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+    word-break: break-word;
+}
+
+.previewTitle {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin: 0 0 var(--space-2) 0;
+}
+
+.previewText {
+    font-size: var(--text-sm);
+    color: var(--color-gray-700);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.previewUrl {
+    font-size: var(--text-sm);
+    color: var(--color-primary);
+    text-decoration: none;
+    display: block;
+    margin-top: var(--space-2);
+}
+
+.previewUrl:hover {
+    text-decoration: underline;
+}
+
+.emptyWarning {
+    color: var(--color-warning);
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+.actions {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.actions button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btnPrimary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btnPrimary:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.btnCancel {
+    background-color: var(--color-gray-200);
+    color: var(--color-gray-700);
+}
+
+.btnCancel:hover {
+    background-color: var(--color-gray-300);
+}

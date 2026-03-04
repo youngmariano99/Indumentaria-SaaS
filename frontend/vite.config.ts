@@ -30,6 +30,15 @@ export default defineConfig({
             purpose: 'any maskable'
           }
         ],
+        share_target: {
+          action: "/shared-product",
+          method: "GET",
+          params: {
+            title: "name",
+            text: "description",
+            url: "link"
+          }
+        },
         shortcuts: [
           {
             name: "Punto de Venta",

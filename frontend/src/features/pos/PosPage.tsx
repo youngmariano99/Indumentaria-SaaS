@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   MagnifyingGlass,
   Plus,
@@ -11,7 +11,8 @@ import {
   CheckCircle,
   Keyboard,
   Money,
-  Circle
+  Circle,
+  Camera
 } from "@phosphor-icons/react";
 import { posApi } from "./api/posApi";
 import type { MetodoPagoDto, ProductoLayerPosDto, VarianteLayerPosDto } from "./api/posApi";
@@ -19,6 +20,9 @@ import { clientesApi } from "../catalog/api/clientesApi";
 import type { ClienteDto } from "../catalog/api/clientesApi";
 import styles from "./PosPage.module.css";
 import { useBarcodeScanner } from "../../hooks/useBarcodeScanner";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "../../db/db";
+import { CameraScanner } from "../../components/CameraScanner";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
 type LineItem = {
@@ -79,26 +83,6 @@ function getColorParaMostrar(v: VarianteLayerPosDto): string {
 
 const PAGE_SIZE = 20;
 
-/** Normaliza respuesta del API (PascalCase) a camelCase para uso en el front */
-function normalizarProductoPos(raw: Record<string, unknown>): ProductoLayerPosDto {
-  const variantesRaw = raw.variantes ?? raw.Variantes;
-  const variantes = Array.isArray(variantesRaw) ? variantesRaw : [];
-  return {
-    id: String(raw.id ?? raw.Id ?? ""),
-    nombre: String(raw.nombre ?? raw.Nombre ?? ""),
-    precioBase: Number(raw.precioBase ?? raw.PrecioBase ?? 0),
-    ean13: String(raw.ean13 ?? raw.Ean13 ?? "").trim(),
-    variantes: variantes.map((v: Record<string, unknown>) => ({
-      varianteId: String(v.varianteId ?? v.VarianteId ?? ""),
-      sizeColor: String(v.sizeColor ?? v.SizeColor ?? "").trim(),
-      talle: String(v.talle ?? v.Talle ?? "").trim(),
-      color: String(v.color ?? v.Color ?? "").trim(),
-      sku: String(v.sku ?? v.Sku ?? "").trim(),
-      stockActual: Number(v.stockActual ?? v.StockActual ?? 0),
-    })),
-  };
-}
-
 export function PosPage() {
   const [busqueda, setBusqueda] = useState("");
   const [carrito, setCarrito] = useState<LineItem[]>([]);
@@ -106,7 +90,26 @@ export function PosPage() {
   const [montoRecibidoStr, setMontoRecibidoStr] = useState("");
 
   const [loadingInitial, setLoadingInitial] = useState(true);
-  const [productos, setProductos] = useState<ProductoLayerPosDto[]>([]);
+
+  const localProductos = useLiveQuery(() => db.productos.toArray());
+  const productos: ProductoLayerPosDto[] = useMemo(() => {
+    if (!localProductos) return [];
+    return localProductos.map(p => ({
+      id: p.id,
+      nombre: p.nombre,
+      precioBase: p.precioBase,
+      ean13: p.codigoBodega || "",
+      variantes: p.variantes.map(v => ({
+        varianteId: v.id,
+        sizeColor: v.talle && v.color ? `${v.talle} / ${v.color}` : v.talle || v.color || "",
+        talle: v.talle,
+        color: v.color,
+        sku: v.sku,
+        stockActual: v.stockVenta
+      }))
+    }));
+  }, [localProductos]);
+
   const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
   const [metodoPagoActivo, setMetodoPagoActivo] = useState<string>("");
 
@@ -128,6 +131,9 @@ export function PosPage() {
 
   /** ID del producto expandido para elegir variante (talle/color) in-situ */
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
+
+  /** Soporte Cámara UI Mobile */
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   /** Paginación de la lista de productos */
   const [paginaActual, setPaginaActual] = useState(1);
@@ -186,16 +192,13 @@ export function PosPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [catResult, mpResult, clResult] = await Promise.allSettled([
-          posApi.obtenerCatalogoPos(),
+        // Disparamos sync de catálogo en background (no frenamos el UI si falla o tarda)
+        posApi.sincronizarCatalogoLocal().catch(e => console.error("Sync catalogo falló", e));
+
+        const [mpResult, clResult] = await Promise.allSettled([
           posApi.obtenerMetodosPago(),
           clientesApi.getAll(),
         ]);
-
-        if (catResult.status === "fulfilled") {
-          const list = Array.isArray(catResult.value) ? catResult.value : [];
-          setProductos(list.map((p) => normalizarProductoPos(p as any)));
-        }
 
         if (mpResult.status === "fulfilled" && mpResult.value.length > 0) {
           setMetodosPago(mpResult.value);
@@ -449,6 +452,15 @@ export function PosPage() {
                 Scanner Pistola
               </div>
               <div style={{ fontSize: '0.65rem', backgroundColor: '#e5e7eb', color: '#6b7280', padding: '0.2rem 0.4rem', borderRadius: '0.25rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}> <Keyboard size={12} /> F2</div>
+              {/* Botón Flotante para escaneo óptico móvil */}
+              <button
+                type="button"
+                onClick={() => setIsCameraOpen(true)}
+                style={{ background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                aria-label="Abrir Cámara"
+              >
+                <Camera size={16} weight="bold" />
+              </button>
             </div>
           </div>
 
@@ -848,6 +860,12 @@ export function PosPage() {
           </div>
         </aside>
       </div>
+
+      <CameraScanner
+        onOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onDetection={handleScannedCode}
+      />
     </div>
   );
 }
