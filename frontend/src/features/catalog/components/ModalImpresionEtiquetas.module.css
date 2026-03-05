@@ -7,24 +7,227 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  /* Glassmorphism oscuro sutil */
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  backdrop-filter: blur(4px);
+  z-index: 1000;
 }
 
 .modal {
   background: white;
-  width: 90%;
-  max-width: 600px;
   border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  width: 95%;
+  max-width: 1050px;
+  height: 85vh;
+  /* Ocupar bien el espacio para ver previa */
   display: flex;
-  flex-direction: column;
-  max-height: 80vh;
+  flex-direction: row;
+  /* 2 Columnas */
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
 }
 
+/* ── LAYOUT 2 COLUMNAS ──────────────────────────────────────────────── */
+.previewPane {
+  flex: 0 0 55%;
+  background-color: #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.previewScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Centrar el paper */
+}
+
+.controlPane {
+  flex: 0 0 45%;
+  background-color: #ffffff;
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* ── ESTILOS DE CONTROLES (UX B2B) ──────────────────────────────────── */
+.controlPane h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.tabsContainer {
+  display: flex;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 0.75rem 0;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tabBtnActive {
+  background: white;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sectionGroup {
+  margin-bottom: 2rem;
+}
+
+.sectionLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 48px;
+}
+
+.qtyBtn {
+  flex: 0 0 48px;
+  height: 100%;
+  background: white;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.qtyBtn:hover {
+  background: #f3f4f6;
+}
+
+.qtyInput {
+  flex: 1;
+  height: 100%;
+  border: none;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.posActions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.posBtnPrimary {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.posBtnPrimary:hover {
+  background-color: #1d4ed8;
+}
+
+.posBtnPrimary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.posBtnSecondary {
+  background-color: transparent;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.posBtnSecondary:hover {
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+.closeCornerBtn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 4px;
+  z-index: 10;
+  padding: 0.5rem;
+}
+
+.closeCornerBtn:hover {
+  color: #1f2937;
+  background: #f3f4f6;
+}
+
+/* ── CONFIG MICRO ─────────────────────────────────────────────────── */
+.settingSelect {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+/* ── PRINT LOGIC OVERRIDES ────────────────────────────────────────── */
 .header {
   padding: 1.5rem;
   border-bottom: 1px solid var(--gray-100);
@@ -255,22 +458,34 @@
     overflow: visible !important;
   }
 
-  /* Ocultar headers y footers interactivos del modal */
-  .header,
-  .header *,
-  .footer,
-  .footer *,
-  .optionsBar,
-  .optionsBar *,
-  .closeBtn {
+  /* Ocultar el panel de control derecho en impresión */
+  .controlPane,
+  .closeCornerBtn {
     display: none !important;
+    visibility: hidden !important;
   }
 
-  .content {
-    padding: 0 !important;
-    margin: 0 !important;
+  /* El panel izquierdo se vuelve la hoja entera */
+  .previewPane {
+    flex: none !important;
+    width: 100% !important;
+    background-color: white !important;
     overflow: visible !important;
     display: block !important;
+  }
+
+  .previewScroll {
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Ocultar headers viejos si quedaron */
+  .content,
+  .header,
+  .footer,
+  .optionsBar {
+    display: none !important;
   }
 
   #print-area {

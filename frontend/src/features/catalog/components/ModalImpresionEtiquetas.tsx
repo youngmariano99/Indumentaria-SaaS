@@ -1,6 +1,5 @@
 import styles from './ModalImpresionEtiquetas.module.css';
-import { Button } from '../../../components/ui/Button';
-import { Printer, X, QrCode } from '@phosphor-icons/react';
+import { Printer, X } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Barcode from 'react-barcode';
@@ -28,8 +27,8 @@ interface Props {
 
 export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
     const [formato, setFormato] = useState<'termico' | 'a4' | 'a3'>('termico');
-    // Anchos comerciales estándar (mm) para el formato térmico
     const [anchoTermico, setAnchoTermico] = useState<number>(58);
+    const [copias, setCopias] = useState<number>(1);
     const [isGenerating, setIsGenerating] = useState(false);
 
     const handlePrint = () => {
@@ -164,107 +163,126 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
         }
     };
 
+    // Multiplicar etiquetas en base a la cantidad configurada
+    const etiquetasAImprimir = etiquetas.flatMap(etiq => Array(copias).fill(etiq));
+
     return (
         <div className={styles.overlay}>
             <div className={styles.modal}>
-                <header className={styles.header}>
-                    <h3>Impresión de Etiquetas</h3>
-                    <button onClick={onClose} className={styles.closeBtn}>
-                        <X size={24} />
-                    </button>
-                </header>
+                {/* Botón de cerrar general esquina flotante */}
+                <button onClick={onClose} className={styles.closeCornerBtn}>
+                    <X size={24} />
+                </button>
 
-                <div className={styles.content}>
-                    <div className={styles.optionsBar}>
-                        <div className={styles.optionField}>
-                            <label>Formato de Impresión</label>
-                            <select value={formato} onChange={(e) => setFormato(e.target.value as any)}>
-                                <option value="termico">Rollo Térmico Continuo</option>
-                                <option value="a4">Hojas A4 (Grilla)</option>
-                                <option value="a3">Hojas A3 (Grilla)</option>
-                            </select>
-                        </div>
-                        {formato === 'termico' && (
-                            <div className={styles.optionField}>
-                                <label>Rollo (Ancho)</label>
-                                <select value={anchoTermico} onChange={(e) => setAnchoTermico(Number(e.target.value))}>
-                                    <option value={38}>38 mm (Códigos QR Pequeños)</option>
-                                    <option value={50}>50 mm (Etiquetadora Estándar)</option>
-                                    <option value={58}>58 mm (Ticketera Común 58mm)</option>
-                                    <option value={80}>80 mm (Ticketera Retail 80mm)</option>
-                                    <option value={100}>100 mm (Etiquetas Especiales)</option>
-                                    <option value={112}>112 mm (Logística/Envíos)</option>
-                                    <option value={216}>216 mm (Industrial)</option>
-                                </select>
-                            </div>
-                        )}
-                        <div style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.8rem', color: 'var(--gray-500)', fontSize: '0.75rem' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                <Printer size={16} /> <i>Soporta Kiosk Mode</i>
-                            </span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                                <QrCode size={16} /> QR + Barras Estandarizadas
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        id="print-area"
-                        className={
-                            formato === 'termico' ? styles.previewContainer :
-                                formato === 'a3' ? styles.previewContainerA3 : styles.previewContainerA4
-                        }
-                    >
-                        {etiquetas.map((etique, idx) => (
-                            <div key={idx}
-                                className={
-                                    formato === 'termico' ? styles.etiquetaIndividual :
-                                        formato === 'a3' ? styles.etiquetaA3 : styles.etiquetaA4
-                                }
-                                style={formato === 'termico' ? { width: `${anchoTermico}mm` } : {}}
-                            >
-                                <div className={styles.codesSection}>
-                                    <div className={styles.barcodeWrap}>
-                                        <Barcode
-                                            value={etique.sku}
-                                            width={formato === 'termico' ? (anchoTermico < 50 ? 1 : (anchoTermico > 80 ? 2 : 1.2)) : 1.5}
-                                            height={formato === 'termico' ? (anchoTermico < 50 ? 25 : 30) : 40}
-                                            fontSize={10}
-                                            margin={0}
-                                        />
+                {/* COLUMNA IZQUIERDA: PREVIEW */}
+                <div className={styles.previewPane}>
+                    <div className={styles.previewScroll}>
+                        <div
+                            id="print-area"
+                            className={
+                                formato === 'termico' ? styles.previewContainer :
+                                    formato === 'a3' ? styles.previewContainerA3 : styles.previewContainerA4
+                            }
+                        >
+                            {etiquetasAImprimir.map((etique, idx) => (
+                                <div key={idx}
+                                    className={
+                                        formato === 'termico' ? styles.etiquetaIndividual :
+                                            formato === 'a3' ? styles.etiquetaA3 : styles.etiquetaA4
+                                    }
+                                    style={formato === 'termico' ? { width: `${anchoTermico}mm` } : {}}
+                                >
+                                    <div className={styles.codesSection}>
+                                        <div className={styles.barcodeWrap}>
+                                            <Barcode
+                                                value={etique.sku}
+                                                width={formato === 'termico' ? (anchoTermico < 50 ? 1 : (anchoTermico > 80 ? 2 : 1.2)) : 1.5}
+                                                height={formato === 'termico' ? (anchoTermico < 50 ? 25 : 30) : 40}
+                                                fontSize={10}
+                                                margin={0}
+                                            />
+                                        </div>
+                                        <div className={styles.qrWrap}>
+                                            <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? (anchoTermico < 50 ? 25 : 35) : 50} />
+                                        </div>
                                     </div>
-                                    <div className={styles.qrWrap}>
-                                        <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? (anchoTermico < 50 ? 25 : 35) : 50} />
+                                    <div className={styles.textSection}>
+                                        <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>{etique.nombre}</span>
+                                        <div className={styles.labelSpecs}>
+                                            <span>T: {etique.talle}</span>
+                                            <span>C: {etique.color}</span>
+                                            {etique.precio && <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className={styles.textSection}>
-                                    <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>{etique.nombre}</span>
-                                    <div className={styles.labelSpecs}>
-                                        <span>T: {etique.talle}</span>
-                                        <span>C: {etique.color}</span>
-                                        {etique.precio && <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                <footer className={styles.footer}>
-                    <Button variant="secundario" onClick={onClose}>Cancelar</Button>
-                    <Button
-                        variant="secundario"
-                        onClick={handleDownloadPDF}
-                        disabled={isGenerating}
-                        iconLeft={<QrCode size={20} />}
-                    >
-                        {isGenerating ? 'Generando...' : 'Descargar PDF'}
-                    </Button>
-                    <Button onClick={handlePrint} className={styles.printBtn}>
-                        <Printer size={20} weight="bold" />
-                        Imprimir
-                    </Button>
-                </footer>
+                {/* COLUMNA DERECHA: PANELES POS */}
+                <div className={styles.controlPane}>
+                    <h2>Opciones de Impresión</h2>
+
+                    <div className={styles.sectionGroup}>
+                        <span className={styles.sectionLabel}>Formato de Salida</span>
+                        <div className={styles.tabsContainer}>
+                            <button
+                                className={`${styles.tabBtn} ${formato === 'termico' ? styles.tabBtnActive : ''}`}
+                                onClick={() => setFormato('termico')}
+                            >
+                                Térmica (Directa)
+                            </button>
+                            <button
+                                className={`${styles.tabBtn} ${formato === 'a4' ? styles.tabBtnActive : ''}`}
+                                onClick={() => setFormato('a4')}
+                            >
+                                Hoja A4 (Grilla)
+                            </button>
+                            {/* Oculto A3 por defecto temporalmente, lo unifico en A4 para no llenar la UI si no se necesita. Sino, lo agrego si el usuario prefiere */}
+                        </div>
+
+                        {formato === 'termico' && (
+                            <select
+                                className={styles.settingSelect}
+                                value={anchoTermico}
+                                onChange={(e) => setAnchoTermico(Number(e.target.value))}
+                            >
+                                <option value={38}>Ancho de Papel: 38 mm</option>
+                                <option value={50}>Ancho de Papel: 50 mm</option>
+                                <option value={58}>Ancho de Papel: 58 mm (Estándar)</option>
+                                <option value={80}>Ancho de Papel: 80 mm (Ticketera Retail)</option>
+                                <option value={100}>Ancho de Papel: 100 mm</option>
+                                <option value={112}>Ancho de Papel: 112 mm</option>
+                                <option value={216}>Ancho de Papel: 216 mm (Industrial)</option>
+                            </select>
+                        )}
+                    </div>
+
+                    <div className={styles.sectionGroup}>
+                        <span className={styles.sectionLabel}>Copias por Variante</span>
+                        <div className={styles.quantityControl}>
+                            <button className={styles.qtyBtn} onClick={() => setCopias(c => Math.max(1, c - 1))}>-</button>
+                            <input type="number" className={styles.qtyInput} value={copias} readOnly />
+                            <button className={styles.qtyBtn} onClick={() => setCopias(c => Math.min(100, c + 1))}>+</button>
+                        </div>
+                    </div>
+
+                    <div className={styles.posActions}>
+                        <button className={styles.posBtnPrimary} onClick={handlePrint}>
+                            <Printer size={20} weight="bold" />
+                            Imprimir Etiquetas
+                        </button>
+
+                        <button
+                            className={styles.posBtnSecondary}
+                            onClick={handleDownloadPDF}
+                            disabled={isGenerating}
+                        >
+                            {isGenerating ? 'Generando...' : 'Descargar PDF Variante'}
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* INYECCIÓN DINÁMICA DE TAMAÑO DE PÁGINA PARA IMPRESORAS TÉRMICAS */}
