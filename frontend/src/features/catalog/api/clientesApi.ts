@@ -53,6 +53,18 @@ export interface TransaccionHistoricoDto {
     montoTotal: number;
     descripcion: string;
     detalles?: CompraRecienteDetalleDto[];
+    deudaOrigenId?: string | null;
+}
+
+export interface PrendaEnCursoDto {
+    id: string;
+    varianteProductoId: string;
+    productoNombre: string;
+    varianteNombre: string;
+    cantidad: number;
+    precioReferencia: number;
+    estado: string;
+    fecha: string;
 }
 
 export interface Cliente360Dto extends ClienteDto {
@@ -61,6 +73,7 @@ export interface Cliente360Dto extends ClienteDto {
     fechaUltimaCompra?: string;
     ticketPromedio: number;
     historialTransacciones: TransaccionHistoricoDto[];
+    prendasEnCurso: PrendaEnCursoDto[];
 }
 
 export const clientesApi = {
@@ -90,13 +103,31 @@ export const clientesApi = {
         await apiClient.delete(`/Clientes/${id}`);
     },
 
-    agregarSaldo: async (id: string, monto: number, descripcion: string, metodoPagoId?: string): Promise<number> => {
-        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, { monto, descripcion, metodoPagoId });
+    agregarSaldo: async (id: string, monto: number, descripcion: string, metodoPagoId?: string, deudaOrigenId?: string): Promise<number> => {
+        const response = await apiClient.post<number>(`/Clientes/${id}/saldo/sumar`, { monto, descripcion, metodoPagoId, deudaOrigenId });
         return response.data;
     },
 
     descontarSaldo: async (id: string, monto: number, descripcion: string, metodoPagoId?: string): Promise<number> => {
         const response = await apiClient.post<number>(`/Clientes/${id}/saldo/restar`, { monto, descripcion, metodoPagoId });
         return response.data;
+    },
+
+    crearPrendaEnCurso: async (
+        clienteId: string,
+        data: { varianteProductoId: string; cantidad: number; precioReferencia: number }
+    ): Promise<string> => {
+        const response = await apiClient.post<string>(`/Clientes/${clienteId}/prendas-en-curso`, data);
+        return response.data;
+    },
+
+    cambiarEstadoPrendaEnCurso: async (
+        prendaId: string,
+        nuevoEstado: "EnPrueba" | "Pagada" | "Deuda" | "Devuelta"
+    ): Promise<void> => {
+        await apiClient.put(`/Clientes/prendas-en-curso/${prendaId}/estado`, {
+            prendaId,
+            nuevoEstado,
+        });
     }
 }

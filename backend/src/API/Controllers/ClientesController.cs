@@ -71,4 +71,20 @@ public class ClientesController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(result);
     }
+
+    [HttpPost("{id}/prendas-en-curso")]
+    public async Task<ActionResult<Guid>> CrearPrendaEnCurso(Guid id, [FromBody] CrearPrendaEnCursoCommand command)
+    {
+        var cmd = command with { ClienteId = id };
+        var resultId = await _mediator.Send(cmd);
+        return Ok(resultId);
+    }
+
+    [HttpPut("prendas-en-curso/{prendaId}/estado")]
+    public async Task<ActionResult> CambiarEstadoPrendaEnCurso(Guid prendaId, [FromBody] CambiarEstadoPrendaEnCursoCommand command)
+    {
+        if (prendaId != command.PrendaId) return BadRequest("El ID de la ruta no coincide con el ID del cuerpo");
+        await _mediator.Send(command);
+        return NoContent();
+    }
 }

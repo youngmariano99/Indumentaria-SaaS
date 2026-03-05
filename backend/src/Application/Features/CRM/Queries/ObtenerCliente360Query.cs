@@ -87,10 +87,41 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             Tipo = m.Tipo == Core.Entities.TipoMovimientoSaldo.Ingreso ? "Ingreso de Saldo" : "Egreso de Saldo",
             MontoTotal = m.Monto,
             Descripcion = m.Descripcion,
-            Detalles = null
+            Detalles = null,
+            DeudaOrigenId = m.DeudaOrigenId
         }));
 
         historialUnificado = historialUnificado.OrderByDescending(x => x.Fecha).ToList();
+
+        // Prendas en curso del cliente
+        var prendasEnCurso = await _context.PrendasClientesEnCurso
+            .AsNoTracking()
+            .Where(p => p.ClienteId == request.ClienteId)
+            .Include(p => p.VarianteProducto)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var productIdsPrendas = prendasEnCurso
+            .Select(p => p.VarianteProducto.ProductId)
+            .Distinct()
+            .ToList();
+
+        var productosDictPrendas = await _context.Productos
+            .AsNoTracking()
+            .Where(p => productIdsPrendas.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, p => p.Nombre, cancellationToken);
+
+        var prendasEnCursoDto = prendasEnCurso.Select(p => new PrendaEnCursoDto
+        {
+            Id = p.Id,
+            VarianteProductoId = p.VarianteProductoId,
+            ProductoNombre = productosDictPrendas.TryGetValue(p.VarianteProducto.ProductId, out var n) ? n : "Producto Borrado",
+            VarianteNombre = $"{p.VarianteProducto.Talle} / {p.VarianteProducto.Color}".Trim(' ', '/'),
+            Cantidad = p.Cantidad,
+            PrecioReferencia = p.PrecioReferencia,
+            Estado = p.Estado.ToString(),
+            Fecha = p.CreatedAt
+        }).ToList();
 
         return new Cliente360Dto
         {
@@ -109,7 +140,8 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             CantidadComprasHistoricas = cantidadCompras,
             TicketPromedio = ticketPromedio,
             FechaUltimaCompra = ultimaCompra,
-            HistorialTransacciones = historialUnificado
+            HistorialTransacciones = historialUnificado,
+            PrendasEnCurso = prendasEnCursoDto
         };
         }
         catch (Exception ex)

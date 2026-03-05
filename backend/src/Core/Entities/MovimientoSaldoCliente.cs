@@ -32,5 +32,8 @@ public class MovimientoSaldoCliente : BaseEntity, IMustHaveTenant
     public Guid? MetodoPagoId { get; set; }
     public MetodoPago? MetodoPago { get; set; }
 
+    // Opcional: si este movimiento es un PAGO (Ingreso), a qué deuda (Egreso) está vinculado
+    public Guid? DeudaOrigenId { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

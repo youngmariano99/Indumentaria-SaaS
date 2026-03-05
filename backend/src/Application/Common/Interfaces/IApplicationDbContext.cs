@@ -23,6 +23,7 @@ public interface IApplicationDbContext
 
     DbSet<Cliente> Clientes { get; }
     DbSet<MovimientoSaldoCliente> MovimientosSaldosClientes { get; }
+    DbSet<ClientePrendaEnCurso> PrendasClientesEnCurso { get; }
 
     // Sprint 4: Punto de Venta
     DbSet<Venta> Ventas { get; }
