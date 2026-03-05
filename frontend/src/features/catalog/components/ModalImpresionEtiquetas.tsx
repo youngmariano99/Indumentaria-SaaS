@@ -28,6 +28,8 @@ interface Props {
 
 export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
     const [formato, setFormato] = useState<'termico' | 'a4' | 'a3'>('termico');
+    // Anchos comerciales estándar (mm) para el formato térmico
+    const [anchoTermico, setAnchoTermico] = useState<number>(58);
     const [isGenerating, setIsGenerating] = useState(false);
 
     const handlePrint = () => {
@@ -38,87 +40,124 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
         return `${window.location.origin}/pos?scan=${sku}`;
     };
 
+    // Definimos dimensiones físicas según estándar milimétrico para lógica de dibujado JS PDF
+    const PAGE_W_A4 = 210; const PAGE_H_A4 = 297;
+    const PAGE_W_A3 = 297; const PAGE_H_A3 = 420;
+
     const handleDownloadPDF = async () => {
         const area = document.getElementById('print-area');
         if (!area) return;
+        const labels = Array.from(area.children) as HTMLElement[];
+        if (labels.length === 0) return;
 
         setIsGenerating(true);
-        // Guardamos estilos originales para restaurar después
+        // Guardar estado original
         const originalStyle = area.style.cssText;
 
         try {
-            // Forzamos que se muestre todo para la captura
+            // Forzar render para permitir capturas con escala nativa (fuera de viewport limit)
             area.style.maxHeight = 'none';
             area.style.overflow = 'visible';
             area.style.display = 'block';
 
-            const canvas = await html2canvas(area, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                backgroundColor: '#ffffff',
-                scrollX: 0,
-                scrollY: 0
-            });
+            // Propiedades Base
+            const isThermal = formato === 'termico';
+            const pdfFormatStr = isThermal ? [anchoTermico, anchoTermico * 0.6] : (formato === 'a3' ? 'a3' : 'a4');
+            const pageWidth = isThermal ? anchoTermico : (formato === 'a3' ? PAGE_W_A3 : PAGE_W_A4);
+            const pageHeight = isThermal ? (anchoTermico * 0.6) : (formato === 'a3' ? PAGE_H_A3 : PAGE_H_A4);
 
-            const imgData = canvas.toDataURL('image/png');
-            const pdfFormat = formato === 'termico' ? [50, 30] : (formato === 'a3' ? 'a3' : 'a4');
+            // Constantes de Grilla (A4 = 3 col, A3 = 2 col grandes)
+            const margin = 10; // 10mm de margen de página
+            const gap = 5; // 5mm entre etiquetas
+            const cols = isThermal ? 1 : (formato === 'a3' ? 2 : 3);
+
+            // Dimensiones físicas de etiqueta (acordadas en CSS)
+            const labelW = isThermal ? anchoTermico : (formato === 'a3' ? 105 : 70);
+            const labelH = isThermal ? (anchoTermico * 0.6) : (formato === 'a3' ? 37 : 36);
+
+            // Calcular X Inicial (Centrado para cuadricular hoja)
+            const totalGridW = (cols * labelW) + ((cols - 1) * gap);
+            const startX = isThermal ? 0 : (pageWidth - totalGridW) / 2;
+            const startY = isThermal ? 0 : margin;
+
+            let currentX = startX;
+            let currentY = startY;
+            let currentCol = 0;
+
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
-                format: pdfFormat
+                format: pdfFormatStr,
+                hotfixes: ['px_scaling']
             });
 
-            const imgProps = pdf.getImageProperties(imgData);
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
+            for (let i = 0; i < labels.length; i++) {
+                const node = labels[i];
 
-            // Calculamos cuánta "altura de imagen" entra en una página física de PDF
-            const imgHeightInPdf = (imgProps.height * pdfWidth) / imgProps.width;
+                // Si la etiqueta está por salirse de la página (y no es térmica pura), agregamos hoja
+                if (!isThermal && (currentY + labelH > pageHeight - margin)) {
+                    pdf.addPage(pdfFormatStr);
+                    currentY = startY;
+                    currentX = startX;
+                    currentCol = 0;
+                }
 
-            let heightLeft = imgHeightInPdf;
-            let position = 0;
+                // Generar imagen de altísima fidelidad individual
+                const canvas = await html2canvas(node, {
+                    scale: 3, // Mayor escala = mejor QR
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
 
-            // Primera página
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightInPdf);
-            heightLeft -= pdfHeight;
+                const imgData = canvas.toDataURL('image/png');
 
-            // Páginas adicionales si sobran etiquetas
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeightInPdf;
-                pdf.addPage(pdfFormat);
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightInPdf);
-                heightLeft -= pdfHeight;
+                // Si es térmico, agregamos "paño" si no es la primera, construyendo un rollo continuo
+                if (isThermal && i > 0) {
+                    pdf.addPage([anchoTermico, labelH]);
+                }
+
+                // Imprimir
+                // Nota: en JS PDF térmico el currentY/X es 0, usamos la top sheet de todo el rato
+                pdf.addImage(
+                    imgData, 'PNG',
+                    isThermal ? 0 : currentX,
+                    isThermal ? 0 : currentY,
+                    labelW, labelH
+                );
+
+                // Calcular posición siguiente
+                if (!isThermal) {
+                    currentCol++;
+                    if (currentCol >= cols) {
+                        currentCol = 0;
+                        currentX = startX;
+                        currentY += labelH + gap; // Salto de Fila
+                    } else {
+                        currentX += labelW + gap; // Mover a la derecha
+                    }
+                }
             }
 
-            // API de File System Access nativa (Desktop Chrome/Edge/Opera moderno)
+            // Descarga Segura
             if ('showSaveFilePicker' in window) {
                 try {
                     const handle = await (window as any).showSaveFilePicker({
                         suggestedName: `etiquetas_${new Date().getTime()}.pdf`,
-                        types: [{
-                            description: 'Documento PDF',
-                            accept: { 'application/pdf': ['.pdf'] },
-                        }],
+                        types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }],
                     });
                     const writable = await handle.createWritable();
-                    // jsPDF.output('blob') returns exactly the PDF binary sequence
                     await writable.write(pdf.output('blob'));
                     await writable.close();
                 } catch (err: any) {
-                    if (err.name !== 'AbortError') {
-                        console.error('File System Access API failed', err);
-                        pdf.save(`etiquetas_${new Date().getTime()}.pdf`);
-                    }
+                    if (err.name !== 'AbortError') { pdf.save(`etiquetas_${new Date().getTime()}.pdf`); }
                 }
             } else {
-                // Caída elegante para Safari/iOS o navegadores que no soportan la API
                 pdf.save(`etiquetas_${new Date().getTime()}.pdf`);
             }
-
         } catch (err) {
             console.error("Error generating PDF:", err);
-            alert("Error al generar el PDF. Probá usando la opción Imprimir.");
+            alert("Error al generar el PDF. Revisa los permisos o capacidad de memoria de la pestaña.");
         } finally {
             area.style.cssText = originalStyle;
             setIsGenerating(false);
@@ -140,13 +179,32 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                         <div className={styles.optionField}>
                             <label>Formato de Impresión</label>
                             <select value={formato} onChange={(e) => setFormato(e.target.value as any)}>
-                                <option value="termico">Ticketera Térmica (50x30mm)</option>
-                                <option value="a4">Hoja A4 (Grilla)</option>
-                                <option value="a3">Hoja A3 (Grilla)</option>
+                                <option value="termico">Rollo Térmico Continuo</option>
+                                <option value="a4">Hojas A4 (Grilla)</option>
+                                <option value="a3">Hojas A3 (Grilla)</option>
                             </select>
                         </div>
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--gray-500)', fontSize: '0.8rem' }}>
-                            <QrCode size={18} /> QR + Barras Incluidos
+                        {formato === 'termico' && (
+                            <div className={styles.optionField}>
+                                <label>Rollo (Ancho)</label>
+                                <select value={anchoTermico} onChange={(e) => setAnchoTermico(Number(e.target.value))}>
+                                    <option value={38}>38 mm (Códigos QR Pequeños)</option>
+                                    <option value={50}>50 mm (Etiquetadora Estándar)</option>
+                                    <option value={58}>58 mm (Ticketera Común 58mm)</option>
+                                    <option value={80}>80 mm (Ticketera Retail 80mm)</option>
+                                    <option value={100}>100 mm (Etiquetas Especiales)</option>
+                                    <option value={112}>112 mm (Logística/Envíos)</option>
+                                    <option value={216}>216 mm (Industrial)</option>
+                                </select>
+                            </div>
+                        )}
+                        <div style={{ marginLeft: 'auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.8rem', color: 'var(--gray-500)', fontSize: '0.75rem' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <Printer size={16} /> <i>Soporta Kiosk Mode</i>
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                <QrCode size={16} /> QR + Barras Estandarizadas
+                            </span>
                         </div>
                     </div>
 
@@ -158,26 +216,29 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                         }
                     >
                         {etiquetas.map((etique, idx) => (
-                            <div key={idx} className={
-                                formato === 'termico' ? styles.etiquetaIndividual :
-                                    formato === 'a3' ? styles.etiquetaA3 : styles.etiquetaA4
-                            }>
+                            <div key={idx}
+                                className={
+                                    formato === 'termico' ? styles.etiquetaIndividual :
+                                        formato === 'a3' ? styles.etiquetaA3 : styles.etiquetaA4
+                                }
+                                style={formato === 'termico' ? { width: `${anchoTermico}mm` } : {}}
+                            >
                                 <div className={styles.codesSection}>
                                     <div className={styles.barcodeWrap}>
                                         <Barcode
                                             value={etique.sku}
-                                            width={formato === 'termico' ? 1.2 : 1.5}
-                                            height={formato === 'termico' ? 30 : 40}
+                                            width={formato === 'termico' ? (anchoTermico < 50 ? 1 : (anchoTermico > 80 ? 2 : 1.2)) : 1.5}
+                                            height={formato === 'termico' ? (anchoTermico < 50 ? 25 : 30) : 40}
                                             fontSize={10}
                                             margin={0}
                                         />
                                     </div>
                                     <div className={styles.qrWrap}>
-                                        <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? 35 : 50} />
+                                        <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? (anchoTermico < 50 ? 25 : 35) : 50} />
                                     </div>
                                 </div>
                                 <div className={styles.textSection}>
-                                    <span className={styles.labelNombre}>{etique.nombre}</span>
+                                    <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>{etique.nombre}</span>
                                     <div className={styles.labelSpecs}>
                                         <span>T: {etique.talle}</span>
                                         <span>C: {etique.color}</span>
@@ -205,6 +266,20 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                     </Button>
                 </footer>
             </div>
+
+            {/* INYECCIÓN DINÁMICA DE TAMAÑO DE PÁGINA PARA IMPRESORAS TÉRMICAS */}
+            {formato === 'termico' && (
+                <style>
+                    {`
+                    @media print {
+                        @page {
+                            size: ${anchoTermico}mm auto !important;
+                            margin: 0 !important;
+                        }
+                    }
+                    `}
+                </style>
+            )}
         </div>
     );
 }

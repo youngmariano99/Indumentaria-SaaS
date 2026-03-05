@@ -305,17 +305,32 @@
     gap: 0 !important;
   }
 
-  /* Estilo Grilla (A4/A3) */
-  .previewContainerA4,
+  /* Estilo Grilla (A4) */
+  .previewContainerA4 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 70mm) !important;
+    gap: 2mm !important;
+    justify-content: center !important;
+  }
+
+  /* Estilo Grilla (A3) */
   .previewContainerA3 {
     display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(2, 105mm) !important;
     gap: 5mm !important;
+    justify-content: center !important;
   }
 
   .etiquetaIndividual {
-    width: 50mm;
-    height: 30mm;
+    width: 100% !important;
+    /* Controlado dinámicamente por React */
+    height: auto !important;
+    /* Altura auto-ajustable según tamaño */
+    min-height: 25mm !important;
+    /* Altura mínima de garantía */
+    padding: 3mm !important;
+    /* Safe Zone (A prueba de desalineación física) */
+    box-sizing: border-box !important;
     border: none !important;
     box-shadow: none !important;
     margin: 0;
@@ -323,11 +338,29 @@
     display: flex !important;
   }
 
-  .etiquetaA4,
-  .etiquetaA3 {
+  .etiquetaA4 {
+    width: 70mm !important;
+    height: 36mm !important;
     border: 0.1mm solid #eee !important;
     box-shadow: none !important;
     page-break-inside: avoid;
     display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2mm !important;
+  }
+
+  .etiquetaA3 {
+    width: 105mm !important;
+    height: 37mm !important;
+    border: 0.1mm solid #eee !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 3mm !important;
   }
 }
