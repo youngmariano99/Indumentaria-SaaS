@@ -5,5 +5,6 @@ public enum RolUsuario
     Admin,
     Manager,
     Vendedor,
-    Auditor
+    Auditor,
+    SuperAdmin
 }

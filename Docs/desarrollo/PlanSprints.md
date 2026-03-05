@@ -276,21 +276,22 @@ A continuación se detalla el plan maestro (End-to-End) de todos los Sprints nec
 ## Sprint 8: Panel de Administración SaaS (SRE & Telemetría Global)
 **Objetivo General:** Construir el "Backoffice Centralizado" para el equipo interno, permitiendo monitoreo de salud (Health), auditoría transaccional, métricas comerciales y gestión de inquilinos (Tenants) en un entorno de alta densidad.
 
-### Sprint 8.1: Fundaciones del Backoffice y Bypass de Tenant
-*   [ ] **Backend (Seguridad):** Implementación de rol estricto `SuperAdmin` en Identity/JWT.
-*   [ ] **Backend (EF Core):** Mecanismo de "Bypass" temporal para deshabilitar el *Global Query Filter* (`IgnoreQueryFilters()`) solo en controladores del área de administración.
-*   [ ] **Frontend (Arquitectura):** Creación de un sub-enrutador `/admin` (o proyecto Vite aislado) protegido, con UI enfocada en densidad de datos.
-*   [ ] **Frontend (Gestión Básica):** ABM global de Tenants (Listar tiendas, Habilitar/Suspender servicio por falta de pago, Ver su plan activo).
+### Sprint 8.1: Fundaciones del Backoffice y Bypass de Tenant (Completado)
+*   [x] **Backend (Seguridad):** Implementación de rol estricto `SuperAdmin` en Identity/JWT.
+*   [x] **Backend (EF Core):** Mecanismo de "Bypass" temporal para deshabilitar el *Global Query Filter* (`IgnoreQueryFilters()`) solo en controladores del área de administración.
+*   [x] **Frontend (Arquitectura):** Creación de un sub-enrutador `/admin` (o proyecto Vite aislado) protegido, con UI enfocada en densidad de datos.
+*   [x] **Frontend (Gestión Básica):** ABM global de Tenants (Listar tiendas, Habilitar/Suspender servicio por falta de pago, Ver su plan activo).
 
-### Sprint 8.2: Telemetría de Salud e Infraestructura (SaaS Health)
-*   [ ] **Backend (Observabilidad):** Integración inicial de **OpenTelemetry** para medir latencia por Inquilino (detectar percentiles altos P95/P99 en carga de catálogo o POS).
-*   [ ] **Base de Datos (PostgreSQL):** Queries de infraestructura apuntando a vistas estándar (`pg_stat_activity`, tamaño de esquemas/tablas) para alertar sobre tiendas que requieren *VACUUM* o consumen mucha memoria.
+### Sprint 8.2: Telemetría de Salud e Infraestructura (SaaS Health) (Completado)
+*   [x] **Backend (Observabilidad):** Uso de ADO.NET para interrogar a PostgreSQL (`pg_stat_activity` y cache hit ratio) sobre el estado de la DB a nivel global.
+*   [x] **Frontend (Dashboard SRE):** Construcción de vistas de monitoreo inspiradas en Datadog/NewRelic usando `recharts`. Gráficos de conexiones concurrentes y salud transaccional.
+*   [x] **Frontend (React Query):** Polling dinámico cada 30 segundos (HUD en tiempo real) en el panel SuperAdmin.
 *   [ ] **Frontend (Dashboards):** Implementación de gráficos (Recharts/Nivo) mostrando la salud del hardware y cuellos de botella por tienda.
 *   [ ] **Sincronización PWA V2:** Endpoints para que el Backoffice vea en tiempo real la "Longitud de la cola pendiente" (Sync Queue) de las cajas offline de cada tienda.
 
 ### Sprint 8.3: Centro de Auditoría y Debugger de Transacciones
-*   [ ] **Backend (Buscador JSONB):** Aprovechar los índices GIN de PostgreSQL sobre la tabla `LogsAuditoria` para crear un buscador global ultrarrápido (Ej: *"Buscar quién y cuándo le cambió el precio a la remera roja en la sucursal X"*).
-*   [ ] **Backend/Frontend (Transaction Debugger):** Interfaz para especialistas de soporte que toma un UUID de Venta e imprime todo su ciclo de vida cronológico, especialmente útil para fallos de sincronía offline o rechazos de AFIP/ARCA.
+*   [x] **Backend (Buscador JSONB):** Aprovechar los índices GIN de PostgreSQL sobre la tabla `LogsAuditoria` para crear un buscador global ultrarrápido (Ej: *"Buscar quién y cuándo le cambió el precio a la remera roja en la sucursal X"*).
+*   [x] **Backend/Frontend (Transaction Debugger):** Interfaz para especialistas de soporte que toma un UUID de Venta e imprime todo su ciclo de vida cronológico, especialmente útil para fallos de sincronía offline o rechazos de AFIP/ARCA.
 *   [ ] **Alertas de Fraude:** Reglas Heurísticas automáticas (Ej: Ráfagas de devoluciones en menos de 10 minutos, o modificaciones de stock manuales en horarios de madrugada).
 
 ### Sprint 8.4: Analítica de Producto Comercial (SaaS Insights)

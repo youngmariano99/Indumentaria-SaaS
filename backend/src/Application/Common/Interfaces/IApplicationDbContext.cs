@@ -6,6 +6,8 @@ namespace Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
+    void EnterBypassMode();
+
     DbSet<Inquilino> Inquilinos { get; }
     DbSet<Categoria> Categorias { get; }
     DbSet<Producto> Productos { get; }

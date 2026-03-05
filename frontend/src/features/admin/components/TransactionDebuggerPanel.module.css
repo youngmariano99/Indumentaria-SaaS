@@ -1,0 +1,216 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.panel {
+    width: 600px;
+    max-width: 90vw;
+    background: white;
+    height: 100vh;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.headerInfo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.headerInfo h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+    color: var(--color-gray-900);
+}
+
+.entityIdBadge {
+    display: inline-block;
+    background: var(--color-gray-100);
+    color: var(--color-gray-600);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-gray-500);
+    padding: 4px;
+}
+
+.closeBtn:hover {
+    color: var(--color-gray-900);
+}
+
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-6);
+    background: var(--color-gray-50);
+}
+
+.timelineContainer {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.timelineContainer::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--color-gray-200);
+}
+
+.timelineItem {
+    display: flex;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    position: relative;
+}
+
+.timelineDot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--color-primary);
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.timelineContent {
+    background: white;
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    flex: 1;
+    box-shadow: var(--shadow-sm);
+}
+
+.timelineMeta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-gray-100);
+    padding-bottom: var(--space-2);
+}
+
+.actionBadge {
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 99px;
+}
+
+.actionBadge.insert {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.actionBadge.update {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-primary);
+}
+
+.actionBadge.delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.timeStr {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+}
+
+.userIdStr {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    margin-left: auto;
+    font-family: monospace;
+}
+
+.diffBox {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-3);
+}
+
+.jsonOld,
+.jsonNew {
+    flex: 1;
+    min-width: 0;
+}
+
+.jsonLabel {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-gray-500);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.jsonOld pre {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.jsonNew pre {
+    background: rgba(16, 185, 129, 0.05);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+pre {
+    margin: 0;
+    padding: var(--space-2);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.diffArrow {
+    display: flex;
+    align-items: center;
+    color: var(--color-gray-400);
+}

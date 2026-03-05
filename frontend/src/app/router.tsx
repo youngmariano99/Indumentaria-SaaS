@@ -19,6 +19,11 @@ import { ArqueoPage } from "../features/arqueo/ArqueoPage";
 import { ShareTargetPage } from "../features/catalog/ShareTargetPage";
 import { useAuthStore } from "../features/auth/store/authStore";
 
+import { AdminLayout } from "../components/layout/AdminLayout";
+import { TenantsDirectoryPage } from "../features/admin/TenantsDirectoryPage";
+import { HealthDashboardPage } from "../features/admin/HealthDashboardPage";
+import { AdminAuditPage } from '../features/admin/AdminAuditPage';
+
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
 const ProtectedLayout = () => {
   const isValid = useAuthStore((state) => state.checkTokenValidity());
@@ -75,5 +80,17 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  { path: "*", element: <Navigate to="/" replace /> },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { path: "tenants", element: <TenantsDirectoryPage /> },
+      { path: "health", element: <HealthDashboardPage /> },
+      { path: "audit", element: <AdminAuditPage /> }
+    ]
+  },
+  {
+    path: "*",
+    element: <Navigate to="/dashboard" replace />,
+  },
 ]);

@@ -111,4 +111,41 @@ public class AuthController : ControllerBase
 
         return Ok(new { mensaje = "Usuario administrador e Inquilino creados exitosamente. Ya puedes hacer login." });
     }
+
+    [HttpPost("register-superadmin")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RegisterSuperAdmin([FromBody] LoginRequest request)
+    {
+        // El SuperAdmin necesita estar atado a un tenant "Master" o uno genérico.
+        var inquilino = await _dbContext.Inquilinos
+            .FirstOrDefaultAsync(i => i.Subdominio == "master-saas");
+
+        if (inquilino == null)
+        {
+            inquilino = new Core.Entities.Inquilino 
+            { 
+                Id = Guid.NewGuid(), 
+                NombreComercial = "Master SaaS",
+                Subdominio = "master-saas" 
+            };
+            _dbContext.Inquilinos.Add(inquilino);
+        }
+
+        var passwordHash = _passwordHasher.Hash(request.Password);
+        
+        var newUser = new Core.Entities.Usuario
+        {
+            Id = Guid.NewGuid(),
+            TenantId = inquilino.Id,
+            Email = request.Email,
+            Nombre = "Super Admin Root",
+            PasswordHash = passwordHash,
+            Rol = Core.Enums.SystemRole.SuperAdmin // O Rol = 4
+        };
+
+        _dbContext.Add(newUser);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { mensaje = "SuperAdmin creado exitosamente." });
+    }
 }

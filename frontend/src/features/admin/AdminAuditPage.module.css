@@ -1,0 +1,211 @@
+.page {
+    padding: var(--space-6);
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    margin-bottom: var(--space-6);
+}
+
+.titleArea {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.title {
+    font-family: var(--font-heading);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    margin: 0 0 var(--space-1) 0;
+    color: var(--color-gray-900);
+}
+
+.subtitle {
+    color: var(--color-gray-500);
+    margin: 0;
+    font-size: var(--text-sm);
+}
+
+.filtersCard {
+    background: white;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-gray-200);
+    margin-bottom: var(--space-4);
+}
+
+.searchForm {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.searchWrapper {
+    position: relative;
+    flex: 1;
+}
+
+.searchIcon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-gray-400);
+}
+
+.searchInput {
+    width: 100%;
+    padding: 10px 10px 10px 40px;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+}
+
+.searchBtn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0 20px;
+    height: 40px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.filterBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: var(--color-gray-700);
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--radius-md);
+    padding: 0 16px;
+    height: 40px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.tableCard {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-gray-200);
+    overflow: hidden;
+}
+
+.tableResponsive {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.table th {
+    background: var(--color-gray-50);
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-gray-500);
+    text-transform: uppercase;
+    font-size: var(--text-xs);
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-gray-100);
+    vertical-align: middle;
+}
+
+.table tr:hover {
+    background: var(--color-gray-50);
+}
+
+.tagTable {
+    background: var(--color-gray-100);
+    color: var(--color-gray-700);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.tagAction {
+    padding: 4px 8px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.tagAction.insert {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.tagAction.update {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--color-primary);
+}
+
+.tagAction.delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.cellJsonPreview {
+    max-width: 300px;
+}
+
+.jsonSnippet {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--color-gray-600);
+    background: var(--color-gray-50);
+    padding: 4px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.muted {
+    color: var(--color-gray-400);
+    font-style: italic;
+}
+
+.truncate {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.debugBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.debugBtn:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}

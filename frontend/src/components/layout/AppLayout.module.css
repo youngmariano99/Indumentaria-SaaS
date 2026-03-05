@@ -9,6 +9,8 @@
     background: var(--color-gray-50);
     color: var(--color-gray-900);
     font-family: var(--font-ui);
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 @media (max-width: 768px) {
@@ -161,6 +163,18 @@
     font-size: 20px;
 }
 
+/* Override para Mobile Drawer cuando está abierto forzosamente */
+.sidebar.forceExpanded .sidebarLogo span:last-child,
+.sidebar.forceExpanded .navItem span:not(.navItemIcon),
+.sidebar.forceExpanded .navFooter {
+    display: block !important;
+}
+
+.sidebar.forceExpanded .navItem {
+    justify-content: flex-start !important;
+    padding-inline: 10px !important;
+}
+
 /* El contenido de la ruta se renderiza aquí */
 .main {
     display: flex;
@@ -168,8 +182,15 @@
     min-height: 100vh;
 }
 
+/* Ocultar elementos móviles por defecto en desktop */
+.mobileOverlay {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    .shell {
+
+    .shell,
+    .shell.sidebarCollapsed {
         grid-template-columns: 1fr;
     }
 
@@ -191,8 +212,8 @@
     }
 
     .mobileOverlay {
-        display: none;
         position: fixed;
+        display: none;
         top: 0;
         left: 0;
         right: 0;

@@ -60,12 +60,19 @@ public class TenantSessionInterceptor : DbConnectionInterceptor
 public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     private readonly ITenantResolver _tenantResolver;
+    private bool _bypassFilters = false;
 
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options,
-        ITenantResolver tenantResolver) : base(options)
+        ITenantResolver tenantResolver)
+        : base(options)
     {
         _tenantResolver = tenantResolver;
+    }
+
+    public void EnterBypassMode()
+    {
+        _bypassFilters = true;
     }
 
     public DbSet<Inquilino> Inquilinos => Set<Inquilino>();
@@ -152,11 +159,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         if (hasTenant && hasSoftDelete)
         {
-            builder.Entity<T>().HasQueryFilter(e => ((IMustHaveTenant)e).TenantId == CurrentTenantId && !((ISoftDelete)e).IsDeleted);
+            builder.Entity<T>().HasQueryFilter(e => _bypassFilters || (((IMustHaveTenant)e).TenantId == CurrentTenantId && !((ISoftDelete)e).IsDeleted));
         }
         else if (hasTenant)
         {
-            builder.Entity<T>().HasQueryFilter(e => ((IMustHaveTenant)e).TenantId == CurrentTenantId);
+            builder.Entity<T>().HasQueryFilter(e => _bypassFilters || (((IMustHaveTenant)e).TenantId == CurrentTenantId));
         }
         else if (hasSoftDelete)
         {

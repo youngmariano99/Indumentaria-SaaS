@@ -63,7 +63,7 @@ export function AppLayout() {
                 onClick={() => setMobileDrawerOpen(false)}
             />
 
-            <aside className={`${styles.sidebar} ${sidebarOpen ? "" : styles.sidebarCollapsed} ${mobileDrawerOpen ? styles.mobileDrawerOpen : ""}`}>
+            <aside className={`${styles.sidebar} ${sidebarOpen && !mobileDrawerOpen ? "" : styles.sidebarCollapsed} ${mobileDrawerOpen ? styles.mobileDrawerOpen : ""} ${mobileDrawerOpen ? styles.forceExpanded : ""}`}>
                 <div className={styles.sidebarHeader}>
                     {/* Logo minimal: solo usamos el espacio para el toggle, sin marca visual */}
                     <div className={styles.sidebarLogo} />
