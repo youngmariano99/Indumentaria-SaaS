@@ -209,38 +209,68 @@
 /* ── PRINT LOGIC ─────────────────────────────────────────────────── */
 @media print {
 
-  /* No ocultar el body completamente, solo elementos disruptivos */
+  /* Tamaño del papel base (ayuda a los drivers de ticketeras) */
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  /* Ocultar absolutamente todo en el body por defecto */
+  :global(body) * {
+    visibility: hidden !important;
+  }
+
+  /* Mostrar solo el overlay del modal y sus descendientes */
+  .overlay,
+  .overlay * {
+    visibility: visible !important;
+  }
+
+  /* Configuración del overlay para que sea el lienzo principal */
   .overlay {
-    background: white !important;
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     height: auto !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
     backdrop-filter: none !important;
+    display: block !important;
+    z-index: 99999 !important;
+    overflow: visible !important;
   }
 
+  /* Resetear el modal para que no parezca una "ventana" sino el contenido puro */
   .modal {
     width: 100% !important;
     max-width: none !important;
     box-shadow: none !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    max-height: none !important;
+    position: static !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    display: block !important;
     overflow: visible !important;
   }
 
-  /* Ocultar UI que no es el área de impresión */
+  /* Ocultar headers y footers interactivos del modal */
   .header,
+  .header *,
   .footer,
-  .optionsBar {
+  .footer *,
+  .optionsBar,
+  .optionsBar *,
+  .closeBtn {
     display: none !important;
   }
 
   .content {
     padding: 0 !important;
+    margin: 0 !important;
     overflow: visible !important;
+    display: block !important;
   }
 
   #print-area {
@@ -251,34 +281,53 @@
     margin: 0 !important;
     max-height: none !important;
     width: 100% !important;
+    position: relative !important;
   }
 
+  /* Reset de contenedores para ELIMINAR SCROLLBARS en impresión */
+  .previewContainer,
+  .previewContainerA4,
+  .previewContainerA3 {
+    max-height: none !important;
+    overflow: visible !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    display: block !important;
+  }
+
+  /* Estilo Térmico (Vertical) */
   .previewContainer {
     display: flex !important;
     flex-direction: column !important;
+    align-items: center !important;
     gap: 0 !important;
   }
 
+  /* Estilo Grilla (A4/A3) */
   .previewContainerA4,
   .previewContainerA3 {
     display: grid !important;
     grid-template-columns: repeat(3, 1fr) !important;
-    /* Ajuste para A4/A3 */
     gap: 5mm !important;
-    border: none !important;
   }
 
   .etiquetaIndividual {
     width: 50mm;
     height: 30mm;
-    border: 0.1mm solid #eee !important;
+    border: none !important;
+    box-shadow: none !important;
     margin: 0;
     page-break-after: always;
+    display: flex !important;
   }
 
   .etiquetaA4,
   .etiquetaA3 {
     border: 0.1mm solid #eee !important;
+    box-shadow: none !important;
     page-break-inside: avoid;
+    display: flex !important;
   }
 }

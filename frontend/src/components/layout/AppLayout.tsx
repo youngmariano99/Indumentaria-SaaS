@@ -10,8 +10,10 @@ import {
     Swap,
     UserCircle,
     CashRegister,
-    DownloadSimple
+    DownloadSimple,
+    SignOut
 } from "@phosphor-icons/react";
+import { useAuthStore } from "../../features/auth/store/authStore";
 import { ReloadPrompt } from "../ReloadPrompt";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
 import { useSyncManager } from "../../hooks/useSyncManager";
@@ -24,6 +26,7 @@ import styles from "./AppLayout.module.css";
  * El contenido de cada ruta se inyecta via <Outlet />.
  */
 export function AppLayout() {
+    const { logout } = useAuthStore();
     const { isInstallable, promptInstall } = usePWAInstall();
     const { isOnline, isSyncing, pendingCount, syncNow } = useSyncManager();
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -237,7 +240,34 @@ export function AppLayout() {
                             {sidebarOpen && <span>Instalar App</span>}
                         </button>
                     )}
-                    <div>Appy Studios</div>
+
+                    <button
+                        onClick={logout}
+                        className={styles.logoutBtn}
+                        style={{
+                            width: '100%',
+                            background: 'transparent',
+                            border: '1px solid rgba(220, 38, 38, 0.3)',
+                            color: '#dc2626',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '0.85rem',
+                            marginBottom: '12px',
+                            transition: 'all 0.2s',
+                            justifyContent: sidebarOpen ? 'flex-start' : 'center'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(220, 38, 38, 0.06)' }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent' }}
+                    >
+                        <SignOut size={18} />
+                        {sidebarOpen && <span>Cerrar Sesión</span>}
+                    </button>
+
+                    <div style={{ textAlign: sidebarOpen ? 'left' : 'center', width: '100%' }}>Appy Studios</div>
                 </div>
             </aside>
 

@@ -57,8 +57,8 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff',
-                windowWidth: area.scrollWidth,
-                windowHeight: area.scrollHeight
+                scrollX: 0,
+                scrollY: 0
             });
 
             const imgData = canvas.toDataURL('image/png');
