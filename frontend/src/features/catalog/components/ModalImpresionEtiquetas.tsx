@@ -5,6 +5,8 @@ import { QRCodeCanvas } from 'qrcode.react';
 import Barcode from 'react-barcode';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { usePrinter } from '../../../hooks/usePrinter';
+import { Bluetooth, Usb } from '@phosphor-icons/react';
 
 /**
  * Propósito: Generar una vista previa e impresión de etiquetas térmicas para SKUs seleccionados.
@@ -30,8 +32,17 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
     const [anchoTermico, setAnchoTermico] = useState<number>(58);
     const [copias, setCopias] = useState<number>(1);
     const [isGenerating, setIsGenerating] = useState(false);
+    const { status, connectSerial, connectBluetooth, printTicket } = usePrinter();
 
-    const handlePrint = () => {
+    const handlePrint = async () => {
+        // 1. Intentar impresión directa si estamos conectados
+        if (status.connected) {
+            const lines = etiquetasAImprimir.map(e => `[B]${e.nombre}\nSKU: ${e.sku}\nT: ${e.talle} C: ${e.color}\n---`);
+            const success = await printTicket(lines);
+            if (success) return;
+        }
+
+        // 2. Fallback a window.print() tradicional si no hay hardware directo
         window.print();
     };
 
@@ -191,6 +202,7 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                             formato === 'a3' ? styles.etiquetaA3 : styles.etiquetaA4
                                     }
                                     style={formato === 'termico' ? { width: `${anchoTermico}mm` } : {}}
+                                    data-ancho={formato === 'termico' ? anchoTermico : undefined}
                                 >
                                     <div className={styles.codesSection}>
                                         <div className={styles.barcodeWrap}>
@@ -248,10 +260,9 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                 value={anchoTermico}
                                 onChange={(e) => setAnchoTermico(Number(e.target.value))}
                             >
-                                <option value={38}>Ancho de Papel: 38 mm</option>
-                                <option value={50}>Ancho de Papel: 50 mm</option>
-                                <option value={58}>Ancho de Papel: 58 mm (Estándar)</option>
-                                <option value={80}>Ancho de Papel: 80 mm (Ticketera Retail)</option>
+                                <option value="40">Térmico (40mm x 30mm)</option>
+                                <option value="58">Térmico (58mm)</option>
+                                <option value="80">Térmico (80mm)</option>
                                 <option value={100}>Ancho de Papel: 100 mm</option>
                                 <option value={112}>Ancho de Papel: 112 mm</option>
                                 <option value={216}>Ancho de Papel: 216 mm (Industrial)</option>
@@ -269,9 +280,24 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                     </div>
 
                     <div className={styles.posActions}>
+                        {!status.connected ? (
+                            <div className={styles.connectionOptions}>
+                                <button className={styles.connBtn} onClick={connectSerial}>
+                                    <Usb size={18} /> USB (Serial)
+                                </button>
+                                <button className={styles.connBtn} onClick={connectBluetooth}>
+                                    <Bluetooth size={18} /> Bluetooth
+                                </button>
+                            </div>
+                        ) : (
+                            <div className={styles.connectedBadge}>
+                                🟢 Conectado vía {status.interface}
+                            </div>
+                        )}
+
                         <button className={styles.posBtnPrimary} onClick={handlePrint}>
                             <Printer size={20} weight="bold" />
-                            Imprimir Etiquetas
+                            {status.connected ? 'Imprimir Directo' : 'Imprimir Etiquetas'}
                         </button>
 
                         <button

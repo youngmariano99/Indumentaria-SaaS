@@ -1,6 +1,6 @@
 import { Outlet, Navigate, NavLink } from 'react-router-dom';
 import { useAuthStore } from '../../features/auth/store/authStore';
-import { Database, ShieldCheck, SignOut, HardDrives, Binoculars } from '@phosphor-icons/react';
+import { Database, ShieldCheck, SignOut, HardDrives, Binoculars, TrendUp } from '@phosphor-icons/react';
 import styles from './AdminLayout.module.css';
 
 export function AdminLayout() {
@@ -38,6 +38,10 @@ export function AdminLayout() {
                     <NavLink to="/admin/audit" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
                         <Binoculars size={20} />
                         Auditoría Forense
+                    </NavLink>
+                    <NavLink to="/admin/insights" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}>
+                        <TrendUp size={20} />
+                        Insights Comerciales
                     </NavLink>
                 </nav>
 

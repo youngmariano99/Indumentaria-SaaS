@@ -21,7 +21,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
 
     // Estado Prenda en Prueba
     const [showPrendaModal, setShowPrendaModal] = useState(false);
-    const [variantePrendaId, setVariantePrendaId] = useState('');
     const [cantidadPrenda, setCantidadPrenda] = useState<number | string>(1);
     const [precioReferenciaPrenda, setPrecioReferenciaPrenda] = useState<number | string>('');
     const [savingPrenda, setSavingPrenda] = useState(false);
@@ -98,7 +97,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
 
     const abrirModalPrenda = () => {
         setModoCargaPrenda('stock');
-        setVariantePrendaId('');
         setCantidadPrenda(1);
         setPrecioReferenciaPrenda('');
         setProductoManualNombre('');
@@ -780,7 +778,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                     });
                                     setShowPrendaModal(false);
                                     setModoCargaPrenda('stock');
-                                    setVariantePrendaId('');
                                     setCantidadPrenda(1);
                                     setPrecioReferenciaPrenda('');
                                     setProductoManualNombre('');
@@ -868,7 +865,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                                                                         disabled={disabled}
                                                                                         onClick={() => {
                                                                                             setVarianteSeleccionada(v);
-                                                                                            setVariantePrendaId(((v as any).varianteId ?? '').toString());
                                                                                             if (!precioReferenciaPrenda) {
                                                                                                 setPrecioReferenciaPrenda(p.precioBase);
                                                                                             }
