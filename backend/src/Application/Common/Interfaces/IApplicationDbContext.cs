@@ -29,6 +29,7 @@ public interface IApplicationDbContext
     DbSet<Venta> Ventas { get; }
     DbSet<VentaDetalle> VentasDetalles { get; }
     DbSet<MetodoPago> MetodosPago { get; }
+    DbSet<EstadoDispositivoPwa> EstadosDispositivosPwa { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

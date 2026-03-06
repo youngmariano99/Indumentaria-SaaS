@@ -10,8 +10,8 @@ export function AdminLayout() {
         return <Navigate to="/login" replace />;
     }
 
-    // Protección de Frontera: Enum 4 corresponde a "SuperAdmin"
-    if (user?.rol !== 4) {
+    // Protección de Frontera: Enum 1 (or "SuperAdmin") corresponde a SuperAdmin según SystemRole.cs
+    if (user?.rol !== 1 && user?.rol !== 'SuperAdmin') {
         return <Navigate to="/dashboard" replace />;
     }
 

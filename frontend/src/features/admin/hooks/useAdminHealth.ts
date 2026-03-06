@@ -24,3 +24,27 @@ export const useAdminHealth = () => {
         staleTime: 10000 // Se considera obsoleto rápido
     });
 };
+
+export interface PwaStatusRow {
+    id: string;
+    tenantId: string;
+    tenantName: string;
+    tenantSubdomain: string;
+    dispositivoId: string;
+    nombreDispositivo: string;
+    appVersion: string;
+    ultimaVezOnline: string;
+    itemsPendientesSubida: number;
+}
+
+export const useAdminPwaStatus = () => {
+    return useQuery({
+        queryKey: ['admin-pwa-status'],
+        queryFn: async (): Promise<PwaStatusRow[]> => {
+            const response = await apiClient.get<PwaStatusRow[]>('/adminhealth/pwa-status');
+            return response.data;
+        },
+        refetchInterval: 15000, // Refrescar los PWAs caídos más rápido
+        staleTime: 5000
+    });
+};

@@ -15,7 +15,7 @@ export interface LoginResponse {
     userId: string;
     nombre: string;
     tenantId: string;
-    rol: number;
+    rol: string | number;
 }
 
 export interface AuthState {
@@ -24,6 +24,6 @@ export interface AuthState {
         userId: string;
         nombre: string;
         tenantId: string;
-        rol: number;
+        rol: string | number;
     } | null;
 }

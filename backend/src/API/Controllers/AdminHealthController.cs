@@ -81,4 +81,77 @@ public class AdminHealthController : ControllerBase
 
         return Ok(health);
     }
+
+    [AllowAnonymous]
+    [HttpPost("seed-superadmin")]
+    public async Task<IActionResult> SeedSuperAdmin(CancellationToken cancellationToken)
+    {
+        // 1. Crear Inquilino "master-saas" si no existe
+        var masterTenant = await _context.Inquilinos.FirstOrDefaultAsync(t => t.Subdominio == "master-saas", cancellationToken);
+        if (masterTenant == null)
+        {
+            masterTenant = new Core.Entities.Inquilino
+            {
+                Id = Guid.NewGuid(),
+                NombreComercial = "Master SaaS",
+                CUIT = "00000000000",
+                Subdominio = "master-saas",
+                ConfiguracionRegional = "es-AR",
+                FechaCreacion = DateTime.UtcNow
+            };
+            _context.Inquilinos.Add(masterTenant);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        // 2. Crear SuperAdmin si no existe
+        var superAdmin = await _context.Usuarios.IgnoreQueryFilters()
+                                .FirstOrDefaultAsync(u => u.Email == "appystudios@gmail.com", cancellationToken);
+        
+        if (superAdmin == null)
+        {
+            superAdmin = new Core.Entities.Usuario
+            {
+                Id = Guid.NewGuid(),
+                TenantId = masterTenant.Id,
+                Nombre = "Super Admin Appy",
+                Email = "appystudios@gmail.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin1234"),
+                Rol = Core.Enums.SystemRole.SuperAdmin
+            };
+            _context.Usuarios.Add(superAdmin);
+            await _context.SaveChangesAsync(cancellationToken);
+            
+            return Ok(new { message = "SuperAdmin y Tenant creados exitosamente.", email = superAdmin.Email });
+        }
+
+        return Ok(new { message = "El SuperAdmin ya existe.", email = superAdmin.Email });
+    }
+
+    [HttpGet("pwa-status")]
+    public async Task<IActionResult> GetPwaStatusAsync(CancellationToken cancellationToken)
+    {
+        // Traemos todos los dispositivos almacenados globalmente, ignorando el filtro de Inquilino 
+        // ya que estamos en contexto de SuperAdmin (Global Query Filters ya están en bypass).
+        var query = await _context.EstadosDispositivosPwa
+            .Join(_context.Inquilinos,
+                  d => d.TenantId,
+                  i => i.Id,
+                  (d, i) => new
+                  {
+                      d.Id,
+                      TenantId = i.Id,
+                      TenantName = i.NombreComercial,
+                      TenantSubdomain = i.Subdominio,
+                      d.DispositivoId,
+                      d.NombreDispositivo,
+                      d.AppVersion,
+                      d.UltimaVezOnline,
+                      d.ItemsPendientesSubida
+                  })
+            .OrderByDescending(d => d.ItemsPendientesSubida) // Priorizar los más saturados
+            .ThenBy(d => d.UltimaVezOnline)             // Priorizar los más viejos sin conectar
+            .ToListAsync(cancellationToken);
+
+        return Ok(query);
+    }
 }

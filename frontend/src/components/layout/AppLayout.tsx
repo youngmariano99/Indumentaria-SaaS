@@ -18,6 +18,7 @@ import { ReloadPrompt } from "../ReloadPrompt";
 import { usePWAInstall } from "../../hooks/usePWAInstall";
 import { useSyncManager } from "../../hooks/useSyncManager";
 import { MobileTabBar } from "./MobileTabBar";
+import { apiClient } from "../../lib/apiClient";
 import styles from "./AppLayout.module.css";
 
 /**
@@ -35,6 +36,37 @@ export function AppLayout() {
         // En mobile el sidebar arranca siempre colapsado (solo iconos)
         return window.innerWidth > 768;
     });
+    const token = useAuthStore(s => s.token); // Escuchamos al token
+
+    // --- PWA SRE HEARTBEAT ---
+    useEffect(() => {
+        if (!token) return; // Si no hay usuario logueado, no reportamos.
+
+        const pingServer = async () => {
+            try {
+                let deviceId = localStorage.getItem("pwa_device_id");
+                if (!deviceId) {
+                    deviceId = "POS-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+                    localStorage.setItem("pwa_device_id", deviceId);
+                }
+
+                await apiClient.post("/telemetria/pwa-ping", {
+                    dispositivoId: deviceId,
+                    nombreDispositivo: (navigator.userAgent.includes("Mobile") ? "Celular POS " : "PC Caja ") + deviceId,
+                    appVersion: "1.2.0-SaaS",
+                    itemsPendientesSubida: pendingCount
+                });
+            } catch (err) {
+                // Silencioso. Si falla (ej. sin WiFi), no se actualiza en DB
+                // y eventualmente el Dashboard Admin lo marcará como Offline.
+            }
+        };
+
+        pingServer(); // Primer disparo al entrar
+        const intervalId = setInterval(pingServer, 20000); // Latido cada 20 segundos
+
+        return () => clearInterval(intervalId);
+    }, [token, pendingCount]);
 
     // Cerrar automáticamente el sidebar cuando el viewport baja a mobile,
     // y reabrirlo por defecto cuando vuelve a desktop.

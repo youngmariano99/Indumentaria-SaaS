@@ -68,7 +68,13 @@ export const LoginScreen = () => {
     try {
       const resp = await authApi.login({ subdominio, email, password });
       loginAuth(resp);
-      window.location.href = "/dashboard";
+
+      // Enrutamiento basado en Roles (Soporta enum numerico y string)
+      if (resp.rol === 1 || resp.rol === 'SuperAdmin') {
+        window.location.href = "/admin/tenants";
+      } else {
+        window.location.href = "/dashboard";
+      }
     } catch (err: unknown) {
       const mensaje =
         err && typeof err === "object" && "response" in err

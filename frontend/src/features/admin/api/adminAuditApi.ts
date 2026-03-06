@@ -13,6 +13,16 @@ export interface LogAuditoriaDto {
     timestamp: string;
 }
 
+export interface FraudAlertDto {
+    id: string;
+    tenantId: string;
+    tenantName: string;
+    nivelRiesgo: 'Crítico' | 'Alto' | 'Medio' | 'Bajo' | string;
+    tipoFraude: string;
+    detalles: string;
+    usuarioSospechoso: string;
+    timestamp: string;
+}
 export const adminAuditApi = {
     search: async (
         searchTerm?: string,
@@ -36,6 +46,11 @@ export const adminAuditApi = {
 
     getTimeline: async (entityId: string): Promise<LogAuditoriaDto[]> => {
         const response = await api.get(`/api/admin/audit/timeline/${entityId}`);
+        return response.data;
+    },
+
+    getFraudAlerts: async (): Promise<FraudAlertDto[]> => {
+        const response = await api.get('/api/admin/audit/alerts');
         return response.data;
     }
 };

@@ -81,6 +81,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<ModuloSuscripcion> ModulosSuscripcion => Set<ModuloSuscripcion>();
     
+    public DbSet<EstadoDispositivoPwa> EstadosDispositivosPwa => Set<EstadoDispositivoPwa>();
+    
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<VarianteProducto> VariantesProducto => Set<VarianteProducto>();
     public DbSet<Inventario> Inventarios => Set<Inventario>();

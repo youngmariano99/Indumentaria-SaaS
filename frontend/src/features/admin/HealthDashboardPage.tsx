@@ -1,9 +1,9 @@
-import { useAdminHealth } from './hooks/useAdminHealth';
+import { useAdminHealth, useAdminPwaStatus } from './hooks/useAdminHealth';
 import {
     XAxis, YAxis, Tooltip, ResponsiveContainer,
     AreaChart, Area, CartesianGrid, PieChart, Pie, Cell
 } from 'recharts';
-import { HardDrives, ChartLineUp, WarningCircle } from '@phosphor-icons/react';
+import { HardDrives, ChartLineUp, WarningCircle, WifiSlash, Globe } from '@phosphor-icons/react';
 import styles from './HealthDashboardPage.module.css';
 
 // Colores de la paleta tech
@@ -11,6 +11,7 @@ const COLORS = ['#22c55e', '#ef4444', '#f59e0b', '#38bdf8'];
 
 export function HealthDashboardPage() {
     const { data: health, isLoading, isError } = useAdminHealth();
+    const { data: pwaStatus, isLoading: isLoadingPwa } = useAdminPwaStatus();
 
     if (isLoading) {
         return (
@@ -156,6 +157,68 @@ export function HealthDashboardPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Estado de Sincronización PWA */}
+            <div className={styles.sectionHeader}>
+                <h3><Globe size={24} /> Monitoreo de Cajas PWA (Offline Sync Queue)</h3>
+                <p>Muestra los dispositivos de las tiendas que tienen transacciones pendientes de subir a la nube o que han perdido la conexión.</p>
+            </div>
+
+            <div className={styles.tableCard}>
+                {isLoadingPwa ? (
+                    <div className={styles.loading}>Escaneando dispositivos PWA...</div>
+                ) : pwaStatus && pwaStatus.length > 0 ? (
+                    <div className={styles.tableResponsive}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>Estado / Pings</th>
+                                    <th>Inquilino</th>
+                                    <th>Dispositivo ID</th>
+                                    <th>Versión App</th>
+                                    <th>Cola Sync (Tickets)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {pwaStatus.map(pwa => {
+                                    const lostConnection = new Date(pwa.ultimaVezOnline).getTime() < Date.now() - 60000; // >1 min sin latido
+                                    const criticalQueue = pwa.itemsPendientesSubida > 10;
+                                    return (
+                                        <tr key={pwa.id}>
+                                            <td>
+                                                {lostConnection ? (
+                                                    <span className={`${styles.statusBadge} ${styles.badgeDanger}`}>
+                                                        <WifiSlash size={16} /> Offline
+                                                    </span>
+                                                ) : (
+                                                    <span className={`${styles.statusBadge} ${styles.badgeSuccess}`}>
+                                                        Online
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <strong>{pwa.tenantName}</strong>
+                                                <div className={styles.kpiSub}>{pwa.tenantSubdomain}</div>
+                                            </td>
+                                            <td>{pwa.nombreDispositivo || pwa.dispositivoId}</td>
+                                            <td>{pwa.appVersion}</td>
+                                            <td>
+                                                <span className={`${styles.queueBadge} ${criticalQueue ? styles.badgeDanger : styles.badgeWarning}`}>
+                                                    {pwa.itemsPendientesSubida} Pnd.
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className={styles.emptyState}>
+                        <p>No hay dispositivos PWA reportando latidos a The Root todavía.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
