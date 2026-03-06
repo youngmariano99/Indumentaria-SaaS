@@ -12,9 +12,17 @@ export const PrinterInterface = {
 
 export type PrinterInterface = typeof PrinterInterface[keyof typeof PrinterInterface];
 
+export const PrinterProtocol = {
+    EscPos: 'EscPos',
+    Tspl: 'Tspl'
+} as const;
+
+export type PrinterProtocol = typeof PrinterProtocol[keyof typeof PrinterProtocol];
+
 export interface PrinterStatus {
     interface: PrinterInterface | null;
     connected: boolean;
+    protocol?: PrinterProtocol;
     error?: string;
 }
 
@@ -118,6 +126,29 @@ class PrinterService {
         }
 
         return false; // Requiere fallback a PDF
+    }
+
+    /**
+     * Genera un buffer TSPL para etiquetas de tamaño fijo (40x30, etc)
+     */
+    public generateTsplLabel(widthMm: number, heightMm: number, items: any[]): Uint8Array {
+        let commands = [
+            `SIZE ${widthMm} mm,${heightMm} mm`,
+            `GAP 3 mm,0`,
+            `DIRECTION 1`,
+            `CLS`,
+        ];
+
+        items.forEach((item) => {
+            // Posicionamiento básico (ajustable)
+            commands.push(`TEXT 10,10,"3",0,1,1,"${item.nombre.substring(0, 25)}"`);
+            commands.push(`TEXT 10,50,"2",0,1,1,"SKU: ${item.sku}"`);
+            commands.push(`BARCODE 10,80,"128",60,1,0,2,2,"${item.sku}"`);
+            commands.push(`PRINT 1`);
+        });
+
+        const encoder = new TextEncoder();
+        return encoder.encode(commands.join('\r\n') + '\r\n');
     }
 
     /**

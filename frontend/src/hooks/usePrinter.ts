@@ -51,11 +51,16 @@ export const usePrinter = () => {
         return true;
     }, []);
 
+    const printRaw = useCallback(async (buffer: Uint8Array) => {
+        return await printerService.printRaw(buffer);
+    }, []);
+
     return {
         status,
         connectSerial,
         connectBluetooth,
         disconnect,
-        printTicket
+        printTicket,
+        printRaw
     };
 };

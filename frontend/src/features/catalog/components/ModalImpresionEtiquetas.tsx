@@ -5,6 +5,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import Barcode from 'react-barcode';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { printerService } from '../../../lib/printing/PrinterService';
 import { usePrinter } from '../../../hooks/usePrinter';
 import { Bluetooth, Usb } from '@phosphor-icons/react';
 
@@ -29,20 +30,30 @@ interface Props {
 
 export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
     const [formato, setFormato] = useState<'termico' | 'a4' | 'a3'>('termico');
-    const [anchoTermico, setAnchoTermico] = useState<number>(58);
+    const [anchoTermico, setAnchoTermico] = useState<number>(40);
     const [copias, setCopias] = useState<number>(1);
+    const [protocolo, setProtocolo] = useState<'EscPos' | 'Tspl'>('Tspl');
     const [isGenerating, setIsGenerating] = useState(false);
-    const { status, connectSerial, connectBluetooth, printTicket } = usePrinter();
+    const { status, connectSerial, connectBluetooth, printTicket, printRaw } = usePrinter();
 
     const handlePrint = async () => {
-        // 1. Intentar impresión directa si estamos conectados
         if (status.connected) {
-            const lines = etiquetasAImprimir.map(e => `[B]${e.nombre}\nSKU: ${e.sku}\nT: ${e.talle} C: ${e.color}\n---`);
-            const success = await printTicket(lines);
-            if (success) return;
+            setIsGenerating(true);
+            try {
+                if (protocolo === 'Tspl') {
+                    const buffer = printerService.generateTsplLabel(anchoTermico, 30, etiquetasAImprimir);
+                    await printRaw(buffer);
+                } else {
+                    const lines = etiquetasAImprimir.map(e => `[B]${e.nombre}\nSKU: ${e.sku}\nT: ${e.talle} C: ${e.color}\n---`);
+                    await printTicket(lines);
+                }
+                setIsGenerating(false);
+                return;
+            } catch (err) {
+                console.error(err);
+                setIsGenerating(false);
+            }
         }
-
-        // 2. Fallback a window.print() tradicional si no hay hardware directo
         window.print();
     };
 
@@ -219,7 +230,9 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                         </div>
                                     </div>
                                     <div className={styles.textSection}>
-                                        <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>{etique.nombre}</span>
+                                        <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>
+                                            {etique.nombre}
+                                        </span>
                                         <div className={styles.labelSpecs}>
                                             <span>T: {etique.talle}</span>
                                             <span>C: {etique.color}</span>
@@ -264,10 +277,23 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                 <option value="58">Térmico (58mm)</option>
                                 <option value="80">Térmico (80mm)</option>
                                 <option value={100}>Ancho de Papel: 100 mm</option>
-                                <option value={112}>Ancho de Papel: 112 mm</option>
-                                <option value={216}>Ancho de Papel: 216 mm (Industrial)</option>
                             </select>
                         )}
+                    </div>
+
+                    <div className={styles.sectionGroup}>
+                        <label className={styles.sectionLabel}>Protocolo de Impresión</label>
+                        <select
+                            className={styles.settingSelect}
+                            value={protocolo}
+                            onChange={(e) => setProtocolo(e.target.value as 'EscPos' | 'Tspl')}
+                        >
+                            <option value="Tspl">Efecto Etiqueta (TSPL - Recomendado)</option>
+                            <option value="EscPos">Modo Ticketera (ESC/POS)</option>
+                        </select>
+                        <p style={{ fontSize: '0.7rem', color: '#666', marginTop: '0.4rem' }}>
+                            TSPL es necesario para que la impresora detecte el corte entre etiquetas.
+                        </p>
                     </div>
 
                     <div className={styles.sectionGroup}>

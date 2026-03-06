@@ -585,15 +585,16 @@
     height: auto !important;
     /* Altura auto-ajustable según tamaño */
     min-height: 25mm !important;
-    /* Altura mínima de garantía */
-    padding: 3mm !important;
-    /* Safe Zone (A prueba de desalineación física) */
+    padding: 0 !important;
     box-sizing: border-box !important;
     border: none !important;
     box-shadow: none !important;
     margin: 0;
     page-break-after: always;
     display: flex !important;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
   }
 
   .etiquetaA4 {
