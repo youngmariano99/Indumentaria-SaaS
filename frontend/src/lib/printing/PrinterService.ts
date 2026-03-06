@@ -147,33 +147,31 @@ class PrinterService {
         ];
 
         items.forEach((item) => {
-            // Nombre de prenda (Top) - Más grande y arriba si es solo barras
+            // Nombre de prenda (TOP)
             const fontNombre = tipoCodigo === 'barcode' ? '"4"' : '"3"';
-            const yNombre = tipoCodigo === 'barcode' ? 5 : 10;
-            commands.push(`TEXT 10,${yNombre},${fontNombre},0,1,1,"${item.nombre.substring(0, 20)}"`);
+            commands.push(`TEXT 10,20,${fontNombre},0,1,1,"${item.nombre.substring(0, 20)}"`);
 
-            // Descripción técnica (Talle y Color) - Condicional
-            const yDetalle = tipoCodigo === 'barcode' ? 45 : 40;
+            // Descripción técnica (debajo del nombre)
             if (incluirDetalles) {
-                commands.push(`TEXT 10,${yDetalle},"2",0,1,1,"T:${item.talle} C:${item.color}"`);
+                commands.push(`TEXT 10,60,"2",0,1,1,"T:${item.talle} C:${item.color}"`);
             }
 
+            // Códigos (CENTRO/ABAJO)
             if (tipoCodigo === 'both') {
-                // Centrado manual aproximado para 40mm (apilado vertical) con barra de 20
-                commands.push(`BARCODE 10,70,"128",20,1,0,2,2,"${item.sku}"`);
-                commands.push(`QRCODE 80,105,L,4,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
+                commands.push(`BARCODE 10,100,"128",30,1,0,2,2,"${item.sku}"`);
+                commands.push(`QRCODE 100,160,L,4,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
             } else if (tipoCodigo === 'barcode') {
-                commands.push(`BARCODE 10,65,"128",80,1,0,2,2,"${item.sku}"`);
+                commands.push(`BARCODE 10,100,"128",60,1,0,2,2,"${item.sku}"`);
             } else if (tipoCodigo === 'qr') {
-                commands.push(`QRCODE 100,60,L,7,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
+                commands.push(`QRCODE 40,80,L,7,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
             }
 
-            // SKU y Precio (Bottom)
+            // SKU y Precio (BOTTOM)
             let bottomLine = `SKU: ${item.sku}`;
             if (incluirPrecio && item.precio) {
                 bottomLine += `  $${item.precio.toLocaleString()}`;
             }
-            commands.push(`TEXT 10,195,"2",0,1,1,"${bottomLine}"`);
+            commands.push(`TEXT 10,210,"2",0,1,1,"${bottomLine}"`);
 
             commands.push(`PRINT 1`);
         });

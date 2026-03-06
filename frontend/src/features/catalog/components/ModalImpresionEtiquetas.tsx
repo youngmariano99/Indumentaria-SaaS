@@ -224,6 +224,30 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                     style={formato === 'termico' ? { width: `${anchoTermico}mm` } : {}}
                                     data-ancho={formato === 'termico' ? anchoTermico : undefined}
                                 >
+                                    <div className={styles.textSection}>
+                                        <span
+                                            className={styles.labelNombre}
+                                            style={{
+                                                ...(formato === 'termico' && anchoTermico < 50 ? { fontSize: tipoCodigo === 'barcode' ? '0.85rem' : '0.6rem' } : {}),
+                                                ...(tipoCodigo === 'barcode' ? { marginTop: '0px' } : {})
+                                            }}
+                                        >
+                                            {etique.nombre}
+                                        </span>
+                                        {!modoProducto && (
+                                            <div className={styles.labelSpecs}>
+                                                <span>T: {etique.talle}</span>
+                                                <span>C: {etique.color}</span>
+                                                {mostrarPrecio && etique.precio && <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>}
+                                            </div>
+                                        )}
+                                        {modoProducto && mostrarPrecio && etique.precio && (
+                                            <div className={styles.labelSpecs}>
+                                                <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className={styles.codesSection}>
                                         {(tipoCodigo === 'both' || tipoCodigo === 'barcode') && (
                                             <div className={styles.barcodeWrap}>
@@ -239,29 +263,6 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                         {(tipoCodigo === 'both' || tipoCodigo === 'qr') && (
                                             <div className={styles.qrWrap}>
                                                 <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? (anchoTermico < 50 ? 25 : 35) : 50} />
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className={styles.textSection}>
-                                        <span
-                                            className={styles.labelNombre}
-                                            style={{
-                                                ...(formato === 'termico' && anchoTermico < 50 ? { fontSize: tipoCodigo === 'barcode' ? '0.85rem' : '0.6rem' } : {}),
-                                                ...(tipoCodigo === 'barcode' ? { marginTop: '-10px' } : {})
-                                            }}
-                                        >
-                                            {etique.nombre}
-                                        </span>
-                                        {!modoProducto && (
-                                            <div className={styles.labelSpecs}>
-                                                <span>T: {etique.talle}</span>
-                                                <span>C: {etique.color}</span>
-                                                {mostrarPrecio && etique.precio && <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>}
-                                            </div>
-                                        )}
-                                        {modoProducto && mostrarPrecio && etique.precio && (
-                                            <div className={styles.labelSpecs}>
-                                                <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>
                                             </div>
                                         )}
                                     </div>
