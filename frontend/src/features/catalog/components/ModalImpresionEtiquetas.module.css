@@ -391,9 +391,15 @@
 .codesSection {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 4px;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.codesSection:has(> :only-child) {
+  justify-content: center;
 }
 
 .barcodeWrap {

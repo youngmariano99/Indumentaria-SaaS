@@ -33,6 +33,9 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
     const [anchoTermico, setAnchoTermico] = useState<number>(40);
     const [copias, setCopias] = useState<number>(1);
     const [protocolo, setProtocolo] = useState<'EscPos' | 'Tspl'>('Tspl');
+    const [tipoCodigo, setTipoCodigo] = useState<'both' | 'barcode' | 'qr'>('both');
+    const [mostrarPrecio, setMostrarPrecio] = useState<boolean>(false);
+    const [modoProducto, setModoProducto] = useState<boolean>(false);
     const [isGenerating, setIsGenerating] = useState(false);
     const { status, connectSerial, connectBluetooth, printTicket, printRaw } = usePrinter();
 
@@ -41,7 +44,7 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
             setIsGenerating(true);
             try {
                 if (protocolo === 'Tspl') {
-                    const buffer = printerService.generateTsplLabel(anchoTermico, 30, etiquetasAImprimir);
+                    const buffer = printerService.generateTsplLabel(anchoTermico, 30, etiquetasAImprimir, tipoCodigo, mostrarPrecio, !modoProducto);
                     await printRaw(buffer);
                 } else {
                     const lines = etiquetasAImprimir.map(e => `[B]${e.nombre}\nSKU: ${e.sku}\nT: ${e.talle} C: ${e.color}\n---`);
@@ -186,7 +189,13 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
     };
 
     // Multiplicar etiquetas en base a la cantidad configurada
-    const etiquetasAImprimir = etiquetas.flatMap(etiq => Array(copias).fill(etiq));
+    const etiquetasAImprimir = (modoProducto
+        ? Object.values(etiquetas.reduce((acc, curr) => {
+            if (!acc[curr.nombre]) acc[curr.nombre] = curr;
+            return acc;
+        }, {} as Record<string, EtiquetaInfo>))
+        : etiquetas
+    ).flatMap(etiq => Array(copias).fill(etiq));
 
     return (
         <div className={styles.overlay}>
@@ -216,28 +225,39 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                     data-ancho={formato === 'termico' ? anchoTermico : undefined}
                                 >
                                     <div className={styles.codesSection}>
-                                        <div className={styles.barcodeWrap}>
-                                            <Barcode
-                                                value={etique.sku}
-                                                width={formato === 'termico' ? (anchoTermico < 50 ? 1 : (anchoTermico > 80 ? 2 : 1.2)) : 1.5}
-                                                height={formato === 'termico' ? (anchoTermico < 50 ? 25 : 30) : 40}
-                                                fontSize={10}
-                                                margin={0}
-                                            />
-                                        </div>
-                                        <div className={styles.qrWrap}>
-                                            <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? (anchoTermico < 50 ? 25 : 35) : 50} />
-                                        </div>
+                                        {(tipoCodigo === 'both' || tipoCodigo === 'barcode') && (
+                                            <div className={styles.barcodeWrap}>
+                                                <Barcode
+                                                    value={etique.sku}
+                                                    width={formato === 'termico' ? (anchoTermico < 50 ? 1 : (anchoTermico > 80 ? 2 : 1.2)) : 1.5}
+                                                    height={formato === 'termico' ? (anchoTermico < 50 ? 25 : 30) : 40}
+                                                    fontSize={10}
+                                                    margin={0}
+                                                />
+                                            </div>
+                                        )}
+                                        {(tipoCodigo === 'both' || tipoCodigo === 'qr') && (
+                                            <div className={styles.qrWrap}>
+                                                <QRCodeCanvas value={getEtiquetaUrl(etique.sku)} size={formato === 'termico' ? (anchoTermico < 50 ? 25 : 35) : 50} />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className={styles.textSection}>
                                         <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>
                                             {etique.nombre}
                                         </span>
-                                        <div className={styles.labelSpecs}>
-                                            <span>T: {etique.talle}</span>
-                                            <span>C: {etique.color}</span>
-                                            {etique.precio && <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>}
-                                        </div>
+                                        {!modoProducto && (
+                                            <div className={styles.labelSpecs}>
+                                                <span>T: {etique.talle}</span>
+                                                <span>C: {etique.color}</span>
+                                                {mostrarPrecio && etique.precio && <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>}
+                                            </div>
+                                        )}
+                                        {modoProducto && mostrarPrecio && etique.precio && (
+                                            <div className={styles.labelSpecs}>
+                                                <span className={styles.labelPrecio}>${etique.precio.toLocaleString()}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -276,9 +296,41 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                 <option value="40">Térmico (40mm x 30mm)</option>
                                 <option value="58">Térmico (58mm)</option>
                                 <option value="80">Térmico (80mm)</option>
-                                <option value={100}>Ancho de Papel: 100 mm</option>
                             </select>
                         )}
+                    </div>
+
+                    <div className={styles.sectionGroup}>
+                        <label className={styles.sectionLabel}>Contenido del Código</label>
+                        <select
+                            className={styles.settingSelect}
+                            value={tipoCodigo}
+                            onChange={(e) => setTipoCodigo(e.target.value as 'both' | 'barcode' | 'qr')}
+                        >
+                            <option value="both">Barras + QR</option>
+                            <option value="barcode">Solo Código de Barras</option>
+                            <option value="qr">Solo QR</option>
+                        </select>
+                    </div>
+
+                    <div className={styles.sectionGroup} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            id="toggle-precio"
+                            checked={mostrarPrecio}
+                            onChange={(e) => setMostrarPrecio(e.target.checked)}
+                        />
+                        <label htmlFor="toggle-precio" className={styles.sectionLabel} style={{ marginBottom: 0 }}>Incluir Precio de Venta</label>
+                    </div>
+
+                    <div className={styles.sectionGroup} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                            type="checkbox"
+                            id="toggle-producto"
+                            checked={modoProducto}
+                            onChange={(e) => setModoProducto(e.target.checked)}
+                        />
+                        <label htmlFor="toggle-producto" className={styles.sectionLabel} style={{ marginBottom: 0 }}>Modo Producto (Sin Variantes)</label>
                     </div>
 
                     <div className={styles.sectionGroup}>

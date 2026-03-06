@@ -131,7 +131,14 @@ class PrinterService {
     /**
      * Genera un buffer TSPL para etiquetas de tamaño fijo (40x30, etc)
      */
-    public generateTsplLabel(widthMm: number, heightMm: number, items: any[]): Uint8Array {
+    public generateTsplLabel(
+        widthMm: number,
+        heightMm: number,
+        items: any[],
+        tipoCodigo: 'both' | 'barcode' | 'qr' = 'both',
+        incluirPrecio: boolean = true,
+        incluirDetalles: boolean = true
+    ): Uint8Array {
         let commands = [
             `SIZE ${widthMm} mm,${heightMm} mm`,
             `GAP 3 mm,0`,
@@ -140,10 +147,32 @@ class PrinterService {
         ];
 
         items.forEach((item) => {
-            // Posicionamiento básico (ajustable)
-            commands.push(`TEXT 10,10,"3",0,1,1,"${item.nombre.substring(0, 25)}"`);
-            commands.push(`TEXT 10,50,"2",0,1,1,"SKU: ${item.sku}"`);
-            commands.push(`BARCODE 10,80,"128",60,1,0,2,2,"${item.sku}"`);
+            // Nombre de prenda (Top)
+            commands.push(`TEXT 10,10,"3",0,1,1,"${item.nombre.substring(0, 20)}"`);
+
+            // Descripción técnica (Talle y Color) - Condicional
+            if (incluirDetalles) {
+                commands.push(`TEXT 10,40,"2",0,1,1,"T:${item.talle} C:${item.color}"`);
+            }
+
+            const codeY = incluirDetalles ? 70 : 45;
+
+            if (tipoCodigo === 'both') {
+                commands.push(`BARCODE 10,${codeY},"128",50,1,0,2,2,"${item.sku}"`);
+                commands.push(`QRCODE 10,${codeY + 60},L,4,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
+            } else if (tipoCodigo === 'barcode') {
+                commands.push(`BARCODE 10,${codeY},"128",80,1,0,2,2,"${item.sku}"`);
+            } else if (tipoCodigo === 'qr') {
+                commands.push(`QRCODE 40,${codeY},L,6,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
+            }
+
+            // SKU y Precio (Bottom)
+            let bottomLine = `SKU: ${item.sku}`;
+            if (incluirPrecio && item.precio) {
+                bottomLine += `  $${item.precio.toLocaleString()}`;
+            }
+            commands.push(`TEXT 10,195,"2",0,1,1,"${bottomLine}"`);
+
             commands.push(`PRINT 1`);
         });
 
