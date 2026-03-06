@@ -102,7 +102,8 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
             .ToListAsync(cancellationToken);
 
         var productIdsPrendas = prendasEnCurso
-            .Select(p => p.VarianteProducto.ProductId)
+            .Where(p => p.VarianteProducto != null)
+            .Select(p => p.VarianteProducto!.ProductId)
             .Distinct()
             .ToList();
 
@@ -115,8 +116,12 @@ public class ObtenerCliente360QueryHandler : IRequestHandler<ObtenerCliente360Qu
         {
             Id = p.Id,
             VarianteProductoId = p.VarianteProductoId,
-            ProductoNombre = productosDictPrendas.TryGetValue(p.VarianteProducto.ProductId, out var n) ? n : "Producto Borrado",
-            VarianteNombre = $"{p.VarianteProducto.Talle} / {p.VarianteProducto.Color}".Trim(' ', '/'),
+            ProductoNombre = p.VarianteProducto != null
+                ? (productosDictPrendas.TryGetValue(p.VarianteProducto.ProductId, out var n) ? n : "Producto Borrado")
+                : (p.ProductoManualNombre ?? "Producto manual"),
+            VarianteNombre = p.VarianteProducto != null
+                ? $"{p.VarianteProducto.Talle} / {p.VarianteProducto.Color}".Trim(' ', '/')
+                : (p.VarianteManualNombre ?? "Manual"),
             Cantidad = p.Cantidad,
             PrecioReferencia = p.PrecioReferencia,
             Estado = p.Estado.ToString(),

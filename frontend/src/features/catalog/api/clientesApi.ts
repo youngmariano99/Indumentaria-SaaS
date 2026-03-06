@@ -58,7 +58,7 @@ export interface TransaccionHistoricoDto {
 
 export interface PrendaEnCursoDto {
     id: string;
-    varianteProductoId: string;
+    varianteProductoId?: string | null;
     productoNombre: string;
     varianteNombre: string;
     cantidad: number;
@@ -115,7 +115,14 @@ export const clientesApi = {
 
     crearPrendaEnCurso: async (
         clienteId: string,
-        data: { varianteProductoId: string; cantidad: number; precioReferencia: number }
+        data: {
+            varianteProductoId?: string;
+            productoManualNombre?: string;
+            varianteManualNombre?: string;
+            cantidad: number;
+            precioReferencia: number;
+            estadoInicial: 'EnPrueba' | 'Deuda';
+        }
     ): Promise<string> => {
         const response = await apiClient.post<string>(`/Clientes/${clienteId}/prendas-en-curso`, data);
         return response.data;

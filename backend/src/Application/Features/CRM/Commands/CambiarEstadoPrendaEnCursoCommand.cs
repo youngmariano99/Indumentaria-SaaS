@@ -45,23 +45,44 @@ public class CambiarEstadoPrendaEnCursoCommandHandler : IRequestHandler<CambiarE
                 prenda.Estado = EstadoPrendaCliente.Deuda;
                 var monto = prenda.PrecioReferencia * prenda.Cantidad;
                 cliente.SaldoAFavor -= monto;
+                var productoNombre = prenda.ProductoManualNombre ?? "Prenda";
+                var varianteNombre = prenda.VarianteManualNombre ?? string.Empty;
+                if (prenda.VarianteProductoId.HasValue)
+                {
+                    var variante = await _context.VariantesProducto
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(v => v.Id == prenda.VarianteProductoId.Value, cancellationToken);
+                    if (variante != null)
+                    {
+                        var producto = await _context.Productos
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(p => p.Id == variante.ProductId, cancellationToken);
+                        productoNombre = producto?.Nombre ?? productoNombre;
+                        varianteNombre = $"{variante.Talle} / {variante.Color}".Trim(' ', '/');
+                    }
+                }
                 _context.MovimientosSaldosClientes.Add(new MovimientoSaldoCliente
                 {
                     TenantId = cliente.TenantId,
                     ClienteId = cliente.Id,
                     Monto = monto,
                     Tipo = TipoMovimientoSaldo.Egreso,
-                    Descripcion = "Deuda por prenda en prueba."
+                    Descripcion = $"Deuda por prenda: {productoNombre}"
+                        + (string.IsNullOrWhiteSpace(varianteNombre) ? string.Empty : $" ({varianteNombre})")
+                        + $" x{prenda.Cantidad}."
                 });
                 break;
 
             case EstadoPrendaCliente.Devuelta:
                 prenda.Estado = EstadoPrendaCliente.Devuelta;
-                var inventario = await _context.Inventarios
-                    .FirstOrDefaultAsync(i => i.ProductVariantId == prenda.VarianteProductoId && i.TenantId == cliente.TenantId, cancellationToken);
-                if (inventario != null)
+                if (prenda.VarianteProductoId.HasValue)
                 {
-                    inventario.StockActual += prenda.Cantidad;
+                    var inventario = await _context.Inventarios
+                        .FirstOrDefaultAsync(i => i.ProductVariantId == prenda.VarianteProductoId.Value && i.TenantId == cliente.TenantId, cancellationToken);
+                    if (inventario != null)
+                    {
+                        inventario.StockActual += prenda.Cantidad;
+                    }
                 }
                 break;
 

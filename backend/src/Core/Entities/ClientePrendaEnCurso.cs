@@ -12,8 +12,12 @@ public class ClientePrendaEnCurso : BaseEntity, IMustHaveTenant
     public Guid ClienteId { get; set; }
     public Cliente Cliente { get; set; } = null!;
 
-    public Guid VarianteProductoId { get; set; }
-    public VarianteProducto VarianteProducto { get; set; } = null!;
+    public Guid? VarianteProductoId { get; set; }
+    public VarianteProducto? VarianteProducto { get; set; }
+
+    // Campos manuales para registrar prendas/deudas históricas sin exigir una variante vigente de stock.
+    public string? ProductoManualNombre { get; set; }
+    public string? VarianteManualNombre { get; set; }
 
     public int Cantidad { get; set; }
 

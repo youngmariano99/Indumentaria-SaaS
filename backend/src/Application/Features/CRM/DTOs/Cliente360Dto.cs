@@ -39,7 +39,7 @@ public class CompraRecienteDetalleDto
 public class PrendaEnCursoDto
 {
     public Guid Id { get; set; }
-    public Guid VarianteProductoId { get; set; }
+    public Guid? VarianteProductoId { get; set; }
     public string ProductoNombre { get; set; } = string.Empty;
     public string VarianteNombre { get; set; } = string.Empty;
     public int Cantidad { get; set; }

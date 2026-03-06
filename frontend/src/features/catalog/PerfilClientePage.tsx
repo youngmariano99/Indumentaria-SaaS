@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CaretLeft, ShoppingBag, Money, CalendarBlank, UserGear, Wallet, WhatsappLogo, PlusCircle, MinusCircle, MagnifyingGlass } from '@phosphor-icons/react';
+import { CaretLeft, ShoppingBag, Money, CalendarBlank, UserGear, Wallet, WhatsappLogo, PlusCircle, MagnifyingGlass } from '@phosphor-icons/react';
 import { clientesApi } from './api/clientesApi';
 import type { Cliente360Dto } from './api/clientesApi';
 import { posApi, type MetodoPagoDto, type ProductoLayerPosDto, type VarianteLayerPosDto } from '../pos/api/posApi';
@@ -15,7 +15,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
     const [showSaldoModal, setShowSaldoModal] = useState(false);
     const [montoSaldo, setMontoSaldo] = useState<number | string>('');
     const [descripcionSaldo, setDescripcionSaldo] = useState('');
-    const [operacionSaldo, setOperacionSaldo] = useState<'sumar' | 'restar'>('sumar');
     const [savingSaldo, setSavingSaldo] = useState(false);
     const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
     const [metodoPagoId, setMetodoPagoId] = useState('');
@@ -29,12 +28,17 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
     const [catalogoPos, setCatalogoPos] = useState<ProductoLayerPosDto[]>([]);
     const [loadingCatalogo, setLoadingCatalogo] = useState(false);
     const [busquedaPrenda, setBusquedaPrenda] = useState('');
+    const [modoCargaPrenda, setModoCargaPrenda] = useState<'stock' | 'manual'>('stock');
+    const [productoManualNombre, setProductoManualNombre] = useState('');
+    const [varianteManualNombre, setVarianteManualNombre] = useState('');
+    const [estadoInicialPrenda, setEstadoInicialPrenda] = useState<'EnPrueba' | 'Deuda'>('EnPrueba');
     const [productoSeleccionado, setProductoSeleccionado] = useState<ProductoLayerPosDto | null>(null);
     const [varianteSeleccionada, setVarianteSeleccionada] = useState<VarianteLayerPosDto | null>(null);
 
     // Estado Detalles de Transacción y Paginación
     const [detalleTxSeleccionada, setDetalleTxSeleccionada] = useState<any | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [searchDeudaTerm, setSearchDeudaTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
     const [deudaSeleccionadaId, setDeudaSeleccionadaId] = useState<string | null>(null);
@@ -92,6 +96,30 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
 
     const historial = cliente?.historialTransacciones || [];
 
+    const abrirModalPrenda = () => {
+        setModoCargaPrenda('stock');
+        setVariantePrendaId('');
+        setCantidadPrenda(1);
+        setPrecioReferenciaPrenda('');
+        setProductoManualNombre('');
+        setVarianteManualNombre('');
+        setEstadoInicialPrenda('EnPrueba');
+        setProductoSeleccionado(null);
+        setVarianteSeleccionada(null);
+        setBusquedaPrenda('');
+        setShowPrendaModal(true);
+        if (catalogoPos.length === 0) {
+            loadCatalogoPos();
+        }
+    };
+
+    const abrirModalPago = (deudaId?: string | null, descripcionInicial?: string) => {
+        setMontoSaldo('');
+        setDescripcionSaldo(descripcionInicial ?? '');
+        setDeudaSeleccionadaId(deudaId ?? null);
+        setShowSaldoModal(true);
+    };
+
     const historialFiltrado = historial.filter(tx => {
         if (!searchTerm) return true;
         const term = searchTerm.toLowerCase();
@@ -118,8 +146,19 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
             const pagado = mapaPagos.get(d.id) || 0;
             const pendiente = Math.max(0, d.montoTotal - pagado);
             return { deuda: d, pagado, pendiente };
-        }).filter(x => x.pendiente > 0);
+        })
+            .filter(x => x.pendiente > 0)
+            .sort((a, b) => new Date(a.deuda.fecha).getTime() - new Date(b.deuda.fecha).getTime());
     }, [historial]);
+
+    const deudasFiltradas = useMemo(() => {
+        const term = searchDeudaTerm.trim().toLowerCase();
+        if (!term) return deudasConPendiente;
+        return deudasConPendiente.filter(item =>
+            item.deuda.id.toLowerCase().includes(term) ||
+            (item.deuda.descripcion || '').toLowerCase().includes(term)
+        );
+    }, [deudasConPendiente, searchDeudaTerm]);
 
     const handleProcesarSaldo = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -127,15 +166,15 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
             alert('Por favor ingrese un monto válido y un motivo.');
             return;
         }
+        if (deudasConPendiente.length > 0 && !deudaSeleccionadaId) {
+            alert('Debés asociar este pago a una deuda específica para mantener trazabilidad.');
+            return;
+        }
 
         setSavingSaldo(true);
         try {
-            if (operacionSaldo === 'sumar') {
-                await clientesApi.agregarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo, metodoPagoId, deudaSeleccionadaId || undefined);
-            } else {
-                await clientesApi.descontarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo, metodoPagoId);
-            }
-            alert(`Saldo ${operacionSaldo === 'sumar' ? 'agregado' : 'descontado'} correctamente.`);
+            await clientesApi.agregarSaldo(cliente.id, Number(montoSaldo), descripcionSaldo, metodoPagoId, deudaSeleccionadaId || undefined);
+            alert('Pago registrado correctamente.');
             setShowSaldoModal(false);
             setMontoSaldo('');
             setDescripcionSaldo('');
@@ -203,18 +242,18 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
                         <button
-                            onClick={() => { setOperacionSaldo('sumar'); setMontoSaldo(''); setDescripcionSaldo(''); setShowSaldoModal(true); }}
+                            onClick={() => abrirModalPago()}
                             style={{ flex: 1, padding: '0.5rem', backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
                             title="Registrar un pago del cliente (reduce deuda o aumenta saldo a favor)"
                         >
                             <PlusCircle size={16} /> Registrar pago
                         </button>
                         <button
-                            onClick={() => { setOperacionSaldo('restar'); setMontoSaldo(''); setDescripcionSaldo(''); setShowSaldoModal(true); }}
-                            style={{ flex: 1, padding: '0.5rem', backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
-                            title="Agregar nueva deuda / fiado al cliente"
+                            onClick={abrirModalPrenda}
+                            style={{ flex: 1, padding: '0.5rem', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
+                            title="Crear una nueva condicional desde prendas en prueba / en curso"
                         >
-                            <MinusCircle size={16} /> Agregar deuda
+                            <PlusCircle size={16} /> Nueva condicional
                         </button>
                     </div>
                 </div>
@@ -270,6 +309,81 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', padding: '1.25rem 1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0, color: '#111827' }}>Deudas activas</h2>
+                        <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>
+                            {deudasConPendiente.length} deuda(s) pendiente(s)
+                        </span>
+                    </div>
+                    {deudasConPendiente.length > 0 && (
+                        <div style={{ marginBottom: '0.75rem' }}>
+                            <input
+                                type="text"
+                                value={searchDeudaTerm}
+                                onChange={e => setSearchDeudaTerm(e.target.value)}
+                                placeholder="Buscar deuda por producto, descripción o ID..."
+                                style={{ width: '100%', maxWidth: '420px', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', fontSize: '0.85rem' }}
+                            />
+                        </div>
+                    )}
+                    {deudasConPendiente.length === 0 ? (
+                        <p style={{ margin: 0, color: '#6b7280', fontSize: '0.9rem' }}>
+                            Este cliente no tiene deudas activas.
+                        </p>
+                    ) : (
+                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                <thead style={{ backgroundColor: '#f9fafb' }}>
+                                    <tr>
+                                        <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem' }}>Fecha</th>
+                                        <th style={{ textAlign: 'left', padding: '0.6rem 0.8rem' }}>Descripción</th>
+                                        <th style={{ textAlign: 'right', padding: '0.6rem 0.8rem' }}>Deuda</th>
+                                        <th style={{ textAlign: 'right', padding: '0.6rem 0.8rem' }}>Pagado</th>
+                                        <th style={{ textAlign: 'right', padding: '0.6rem 0.8rem' }}>Pendiente</th>
+                                        <th style={{ textAlign: 'center', padding: '0.6rem 0.8rem' }}>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {deudasFiltradas.map(item => (
+                                        <tr key={item.deuda.id} style={{ borderTop: '1px solid #f3f4f6' }}>
+                                            <td style={{ padding: '0.6rem 0.8rem', color: '#4b5563' }}>
+                                                {new Date(item.deuda.fecha).toLocaleDateString('es-AR')}
+                                            </td>
+                                            <td style={{ padding: '0.6rem 0.8rem', color: '#111827' }}>
+                                                {item.deuda.descripcion || 'Deuda sin descripción'}
+                                            </td>
+                                            <td style={{ padding: '0.6rem 0.8rem', color: '#b91c1c', textAlign: 'right', fontWeight: 500 }}>
+                                                ${item.deuda.montoTotal.toLocaleString('es-AR')}
+                                            </td>
+                                            <td style={{ padding: '0.6rem 0.8rem', color: '#166534', textAlign: 'right' }}>
+                                                ${item.pagado.toLocaleString('es-AR')}
+                                            </td>
+                                            <td style={{ padding: '0.6rem 0.8rem', color: '#dc2626', textAlign: 'right', fontWeight: 600 }}>
+                                                ${item.pendiente.toLocaleString('es-AR')}
+                                            </td>
+                                            <td style={{ padding: '0.6rem 0.8rem', textAlign: 'center' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => abrirModalPago(item.deuda.id, `Pago deuda: ${item.deuda.descripcion || 'Sin descripción'}`)}
+                                                    style={{ padding: '0.35rem 0.65rem', borderRadius: '0.4rem', border: '1px solid #bbf7d0', backgroundColor: '#f0fdf4', color: '#166534', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                                                >
+                                                    Registrar pago
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {deudasConPendiente.length > 0 && deudasFiltradas.length === 0 && (
+                        <p style={{ margin: '0.75rem 0 0', color: '#6b7280', fontSize: '0.85rem' }}>
+                            No hay deudas que coincidan con la búsqueda.
+                        </p>
+                    )}
+                </div>
+
                 {/* Información de Contacto + Prendas en curso (full width, dos columnas) */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1.4fr)', gap: '1.25rem' }}>
                     <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', padding: '1.5rem' }}>
@@ -289,18 +403,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                             </h2>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setVariantePrendaId('');
-                                    setCantidadPrenda(1);
-                                    setPrecioReferenciaPrenda('');
-                                    setProductoSeleccionado(null);
-                                    setVarianteSeleccionada(null);
-                                    setBusquedaPrenda('');
-                                    setShowPrendaModal(true);
-                                    if (catalogoPos.length === 0) {
-                                        loadCatalogoPos();
-                                    }
-                                }}
+                                onClick={abrirModalPrenda}
                                 style={{ padding: '0.35rem 0.7rem', borderRadius: '9999px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             >
                                 <PlusCircle size={14} /> Agregar prenda en prueba
@@ -489,7 +592,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
                     <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem', width: '100%', maxWidth: '400px' }}>
                         <h2 style={{ margin: '0 0 1rem', fontSize: '1.25rem' }}>
-                            {operacionSaldo === 'sumar' ? 'Cargar Saldo a Favor' : 'Descontar Saldo'}
+                            Registrar pago
                         </h2>
                         <form onSubmit={handleProcesarSaldo}>
                             <div style={{ marginBottom: '1rem' }}>
@@ -511,7 +614,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                     value={descripcionSaldo}
                                     onChange={e => setDescripcionSaldo(e.target.value)}
                                     style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.375rem' }}
-                                    placeholder={operacionSaldo === 'sumar' ? 'Ej: Pago de deuda ticket X, transferencia, etc.' : 'Ej: Deuda por prenda en prueba, fiado, etc.'}
+                                    placeholder="Ej: Pago de deuda ticket X, transferencia, etc."
                                 />
 
                                 <label style={{ display: 'block', margin: '1rem 0 0.5rem', fontSize: '0.875rem', fontWeight: 500 }}>Método de Pago</label>
@@ -528,30 +631,29 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                 </select>
 
                                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
-                                    {operacionSaldo === 'sumar'
-                                        ? 'Se registrará un pago: si el cliente tiene deuda (saldo negativo), se reducirá; si no, aumentará su saldo a favor.'
-                                        : 'Se registrará una nueva deuda/fiado: el saldo del cliente disminuirá y quedará más en negativo.'}
+                                    Se registrará un pago: si el cliente tiene deuda (saldo negativo), se reducirá; si no, aumentará su saldo a favor.
                                 </p>
 
-                                {operacionSaldo === 'sumar' && deudasConPendiente.length > 0 && (
+                                {deudasConPendiente.length > 0 && (
                                     <div style={{ marginTop: '0.75rem' }}>
                                         <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.875rem', fontWeight: 500 }}>
-                                            Asociar pago a deuda (opcional)
+                                            Asociar pago a deuda (obligatorio si hay deudas activas)
                                         </label>
                                         <select
                                             value={deudaSeleccionadaId ?? ''}
                                             onChange={e => setDeudaSeleccionadaId(e.target.value || null)}
+                                            required={deudasConPendiente.length > 0}
                                             style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #d1d5db', backgroundColor: 'white', fontSize: '0.85rem' }}
                                         >
-                                            <option value="">No asociar, pago genérico</option>
+                                            <option value="">Seleccionar deuda por ID...</option>
                                             {deudasConPendiente.map(x => (
                                                 <option key={x.deuda.id} value={x.deuda.id}>
-                                                    {x.deuda.descripcion || 'Deuda sin descripción'} · Pendiente: ${x.pendiente.toLocaleString('es-AR')}
+                                                    ID: {x.deuda.id.slice(0, 8)} · {x.deuda.descripcion || 'Deuda sin descripción'} · Pendiente: ${x.pendiente.toLocaleString('es-AR')}
                                                 </option>
                                             ))}
                                         </select>
                                         <p style={{ margin: '0.25rem 0 0', fontSize: '0.7rem', color: '#6b7280' }}>
-                                            Si seleccionás una deuda, este pago se imputará a esa deuda puntual y se actualizará su pendiente.
+                                            Cada pago queda trazado por `DeudaOrigenId` para identificar exactamente qué deuda fue abonada.
                                         </p>
                                     </div>
                                 )}
@@ -567,9 +669,9 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                 <button
                                     type="submit"
                                     disabled={savingSaldo}
-                                    style={{ padding: '0.5rem 1rem', border: 'none', backgroundColor: operacionSaldo === 'sumar' ? '#16a34a' : '#dc2626', color: 'white', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 500 }}
+                                    style={{ padding: '0.5rem 1rem', border: 'none', backgroundColor: '#16a34a', color: 'white', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 500 }}
                                 >
-                                    {savingSaldo ? 'Procesando...' : (operacionSaldo === 'sumar' ? 'Registrar pago' : 'Agregar deuda')}
+                                    {savingSaldo ? 'Procesando...' : 'Registrar pago'}
                                 </button>
                             </div>
                         </form>
@@ -580,7 +682,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
             {/* Modal Prenda en Prueba */}
             {showPrendaModal && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.5rem 1.75rem', width: '100%', maxWidth: '960px', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.5rem 1.75rem', width: '100%', maxWidth: '1080px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h2 style={{ margin: 0, fontSize: '1.35rem' }}>
                                 Agregar prenda en prueba
@@ -593,13 +695,72 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                 &times;
                             </button>
                         </div>
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => setModoCargaPrenda('stock')}
+                                style={{
+                                    padding: '0.35rem 0.7rem',
+                                    borderRadius: '9999px',
+                                    border: '1px solid',
+                                    borderColor: modoCargaPrenda === 'stock' ? '#93c5fd' : '#d1d5db',
+                                    backgroundColor: modoCargaPrenda === 'stock' ? '#eff6ff' : '#f9fafb',
+                                    color: modoCargaPrenda === 'stock' ? '#1d4ed8' : '#4b5563',
+                                    cursor: 'pointer',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600
+                                }}
+                            >
+                                Con producto del stock
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setModoCargaPrenda('manual'); setEstadoInicialPrenda('Deuda'); }}
+                                style={{
+                                    padding: '0.35rem 0.7rem',
+                                    borderRadius: '9999px',
+                                    border: '1px solid',
+                                    borderColor: modoCargaPrenda === 'manual' ? '#fca5a5' : '#d1d5db',
+                                    backgroundColor: modoCargaPrenda === 'manual' ? '#fef2f2' : '#f9fafb',
+                                    color: modoCargaPrenda === 'manual' ? '#b91c1c' : '#4b5563',
+                                    cursor: 'pointer',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600
+                                }}
+                            >
+                                Carga manual (deuda vieja)
+                            </button>
+                            <div style={{ marginLeft: 'auto', minWidth: '220px' }}>
+                                <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem', fontWeight: 500 }}>Estado inicial</label>
+                                <select
+                                    value={estadoInicialPrenda}
+                                    onChange={e => setEstadoInicialPrenda(e.target.value as 'EnPrueba' | 'Deuda')}
+                                    disabled={modoCargaPrenda === 'manual'}
+                                    style={{ width: '100%', padding: '0.45rem', borderRadius: '0.375rem', border: '1px solid #d1d5db', backgroundColor: modoCargaPrenda === 'manual' ? '#f9fafb' : 'white', fontSize: '0.85rem' }}
+                                >
+                                    <option value="EnPrueba">En prueba</option>
+                                    <option value="Deuda">Deuda</option>
+                                </select>
+                            </div>
+                        </div>
                         <form
                             onSubmit={async (e) => {
                                 e.preventDefault();
                                 if (!cliente) return;
-                                if (!varianteSeleccionada) {
-                                    alert('Seleccioná una variante del catálogo.');
-                                    return;
+                                if (modoCargaPrenda === 'stock') {
+                                    if (!varianteSeleccionada) {
+                                        alert('Seleccioná una variante del catálogo.');
+                                        return;
+                                    }
+                                } else {
+                                    if (!productoManualNombre.trim()) {
+                                        alert('Ingresá el nombre del producto para la deuda manual.');
+                                        return;
+                                    }
+                                    if (estadoInicialPrenda !== 'Deuda') {
+                                        alert('Para carga manual solo se permite estado inicial Deuda.');
+                                        return;
+                                    }
                                 }
                                 if (!cantidadPrenda || !precioReferenciaPrenda) {
                                     alert('Completá Cantidad y Precio de referencia.');
@@ -608,14 +769,23 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                 setSavingPrenda(true);
                                 try {
                                     await clientesApi.crearPrendaEnCurso(cliente.id, {
-                                        varianteProductoId: (varianteSeleccionada as any).varianteId ?? (varianteSeleccionada as any).VarianteId ?? '',
+                                        varianteProductoId: modoCargaPrenda === 'stock'
+                                            ? ((varianteSeleccionada as any).varianteId ?? (varianteSeleccionada as any).VarianteId ?? '')
+                                            : undefined,
+                                        productoManualNombre: modoCargaPrenda === 'manual' ? productoManualNombre.trim() : undefined,
+                                        varianteManualNombre: modoCargaPrenda === 'manual' ? varianteManualNombre.trim() : undefined,
                                         cantidad: Number(cantidadPrenda),
                                         precioReferencia: Number(precioReferenciaPrenda),
+                                        estadoInicial: estadoInicialPrenda,
                                     });
                                     setShowPrendaModal(false);
+                                    setModoCargaPrenda('stock');
                                     setVariantePrendaId('');
                                     setCantidadPrenda(1);
                                     setPrecioReferenciaPrenda('');
+                                    setProductoManualNombre('');
+                                    setVarianteManualNombre('');
+                                    setEstadoInicialPrenda('EnPrueba');
                                     setProductoSeleccionado(null);
                                     setVarianteSeleccionada(null);
                                     loadPerfil(cliente.id);
@@ -628,107 +798,149 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                 }
                             }}
                         >
-                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.1fr)', gap: '1rem', marginBottom: '1rem', alignItems: 'stretch', minHeight: '260px' }}>
-                                <div style={{ position: 'relative' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', fontWeight: 500 }}>Buscar producto (nombre, código de barra, SKU)</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', borderRadius: '0.375rem', border: '1px solid #d1d5db', padding: '0.35rem 0.5rem', gap: '0.35rem' }}>
-                                        <MagnifyingGlass size={16} color="#9ca3af" />
-                                        <input
-                                            type="text"
-                                            value={busquedaPrenda}
-                                            onChange={e => setBusquedaPrenda(e.target.value)}
-                                            placeholder="Ej: Remera, 779..., SKU..."
-                                            style={{ border: 'none', outline: 'none', flex: 1, fontSize: '0.85rem' }}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div style={{ maxHeight: '340px', overflowY: 'auto', borderRadius: '0.375rem', border: '1px solid #e5e7eb', padding: '0.35rem', backgroundColor: '#f9fafb' }}>
-                                    {loadingCatalogo && (
-                                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>Cargando catálogo...</p>
-                                    )}
-                                    {!loadingCatalogo && catalogoPos.length === 0 && (
-                                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>No hay productos en el catálogo POS.</p>
-                                    )}
-                                    {!loadingCatalogo && catalogoPos.length > 0 && (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                                            {catalogoPos
-                                                .filter(p => {
-                                                    const q = busquedaPrenda.trim();
-                                                    if (!q) return true;
-                                                    const qLower = q.toLowerCase();
-                                                    if (p.nombre.toLowerCase().includes(qLower)) return true;
-                                                    if (p.ean13 && p.ean13.includes(q)) return true;
-                                                    if (p.variantes?.some(v =>
-                                                        (v as any).sku?.toLowerCase().includes(qLower) ||
-                                                        (v as any).sizeColor?.toLowerCase().includes(qLower)
-                                                    )) return true;
-                                                    return false;
-                                                })
-                                                .slice(0, 12)
-                                                .map(p => (
-                                                    <div key={p.id} style={{ borderRadius: '0.375rem', border: '1px solid #e5e7eb', backgroundColor: productoSeleccionado?.id === p.id ? '#eef2ff' : '#ffffff', padding: '0.35rem 0.45rem' }}>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => { setProductoSeleccionado(p); setVarianteSeleccionada(null); }}
-                                                            style={{ all: 'unset', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
-                                                        >
-                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>{p.nombre}</span>
-                                                                <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                                                                    {p.ean13 ? `EAN: ${p.ean13}` : ''}{p.variantes?.length ? ` · ${p.variantes.length} var.` : ''}
-                                                                </span>
-                                                            </div>
-                                                            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>
-                                                                ${p.precioBase.toLocaleString('es-AR')}
-                                                            </span>
-                                                        </button>
-                                                        {productoSeleccionado?.id === p.id && p.variantes?.length > 0 && (
-                                                            <div style={{ marginTop: '0.35rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                                                                {p.variantes.map((v) => {
-                                                                    const sizeColor = (v as any).sizeColor ?? `${(v as any).talle ?? ''} / ${(v as any).color ?? ''}`.trim();
-                                                                    const stock = (v as any).stockActual ?? 0;
-                                                                    const disabled = stock <= 0;
-                                                                    return (
-                                                                        <button
-                                                                            key={(v as any).varianteId}
-                                                                            type="button"
-                                                                            disabled={disabled}
-                                                                            onClick={() => {
-                                                                                setVarianteSeleccionada(v);
-                                                                                setVariantePrendaId(((v as any).varianteId ?? '').toString());
-                                                                                if (!precioReferenciaPrenda) {
-                                                                                    setPrecioReferenciaPrenda(p.precioBase);
-                                                                                }
-                                                                            }}
-                                                                            style={{
-                                                                                padding: '0.2rem 0.45rem',
-                                                                                borderRadius: '9999px',
-                                                                                border: '1px solid',
-                                                                                borderColor: varianteSeleccionada === v ? '#2563eb' : '#d1d5db',
-                                                                                backgroundColor: disabled ? '#f3f4f6' : (varianteSeleccionada === v ? '#eff6ff' : '#ffffff'),
-                                                                                fontSize: '0.7rem',
-                                                                                cursor: disabled ? 'not-allowed' : 'pointer',
-                                                                                color: disabled ? '#9ca3af' : '#111827'
-                                                                            }}
-                                                                        >
-                                                                            {sizeColor || 'Única'} · Stk: {stock}
-                                                                        </button>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        )}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1.1fr)', gap: '1rem', marginBottom: '1rem', alignItems: 'stretch' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                    {modoCargaPrenda === 'stock' ? (
+                                        <>
+                                            <div style={{ position: 'relative', marginBottom: '0.6rem' }}>
+                                                <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', fontWeight: 500 }}>Buscar producto (nombre, código de barra, SKU)</label>
+                                                <div style={{ display: 'flex', alignItems: 'center', borderRadius: '0.375rem', border: '1px solid #d1d5db', padding: '0.35rem 0.5rem', gap: '0.35rem' }}>
+                                                    <MagnifyingGlass size={16} color="#9ca3af" />
+                                                    <input
+                                                        type="text"
+                                                        value={busquedaPrenda}
+                                                        onChange={e => setBusquedaPrenda(e.target.value)}
+                                                        placeholder="Ej: Remera, 779..., SKU..."
+                                                        style={{ border: 'none', outline: 'none', flex: 1, fontSize: '0.85rem' }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div style={{ flex: 1, minHeight: '360px', maxHeight: '420px', overflowY: 'auto', borderRadius: '0.375rem', border: '1px solid #e5e7eb', padding: '0.35rem', backgroundColor: '#f9fafb' }}>
+                                                {loadingCatalogo && (
+                                                    <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>Cargando catálogo...</p>
+                                                )}
+                                                {!loadingCatalogo && catalogoPos.length === 0 && (
+                                                    <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: 0 }}>No hay productos en el catálogo POS.</p>
+                                                )}
+                                                {!loadingCatalogo && catalogoPos.length > 0 && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                                                        {catalogoPos
+                                                            .filter(p => {
+                                                                const q = busquedaPrenda.trim();
+                                                                if (!q) return true;
+                                                                const qLower = q.toLowerCase();
+                                                                if (p.nombre.toLowerCase().includes(qLower)) return true;
+                                                                if (p.ean13 && p.ean13.includes(q)) return true;
+                                                                if (p.variantes?.some(v =>
+                                                                    (v as any).sku?.toLowerCase().includes(qLower) ||
+                                                                    (v as any).sizeColor?.toLowerCase().includes(qLower)
+                                                                )) return true;
+                                                                return false;
+                                                            })
+                                                            .slice(0, 20)
+                                                            .map(p => (
+                                                                <div key={p.id} style={{ borderRadius: '0.375rem', border: '1px solid #e5e7eb', backgroundColor: productoSeleccionado?.id === p.id ? '#eef2ff' : '#ffffff', padding: '0.35rem 0.45rem' }}>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => { setProductoSeleccionado(p); setVarianteSeleccionada(null); }}
+                                                                        style={{ all: 'unset', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
+                                                                    >
+                                                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>{p.nombre}</span>
+                                                                            <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                                                                                {p.ean13 ? `EAN: ${p.ean13}` : ''}{p.variantes?.length ? ` · ${p.variantes.length} var.` : ''}
+                                                                            </span>
+                                                                        </div>
+                                                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#111827' }}>
+                                                                            ${p.precioBase.toLocaleString('es-AR')}
+                                                                        </span>
+                                                                    </button>
+                                                                    {productoSeleccionado?.id === p.id && p.variantes?.length > 0 && (
+                                                                        <div style={{ marginTop: '0.35rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                                                                            {p.variantes.map((v) => {
+                                                                                const sizeColor = (v as any).sizeColor ?? `${(v as any).talle ?? ''} / ${(v as any).color ?? ''}`.trim();
+                                                                                const stock = (v as any).stockActual ?? 0;
+                                                                                const disabled = stock <= 0;
+                                                                                return (
+                                                                                    <button
+                                                                                        key={(v as any).varianteId}
+                                                                                        type="button"
+                                                                                        disabled={disabled}
+                                                                                        onClick={() => {
+                                                                                            setVarianteSeleccionada(v);
+                                                                                            setVariantePrendaId(((v as any).varianteId ?? '').toString());
+                                                                                            if (!precioReferenciaPrenda) {
+                                                                                                setPrecioReferenciaPrenda(p.precioBase);
+                                                                                            }
+                                                                                        }}
+                                                                                        style={{
+                                                                                            padding: '0.2rem 0.45rem',
+                                                                                            borderRadius: '9999px',
+                                                                                            border: '1px solid',
+                                                                                            borderColor: varianteSeleccionada === v ? '#2563eb' : '#d1d5db',
+                                                                                            backgroundColor: disabled ? '#f3f4f6' : (varianteSeleccionada === v ? '#eff6ff' : '#ffffff'),
+                                                                                            fontSize: '0.7rem',
+                                                                                            cursor: disabled ? 'not-allowed' : 'pointer',
+                                                                                            color: disabled ? '#9ca3af' : '#111827'
+                                                                                        }}
+                                                                                    >
+                                                                                        {sizeColor || 'Única'} · Stk: {stock}
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
                                                     </div>
-                                                ))}
+                                                )}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div style={{ border: '1px solid #fecaca', backgroundColor: '#fff7ed', borderRadius: '0.5rem', padding: '0.9rem', display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+                                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#9a3412' }}>
+                                                Carga manual para deudas históricas: no requiere variante del stock actual.
+                                            </p>
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.82rem', fontWeight: 500 }}>Producto</label>
+                                                <input
+                                                    type="text"
+                                                    value={productoManualNombre}
+                                                    onChange={e => setProductoManualNombre(e.target.value)}
+                                                    required={modoCargaPrenda === 'manual'}
+                                                    placeholder="Ej: Campera cuero (deuda vieja)"
+                                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.82rem', fontWeight: 500 }}>Variante / Detalle (opcional)</label>
+                                                <input
+                                                    type="text"
+                                                    value={varianteManualNombre}
+                                                    onChange={e => setVarianteManualNombre(e.target.value)}
+                                                    placeholder="Ej: Talle M / Negro"
+                                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', minHeight: 0 }}>
                                     <div>
                                         <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', fontWeight: 500 }}>Resumen</label>
                                         <div style={{ padding: '0.6rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #e5e7eb', backgroundColor: '#f9fafb', fontSize: '0.8rem', color: '#4b5563', minHeight: '56px' }}>
-                                            {productoSeleccionado && varianteSeleccionada ? (
+                                            {modoCargaPrenda === 'manual' ? (
+                                                <>
+                                                    <div style={{ fontWeight: 600, color: '#111827' }}>{productoManualNombre || 'Producto manual'}</div>
+                                                    <div style={{ marginTop: '0.15rem' }}>
+                                                        Detalle:&nbsp;
+                                                        <span style={{ fontWeight: 500 }}>
+                                                            {varianteManualNombre || 'Sin especificar'}
+                                                        </span>
+                                                    </div>
+                                                </>
+                                            ) : (productoSeleccionado && varianteSeleccionada ? (
                                                 <>
                                                     <div style={{ fontWeight: 600, color: '#111827' }}>{productoSeleccionado.nombre}</div>
                                                     <div style={{ marginTop: '0.15rem' }}>
@@ -742,7 +954,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                                 </>
                                             ) : (
                                                 <span>Seleccioná un producto y una variante del catálogo para ver el resumen.</span>
-                                            )}
+                                            ))}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -772,7 +984,11 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                         </div>
                                     </div>
                                     <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
-                                        Esta acción descontará stock para la variante indicada y dejará la prenda asociada al cliente en estado <strong>EnPrueba</strong>. Luego podés marcarla como Paga, Deuda o Devuelta desde la tabla.
+                                        {modoCargaPrenda === 'manual'
+                                            ? 'La carga manual registra una deuda histórica sin impactar stock actual y queda en estado Deuda.'
+                                            : estadoInicialPrenda === 'Deuda'
+                                                ? 'Se descontará stock de la variante, se registrará deuda inmediata y se afectará el saldo del cliente.'
+                                                : 'Se descontará stock y quedará en EnPrueba para resolverla luego como Paga, Deuda o Devuelta.'}
                                     </p>
                                 </div>
                             </div>
@@ -789,7 +1005,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                     disabled={savingPrenda}
                                     style={{ padding: '0.5rem 1rem', border: 'none', backgroundColor: '#2563eb', color: 'white', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 500, fontSize: '0.9rem' }}
                                 >
-                                    {savingPrenda ? 'Guardando...' : 'Crear prenda en prueba'}
+                                    {savingPrenda ? 'Guardando...' : (estadoInicialPrenda === 'Deuda' ? 'Crear deuda' : 'Crear prenda en prueba')}
                                 </button>
                             </div>
                         </form>
