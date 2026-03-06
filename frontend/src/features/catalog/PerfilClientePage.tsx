@@ -22,7 +22,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
 
     // Estado Prenda en Prueba
     const [showPrendaModal, setShowPrendaModal] = useState(false);
-    const [variantePrendaId, setVariantePrendaId] = useState('');
     const [cantidadPrenda, setCantidadPrenda] = useState<number | string>(1);
     const [precioReferenciaPrenda, setPrecioReferenciaPrenda] = useState<number | string>('');
     const [savingPrenda, setSavingPrenda] = useState(false);
@@ -290,7 +289,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setVariantePrendaId('');
                                     setCantidadPrenda(1);
                                     setPrecioReferenciaPrenda('');
                                     setProductoSeleccionado(null);
@@ -613,7 +611,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                         precioReferencia: Number(precioReferenciaPrenda),
                                     });
                                     setShowPrendaModal(false);
-                                    setVariantePrendaId('');
                                     setCantidadPrenda(1);
                                     setPrecioReferenciaPrenda('');
                                     setProductoSeleccionado(null);
@@ -696,7 +693,6 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                                                             disabled={disabled}
                                                                             onClick={() => {
                                                                                 setVarianteSeleccionada(v);
-                                                                                setVariantePrendaId(((v as any).varianteId ?? '').toString());
                                                                                 if (!precioReferenciaPrenda) {
                                                                                     setPrecioReferenciaPrenda(p.precioBase);
                                                                                 }

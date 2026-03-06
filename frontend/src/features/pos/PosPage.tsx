@@ -23,6 +23,8 @@ import { useBarcodeScanner } from "../../hooks/useBarcodeScanner";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db/db";
 import { CameraScanner } from "../../components/CameraScanner";
+import { usePrinter } from "../../hooks/usePrinter";
+import { Bluetooth, Usb } from "@phosphor-icons/react";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
 type LineItem = {
@@ -138,6 +140,8 @@ export function PosPage() {
   /** Paginación de la lista de productos */
   const [paginaActual, setPaginaActual] = useState(1);
   const [scannerHidActivo, setScannerHidActivo] = useState(true); // Siempre activo por el hook
+
+  const { status: printStatus, connectSerial, connectBluetooth, printTicket } = usePrinter();
 
   // Listeners de teclado (Barra de comandos)
   useEffect(() => {
@@ -414,6 +418,23 @@ export function PosPage() {
       setUsarSaldoCliente(false); // reseteamos billetera
       setCobroExitoso(`¡Cobro completado! Ticket: ${res.ventaId.split('-')[0]}`);
 
+      // 3. Intento de Impresión Directa ESC/POS
+      if (printStatus.connected) {
+        const ticketLines = [
+          '[C]TICKET DE VENTA',
+          `[C]${new Date().toLocaleString()}`,
+          '---',
+          ...carrito.map(i => `${i.cantidad}x ${i.nombre} @ $${i.precioUnitario.toLocaleString()}`),
+          '---',
+          `[B]TOTAL: $${totalAPagar.toLocaleString()}`,
+          `[C]PAGO: ${metodosPago.find(m => m.id === metodoPagoActivo)?.nombre || 'S/D'}`,
+          '---',
+          '[C]¡Gracias por su compra!',
+          `[C]Ticket #${res.ventaId.split('-')[0]}`
+        ];
+        await printTicket(ticketLines);
+      }
+
       setTimeout(() => setCobroExitoso(null), 5000);
     } catch (error: any) {
       console.error(error);
@@ -426,10 +447,28 @@ export function PosPage() {
   return (
     <div className={styles.posPage}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Punto de venta</h1>
-        <p className={styles.subtitle}>
-          Agregá productos, asigná cliente si corresponde y cobrá.
-        </p>
+        <div>
+          <h1 className={styles.title}>Punto de venta</h1>
+          <p className={styles.subtitle}>
+            Agregá productos, asigná cliente si corresponde y cobrá.
+          </p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {!printStatus.connected ? (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={connectSerial} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Usb size={14} /> Link USB
+              </button>
+              <button onClick={connectBluetooth} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Bluetooth size={14} /> BT
+              </button>
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              🟢 {printStatus.interface} Ready
+            </div>
+          )}
+        </div>
       </header>
 
       <div className={styles.grid}>

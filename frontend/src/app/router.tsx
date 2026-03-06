@@ -23,6 +23,7 @@ import { AdminLayout } from "../components/layout/AdminLayout";
 import { TenantsDirectoryPage } from "../features/admin/TenantsDirectoryPage";
 import { HealthDashboardPage } from "../features/admin/HealthDashboardPage";
 import { AdminAuditPage } from '../features/admin/AdminAuditPage';
+import { AdminInsightsPage } from "../features/admin/AdminInsightsPage";
 
 // Layout protegido: valida auth y renderiza AppLayout con Outlet
 const ProtectedLayout = () => {
@@ -86,7 +87,8 @@ export const router = createBrowserRouter([
     children: [
       { path: "tenants", element: <TenantsDirectoryPage /> },
       { path: "health", element: <HealthDashboardPage /> },
-      { path: "audit", element: <AdminAuditPage /> }
+      { path: "audit", element: <AdminAuditPage /> },
+      { path: "insights", element: <AdminInsightsPage /> }
     ]
   },
   {
