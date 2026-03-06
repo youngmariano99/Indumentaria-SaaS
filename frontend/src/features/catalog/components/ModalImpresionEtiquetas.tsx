@@ -229,9 +229,9 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                             <div className={styles.barcodeWrap}>
                                                 <Barcode
                                                     value={etique.sku}
-                                                    width={formato === 'termico' ? (anchoTermico < 50 ? 1 : (anchoTermico > 80 ? 2 : 1.2)) : 1.5}
-                                                    height={formato === 'termico' ? (anchoTermico < 50 ? 25 : 30) : 40}
-                                                    fontSize={10}
+                                                    width={formato === 'termico' ? (anchoTermico < 50 ? 0.8 : (anchoTermico > 80 ? 1.5 : 1)) : 1.2}
+                                                    height={formato === 'termico' ? (anchoTermico < 50 ? 20 : 30) : 40}
+                                                    fontSize={8}
                                                     margin={0}
                                                 />
                                             </div>
@@ -243,7 +243,13 @@ export function ModalImpresionEtiquetas({ etiquetas, onClose }: Props) {
                                         )}
                                     </div>
                                     <div className={styles.textSection}>
-                                        <span className={styles.labelNombre} style={formato === 'termico' && anchoTermico < 50 ? { fontSize: '0.6rem' } : {}}>
+                                        <span
+                                            className={styles.labelNombre}
+                                            style={{
+                                                ...(formato === 'termico' && anchoTermico < 50 ? { fontSize: tipoCodigo === 'barcode' ? '0.85rem' : '0.6rem' } : {}),
+                                                ...(tipoCodigo === 'barcode' ? { marginTop: '-10px' } : {})
+                                            }}
+                                        >
                                             {etique.nombre}
                                         </span>
                                         {!modoProducto && (

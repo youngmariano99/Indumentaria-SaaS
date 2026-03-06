@@ -147,23 +147,25 @@ class PrinterService {
         ];
 
         items.forEach((item) => {
-            // Nombre de prenda (Top)
-            commands.push(`TEXT 10,10,"3",0,1,1,"${item.nombre.substring(0, 20)}"`);
+            // Nombre de prenda (Top) - Más grande y arriba si es solo barras
+            const fontNombre = tipoCodigo === 'barcode' ? '"4"' : '"3"';
+            const yNombre = tipoCodigo === 'barcode' ? 5 : 10;
+            commands.push(`TEXT 10,${yNombre},${fontNombre},0,1,1,"${item.nombre.substring(0, 20)}"`);
 
             // Descripción técnica (Talle y Color) - Condicional
+            const yDetalle = tipoCodigo === 'barcode' ? 45 : 40;
             if (incluirDetalles) {
-                commands.push(`TEXT 10,40,"2",0,1,1,"T:${item.talle} C:${item.color}"`);
+                commands.push(`TEXT 10,${yDetalle},"2",0,1,1,"T:${item.talle} C:${item.color}"`);
             }
 
-            const codeY = incluirDetalles ? 70 : 45;
-
             if (tipoCodigo === 'both') {
-                commands.push(`BARCODE 10,${codeY},"128",50,1,0,2,2,"${item.sku}"`);
-                commands.push(`QRCODE 10,${codeY + 60},L,4,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
+                // Centrado manual aproximado para 40mm (apilado vertical) con barra de 20
+                commands.push(`BARCODE 10,70,"128",20,1,0,2,2,"${item.sku}"`);
+                commands.push(`QRCODE 80,105,L,4,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
             } else if (tipoCodigo === 'barcode') {
-                commands.push(`BARCODE 10,${codeY},"128",80,1,0,2,2,"${item.sku}"`);
+                commands.push(`BARCODE 10,65,"128",80,1,0,2,2,"${item.sku}"`);
             } else if (tipoCodigo === 'qr') {
-                commands.push(`QRCODE 40,${codeY},L,6,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
+                commands.push(`QRCODE 100,60,L,7,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
             }
 
             // SKU y Precio (Bottom)
