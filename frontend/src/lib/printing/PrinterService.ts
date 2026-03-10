@@ -143,10 +143,11 @@ class PrinterService {
             `SIZE ${widthMm} mm,${heightMm} mm`,
             `GAP 3 mm,0`,
             `DIRECTION 1`,
-            `CLS`,
         ];
 
         items.forEach((item) => {
+            commands.push(`CLS`); // Limpiar el buffer para cada etiqueta individual
+
             // Nombre de prenda (TOP)
             const fontNombre = tipoCodigo === 'barcode' ? '"4"' : '"3"';
             commands.push(`TEXT 10,20,${fontNombre},0,1,1,"${item.nombre.substring(0, 20)}"`);
@@ -158,10 +159,10 @@ class PrinterService {
 
             // Códigos (CENTRO/ABAJO)
             if (tipoCodigo === 'both') {
-                commands.push(`BARCODE 10,100,"128",30,1,0,2,2,"${item.sku}"`);
+                commands.push(`BARCODE 10,100,"128",30,1,0,1,1,"${item.sku}"`);
                 commands.push(`QRCODE 100,160,L,4,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
             } else if (tipoCodigo === 'barcode') {
-                commands.push(`BARCODE 10,100,"128",60,1,0,2,2,"${item.sku}"`);
+                commands.push(`BARCODE 10,100,"128",60,1,0,1,1,"${item.sku}"`);
             } else if (tipoCodigo === 'qr') {
                 commands.push(`QRCODE 40,80,L,7,A,0,"${window.location.origin}/pos?scan=${item.sku}"`);
             }
