@@ -21,4 +21,13 @@ public class Inquilino : BaseEntity
     /// JSON: {"Calzado": [{"clave":"Tipo de suelo","valor":""},{"clave":"Uso","valor":""}]}
     /// </summary>
     public string ConfiguracionAtributosJson { get; set; } = "{}";
+
+    // ── Referencia al Rubro Comercial (Sprint 2) ──
+    public Guid RubroId { get; set; }
+    public virtual Rubro Rubro { get; set; } = null!;
+
+    /// <summary>
+    /// Sobrescritura de funcionalidades activas/desactivas para este inquilino específico.
+    /// </summary>
+    public string FeaturesJson { get; set; } = "{}";
 }

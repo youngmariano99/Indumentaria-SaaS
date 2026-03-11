@@ -6,12 +6,13 @@ import { authApi } from "./api/authApi";
 import styles from "./AuthPages.module.css";
 
 /**
- * Pantalla de registro. Mismo estilo que login; panel derecho muestra ilustración estadísticas.
- * Conectada al endpoint POST /api/auth/register-admin-temp
+ * Pantalla de registro SaaS 2.0.
+ * Permite elegir el nombre del negocio y el rubro para inicializar el motor dinámico.
  */
 export function RegisterPage() {
   const navigate = useNavigate();
   const [nombreComercial, setNombreComercial] = useState("");
+  const [rubroId, setRubroId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
@@ -22,7 +23,7 @@ export function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    // Validaciones locales (sin llamar a la API)
+    // Validaciones locales
     if (!nombreComercial.trim()) {
       setError("Ingresá el nombre de tu negocio.");
       return;
@@ -47,12 +48,17 @@ export function RegisterPage() {
     setLoading(true);
     try {
       // El subdominio se genera automáticamente del nombre del negocio
-      // (sin espacios, en minúsculas). Ej: "Mi Tienda" → "mi-tienda"
       const subdominio = nombreComercial.trim().toLowerCase().replace(/\s+/g, "-");
 
-      await authApi.register({ subdominio, email, password });
+      await authApi.register({
+        nombreComercial: nombreComercial.trim(),
+        subdominio,
+        email,
+        password,
+        rubroId: rubroId || undefined
+      });
 
-      // Registro exitoso → redirigir al login para que inicie sesión
+      // Registro exitoso → redirigir al login
       navigate("/login", { replace: true, state: { mensaje: "¡Cuenta creada! Podés ingresar ahora." } });
     } catch (err: unknown) {
       const mensaje =
@@ -77,7 +83,7 @@ export function RegisterPage() {
       <header className={styles.header}>
         <h1 className={styles.title}>Crear cuenta</h1>
         <p className={styles.subtitle}>
-          Registrá tu negocio para empezar a usar el Saas.
+          Registrá tu negocio para empezar a usar el SaaS.
         </p>
       </header>
 
@@ -98,6 +104,34 @@ export function RegisterPage() {
           iconLeft={<User size={20} />}
           disabled={loading}
         />
+
+        {/* Selector de Rubro - SaaS 2.0 */}
+        <div className={styles.inputWrapper}>
+          <label className={styles.label}>Tipo de Negocio (Rubro)</label>
+          <div className={styles.selectContainer}>
+            <select
+              className={styles.select}
+              value={rubroId}
+              onChange={(e) => setRubroId(e.target.value)}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                marginTop: '4px',
+                outline: 'none'
+              }}
+            >
+              <option value="">Seleccionar rubro...</option>
+              <option value="d1e0f6a2-1234-5678-90ab-cdef01234567">Indumentaria / Ropa</option>
+              <option value="ferreteria">Ferretería (Próximamente)</option>
+              <option value="gastronomia">Gastronomía (Próximamente)</option>
+            </select>
+          </div>
+        </div>
 
         <Input
           label="Correo electrónico"
@@ -132,11 +166,10 @@ export function RegisterPage() {
           disabled={loading}
         />
 
-        {/* Indicador del subdominio generado — solo informativo */}
         {nombreComercial.trim() && (
           <p className={styles.subtitle} style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "4px" }}>
             <Tag size={13} />
-            Tu negocio usará el código: <strong>{nombreComercial.trim().toLowerCase().replace(/\s+/g, "-")}</strong>
+            Tu url será: <strong>{nombreComercial.trim().toLowerCase().replace(/\s+/g, "-")}.dominio.com</strong>
           </p>
         )}
 
@@ -161,3 +194,4 @@ export function RegisterPage() {
     </>
   );
 }
+

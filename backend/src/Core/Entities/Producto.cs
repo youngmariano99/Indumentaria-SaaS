@@ -36,5 +36,10 @@ public class Producto : BaseEntity, IMustHaveTenant, ISoftDelete
     /// <summary>
     /// Escala base de talles para ropa importada/calzado. Ej: "AR", "US", "EU", "UK"
     /// </summary>
-    public string EscalaTalles { get; set; } = string.Empty; 
+    public string EscalaTalles { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Metadatos variables por rubro en formato JSON.
+    /// </summary>
+    public string MetadatosJson { get; set; } = "{}";
 }

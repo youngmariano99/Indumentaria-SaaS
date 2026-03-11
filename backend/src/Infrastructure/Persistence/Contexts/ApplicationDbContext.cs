@@ -1,9 +1,13 @@
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Core.Entities;
 using Core.Entities.Base;
 using Core.Interfaces;
@@ -40,7 +44,7 @@ public class TenantSessionInterceptor : DbConnectionInterceptor
         if (tenantId.HasValue)
         {
             using var cmd = connection.CreateCommand();
-            cmd.CommandText = $"SET SESSION \"app.current_tenant\" = '{tenantId.Value}';";
+            cmd.CommandText = $"SET LOCAL app.current_tenant = '{tenantId.Value}';";
             cmd.ExecuteNonQuery();
         }
     }
@@ -51,7 +55,7 @@ public class TenantSessionInterceptor : DbConnectionInterceptor
         if (tenantId.HasValue)
         {
             using var cmd = connection.CreateCommand();
-            cmd.CommandText = $"SET SESSION \"app.current_tenant\" = '{tenantId.Value}';";
+            cmd.CommandText = $"SET LOCAL app.current_tenant = '{tenantId.Value}';";
             await cmd.ExecuteNonQueryAsync();
         }
     }
@@ -76,6 +80,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     }
 
     public DbSet<Inquilino> Inquilinos => Set<Inquilino>();
+    public DbSet<Rubro> Rubros => Set<Rubro>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Sucursal> Sucursales => Set<Sucursal>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
@@ -128,6 +133,29 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             }
         }
 
+        builder.Entity<Rubro>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DiccionarioJson).HasColumnType("jsonb");
+            entity.Property(e => e.EsquemaMetadatosJson).HasColumnType("jsonb");
+            entity.Property(e => e.FeaturesJson).HasColumnType("jsonb");
+        });
+
+        builder.Entity<Inquilino>(entity =>
+        {
+            entity.Property(e => e.FeaturesJson).HasColumnType("jsonb");
+        });
+
+        builder.Entity<Sucursal>(entity =>
+        {
+            entity.Property(e => e.FeaturesJson).HasColumnType("jsonb");
+        });
+
+        builder.Entity<Usuario>(entity =>
+        {
+            entity.Property(e => e.FeaturesJson).HasColumnType("jsonb");
+        });
+
         // Configuración especial de la tabla LogsAuditoria: Campos JSONB y convenciones de nombre
         builder.Entity<LogAuditoria>(entity =>
         {
@@ -152,6 +180,18 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         builder.Entity<ArqueoCajaDetalle>(entity =>
         {
             entity.HasOne(x => x.MetodoPago).WithMany().HasForeignKey(x => x.MetodoPagoId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Producto>(entity =>
+        {
+            entity.Property(p => p.MetadatosJson).HasColumnType("jsonb");
+            entity.HasIndex(p => p.MetadatosJson).HasMethod("gin");
+        });
+
+        builder.Entity<VarianteProducto>(entity =>
+        {
+            entity.Property(v => v.AtributosJson).HasColumnType("jsonb");
+            entity.HasIndex(v => v.AtributosJson).HasMethod("gin");
         });
     }
 

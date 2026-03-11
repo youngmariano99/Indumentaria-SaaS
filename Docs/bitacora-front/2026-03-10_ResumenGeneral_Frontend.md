@@ -8,6 +8,9 @@
 - **Arquitectura de Slices:** Componentes desacoplados en `frontend/src/features/` para escalabilidad.
 - **CSS Modules:** Estilización modular y aislada, utilizando una paleta de colores y tokens centralizados en `variables.css`.
 - **Iconografía:** Uso estandarizado de **Phosphor Icons**.
+- **Feature Toggles (Sprint 3):** Sistema de control de funcionalidades reactivo usando `featureStore` (Zustand) y el hook `useFeatures`.
+- **UI Mutante (Sprint 4):** Motor de renderizado dinámico `FieldFactory` que genera formularios basados en esquemas JSON recibidos del backend.
+- **UX Progresiva (Sprint 5):** Implementación de `Smart Defaults` y `Drawers` laterales para una carga de datos fluida y sin interrupciones.
 
 ## 📱 2. PWA y Capacidades Nativas (Sprint 5)
 La aplicación ha trascendido el navegador para comportarse como una App Nativa:

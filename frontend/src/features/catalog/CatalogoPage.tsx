@@ -24,6 +24,7 @@ import layoutStyles from "../dashboard/DashboardPage.module.css";
 import styles from "./CatalogoPage.module.css";
 import { ModalImpresionEtiquetas } from "./components/ModalImpresionEtiquetas";
 import { Button } from "../../components/ui/Button";
+import { useRubro } from "../../hooks/useRubro";
 
 const fmt = (n: number) =>
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
@@ -99,6 +100,7 @@ export function CatalogoPage() {
     const [inputTalle, setInputTalle] = useState("");
     const [inputColor, setInputColor] = useState("");
     const [etiquetasParaImprimir, setEtiquetasParaImprimir] = useState<any[] | null>(null);
+    const { t } = useRubro();
 
     const cargarCatalogo = async () => {
         setLoading(true); setError(null);
@@ -169,13 +171,13 @@ export function CatalogoPage() {
             <header className={layoutStyles.topbar}>
                 <div className={layoutStyles.topbarRow}>
                     <div className={layoutStyles.topbarTitle}>
-                        <h1>Catálogo de productos</h1>
-                        <p>Gestioná los productos y su matriz de variantes.</p>
+                        <h1>{t('Catalogo', 'Catálogo de productos')}</h1>
+                        <p>{t('GestionCatalogoDesc', 'Gestioná los productos y su matriz de variantes.')}</p>
                     </div>
                     <div className={layoutStyles.topbarControls}>
                         <Link to="/catalogo/nuevo" className={layoutStyles.btnPrimarySmall ?? layoutStyles.segmentButton}>
                             <PlusCircle size={14} weight="bold" style={{ marginRight: 4 }} />
-                            Nuevo producto
+                            {t('NuevoProducto', 'Nuevo producto')}
                         </Link>
                     </div>
                 </div>
@@ -387,14 +389,14 @@ export function CatalogoPage() {
                                         <table className={styles.table}>
                                             <thead>
                                                 <tr>
-                                                    <th>Producto</th>
-                                                    <th>Tipo</th>
-                                                    <th>Temporada</th>
-                                                    <th style={{ textAlign: "right" }}>Precio base</th>
-                                                    <th style={{ textAlign: "center" }}>Variantes</th>
-                                                    <th>Talles disponibles</th>
-                                                    <th>Colores</th>
-                                                    <th style={{ textAlign: "center" }}>Stock total</th>
+                                                    <th>{t('Producto')}</th>
+                                                    <th>{t('Tipo')}</th>
+                                                    <th>{t('Temporada')}</th>
+                                                    <th style={{ textAlign: "right" }}>{t('PrecioBase', 'Precio base')}</th>
+                                                    <th style={{ textAlign: "center" }}>{t('Variantes')}</th>
+                                                    <th>{t('Talles', 'Talles disponibles')}</th>
+                                                    <th>{t('Colores')}</th>
+                                                    <th style={{ textAlign: "center" }}>{t('StockTotal', 'Stock total')}</th>
                                                     <th></th>
                                                 </tr>
                                             </thead>

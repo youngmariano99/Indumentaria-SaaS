@@ -15,4 +15,9 @@ public class Usuario : BaseEntity, IMustHaveTenant
     public string? PinCodeHash { get; set; } // Para acceso rápido en POS
     
     public SystemRole Rol { get; set; }
+
+    /// <summary>
+    /// Sobrescritura de funcionalidades activas/desactivas para este usuario.
+    /// </summary>
+    public string FeaturesJson { get; set; } = "{}";
 }

@@ -11,4 +11,9 @@ public class Sucursal : BaseEntity, IMustHaveTenant
     public string Direccion { get; set; } = string.Empty;
     
     public bool EsDepositoCentral { get; set; }
+
+    /// <summary>
+    /// Sobrescritura de funcionalidades activas/desactivas para esta sucursal.
+    /// </summary>
+    public string FeaturesJson { get; set; } = "{}";
 }

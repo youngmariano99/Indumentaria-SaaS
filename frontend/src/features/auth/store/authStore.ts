@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { jwtDecode } from 'jwt-decode';
 import type { AuthState, LoginResponse } from '../types';
+import { useRubroStore } from '../../../store/rubroStore';
+import { useFeatureStore } from '../../../store/featureStore';
 
 interface AuthStore extends AuthState {
     login: (data: LoginResponse) => void;
@@ -16,6 +18,18 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
 
             login: (data: LoginResponse) => {
+                // Sincronizar Rubro y Diccionario inmediatamente para que la UI mutante se active
+                if (data.rubroId) {
+                    useRubroStore.getState().setRubro(
+                        data.rubroId, 
+                        data.diccionarioJson || '{}', 
+                        data.esquemaMetadatosJson || '[]'
+                    );
+                }
+
+                // Sincronizar Feature Toggles de forma reactiva
+                useFeatureStore.getState().fetchFeatures();
+
                 set({
                     token: data.token,
                     user: {

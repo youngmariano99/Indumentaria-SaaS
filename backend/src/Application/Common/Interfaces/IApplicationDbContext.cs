@@ -9,6 +9,8 @@ public interface IApplicationDbContext
     void EnterBypassMode();
 
     DbSet<Inquilino> Inquilinos { get; }
+    DbSet<Rubro> Rubros { get; }
+    DbSet<Sucursal> Sucursales { get; }
     DbSet<Categoria> Categorias { get; }
     DbSet<Producto> Productos { get; }
     DbSet<VarianteProducto> VariantesProducto { get; }

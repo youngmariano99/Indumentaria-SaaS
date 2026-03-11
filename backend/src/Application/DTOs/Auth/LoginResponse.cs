@@ -10,4 +10,7 @@ public class LoginResponse
     public string Nombre { get; set; } = string.Empty;
     public Guid TenantId { get; set; }
     public SystemRole Rol { get; set; }
+    public Guid? RubroId { get; set; }
+    public string? DiccionarioJson { get; set; }
+    public string? EsquemaMetadatosJson { get; set; }
 }

@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Persistence.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310231256_MigrateToRLSAndGINIndices")]
+    partial class MigrateToRLSAndGINIndices
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -364,10 +367,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("FeaturesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("timestamp with time zone");
 
@@ -375,16 +374,11 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("RubroId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Subdominio")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RubroId");
 
                     b.ToTable("Inquilinos");
                 });
@@ -648,7 +642,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("MetadatosJson")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -683,40 +677,6 @@ namespace Infrastructure.Migrations
                     b.ToTable("Productos");
                 });
 
-            modelBuilder.Entity("Core.Entities.Rubro", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("Activo")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("DiccionarioJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("EsquemaMetadatosJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("FeaturesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("Icono")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Rubros");
-                });
-
             modelBuilder.Entity("Core.Entities.Sucursal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -729,10 +689,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<bool>("EsDepositoCentral")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("FeaturesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -808,10 +764,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("FeaturesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasColumnType("text");
@@ -842,7 +794,7 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("AtributosJson")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<string>("Color")
                         .IsRequired()
@@ -1034,17 +986,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("VarianteProducto");
-                });
-
-            modelBuilder.Entity("Core.Entities.Inquilino", b =>
-                {
-                    b.HasOne("Core.Entities.Rubro", "Rubro")
-                        .WithMany()
-                        .HasForeignKey("RubroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Rubro");
                 });
 
             modelBuilder.Entity("Core.Entities.ItemComprobante", b =>

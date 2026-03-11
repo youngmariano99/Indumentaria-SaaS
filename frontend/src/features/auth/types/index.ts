@@ -5,9 +5,11 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-    subdominio: string;  // El nombre del local (se usa como subdominio identificador del tenant)
+    nombreComercial: string;
+    subdominio: string;  
     email: string;
     password: string;
+    rubroId?: string;
 }
 
 export interface LoginResponse {
@@ -16,6 +18,9 @@ export interface LoginResponse {
     nombre: string;
     tenantId: string;
     rol: string | number;
+    rubroId?: string;
+    diccionarioJson?: string;
+    esquemaMetadatosJson?: string;
 }
 
 export interface AuthState {

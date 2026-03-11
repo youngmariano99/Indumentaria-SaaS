@@ -20,6 +20,10 @@ import { ajustesApi } from "../ajustes/api/ajustesApi";
 import type { FilaVariante } from "./types";
 import { TALLES_POR_TIPO, NOMBRE_TIPO, TIPOS_PRODUCTO } from "./data/tallesPorTipo";
 import styles from "./NuevoProductoPage.module.css";
+import { useRubroStore } from "../../store/rubroStore";
+import { FieldFactory, Drawer } from "../../components/common";
+import type { FieldDefinition } from "../../components/common";
+import { useRubro } from "../../hooks/useRubro";
 
 const TEMPORADAS = [
     "",  // sin temporada
@@ -48,11 +52,25 @@ export function NuevoProductoPage() {
     const [categoriasRaw, setCategoriasRaw] = useState<CategoriaDto[]>([]);
     const [categoriaId, setCategoriaId] = useState("");
 
-    // ── Metadatos (Sprint 3.5) ─────────────────────────────────────────────────
-    const [pesoKg, setPesoKg] = useState("");
-    const [ean13, setEan13] = useState("");
-    const [origen, setOrigen] = useState("");
-    const [escalaTalles, setEscalaTalles] = useState("");
+    const { getSmartDefaults } = useRubro();
+    const esquemaMetadatos = useRubroStore(state => state.esquema as FieldDefinition[]);
+    const [metadataValues, setMetadataValues] = useState<Record<string, any>>({});
+
+    const handleMetadataChange = (key: string, value: any) => {
+        setMetadataValues(prev => ({ ...prev, [key]: value }));
+    };
+
+    // Aplicar Smart Defaults al inicio si no es edición
+    useEffect(() => {
+        if (!isEditMode) {
+            const defaults = getSmartDefaults();
+            if (defaults.tipoProducto) setTipoProducto(defaults.tipoProducto);
+            if (defaults.temporada) setTemporada(defaults.temporada);
+            if (defaults.metadata) {
+                setMetadataValues(prev => ({ ...prev, ...defaults.metadata }));
+            }
+        }
+    }, [isEditMode, getSmartDefaults]);
 
     // ── Chips de talles y colores ──────────────────────────────────────────────
     const [talles, setTalles] = useState<string[]>([]);
@@ -79,6 +97,12 @@ export function NuevoProductoPage() {
     const [modalFilaIdx, setModalFilaIdx] = useState<number | null>(null);
     const [bulkAtributoClave, setBulkAtributoClave] = useState("");
     const [bulkAtributoValor, setBulkAtributoValor] = useState("");
+
+    // ── Nueva Categoría (Drawer) ──
+    const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
+    const [newCatName, setNewCatName] = useState("");
+    const [newCatDesc, setNewCatDesc] = useState("");
+    const [creatingCategory, setCreatingCategory] = useState(false);
 
     // ── Estado UI ──────────────────────────────────────────────────────────────
     const [loading, setLoading] = useState(false);
@@ -132,11 +156,14 @@ export function NuevoProductoPage() {
             setTipoProducto(prod.tipoProducto);
             setCategoriaId(prod.categoriaId);
 
-            // Metadatos
-            setPesoKg(prod.pesoKg?.toString() || "");
-            setEan13(prod.ean13 || "");
-            setOrigen(prod.origen || "");
-            setEscalaTalles(prod.escalaTalles || "");
+            // Metadatos dinámicos
+            try {
+                const prodMetadatos = JSON.parse(prod.metadatosJson || "{}");
+                setMetadataValues(prodMetadatos);
+            } catch {
+                // Si no hay metadatos o el JSON es inválido, mantenemos el objeto vacío
+                setMetadataValues({});
+            }
 
             // Poblar chips usando Sets
             const tallesUnicos = new Set<string>();
@@ -399,20 +426,17 @@ export function NuevoProductoPage() {
                     categoriaId: categoriaId,
                     temporada,
                     tipoProducto,
-                    pesoKg: pesoKg ? Number(pesoKg) : 0,
-                    ean13: ean13.trim(),
-                    origen: origen.trim(),
-                    escalaTalles: escalaTalles.trim(),
+                    metadatosJson: JSON.stringify(metadataValues),
                     variantes: filas.map(f => ({
-                        id: f.id, // Enviar si viene de DB
+                        id: f.id, 
                         precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
                         precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
                         stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
                         atributos: atributosMap,
-                    })).filter(f => f.id) // Solo enviamos las filas pre-existentes que tienen ID a EditarProductoCommand
+                    })).filter(f => f.id)
                 });
                 setSuccess(`Producto actulizado exitosamente.`);
-                setTimeout(() => navigate("/catalogo"), 1500); // Volver
+                setTimeout(() => navigate("/catalogo"), 1500);
             } else {
                 // MODO CREACIÓN
                 const resp = await catalogApi.crearProductoConVariantes({
@@ -422,12 +446,8 @@ export function NuevoProductoPage() {
                     categoriaId: categoriaId,
                     temporada,
                     tipoProducto,
-                    pesoKg: pesoKg ? Number(pesoKg) : 0,
-                    ean13: ean13.trim(),
-                    origen: origen.trim(),
-                    escalaTalles: escalaTalles.trim(),
+                    metadatosJson: JSON.stringify(metadataValues),
                     variantes: filas.map(f => {
-                        // Fusionar atributos globales del formulario con atributos específicos de la fila
                         const finalAttrs = { ...atributosMap, ...(f.atributos || {}) };
                         return {
                             talle: f.talle,
@@ -442,7 +462,7 @@ export function NuevoProductoPage() {
                 });
                 setSuccess(`¡Producto creado! ID: ${resp.id} — ${filas.length} variantes guardadas.`);
                 setNombre(""); setDescripcion(""); setPrecioBase(""); setTemporada("");
-                setPesoKg(""); setEan13(""); setOrigen(""); setEscalaTalles("");
+                setMetadataValues({});
                 setTalles([]); setColores([]); setFilas([]); setAtributos([]);
             }
         } catch (err: unknown) {
@@ -514,24 +534,36 @@ export function NuevoProductoPage() {
                                     <Tag size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
                                     Categoría <span className={styles.required}>*</span>
                                 </label>
-                                <select
-                                    className={styles.input}
-                                    value={categoriaId}
-                                    onChange={e => setCategoriaId(e.target.value)}
-                                    disabled={loading || categoriasRaw.length === 0}
-                                >
-                                    <option value="">Seleccione una categoría...</option>
-                                    {(function aplanar(cats: CategoriaDto[], prefix = ""): React.ReactNode[] {
-                                        let opts: React.ReactNode[] = [];
-                                        for (const c of cats) {
-                                            opts.push(<option key={c.id} value={c.id}>{prefix}{c.nombre}</option>);
-                                            if (c.subcategorias?.length > 0) {
-                                                opts = opts.concat(aplanar(c.subcategorias, prefix + "— "));
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <select
+                                        className={styles.input}
+                                        value={categoriaId}
+                                        onChange={e => setCategoriaId(e.target.value)}
+                                        disabled={loading || categoriasRaw.length === 0}
+                                        style={{ flex: 1 }}
+                                    >
+                                        <option value="">Seleccione una categoría...</option>
+                                        {(function aplanar(cats: CategoriaDto[], prefix = ""): React.ReactNode[] {
+                                            let opts: React.ReactNode[] = [];
+                                            for (const c of cats) {
+                                                opts.push(<option key={c.id} value={c.id}>{prefix}{c.nombre}</option>);
+                                                if (c.subcategorias?.length > 0) {
+                                                    opts = opts.concat(aplanar(c.subcategorias, prefix + "— "));
+                                                }
                                             }
-                                        }
-                                        return opts;
-                                    })(categoriasRaw)}
-                                </select>
+                                            return opts;
+                                        })(categoriasRaw)}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        className={styles.addAtributoBtn}
+                                        onClick={() => setShowCategoryDrawer(true)}
+                                        title="Nueva Categoría"
+                                        disabled={loading}
+                                    >
+                                        <Plus size={18} weight="bold" />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Tipo de producto — pre-carga los talles */}
@@ -584,68 +616,27 @@ export function NuevoProductoPage() {
                         </div>
                     </div>
 
-                    {/* ── Metadatos y Logística ───────────────────────────────────────────── */}
-                    <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
-                        <h2 className={styles.cardTitle}>
-                            <Tag size={20} weight="bold" />
-                            Metadatos y Logística (Opcional)
-                        </h2>
+                    {/* ── Metadatos Dinámicos (UI Mutante) ─────────────────────────────────── */}
+                    {esquemaMetadatos.length > 0 && (
+                        <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
+                            <h2 className={styles.cardTitle}>
+                                <Tag size={20} weight="bold" />
+                                Especificaciones del {useRubroStore.getState().translate('Producto', 'Producto')}
+                            </h2>
 
-                        <div className={styles.grid2}>
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>Peso (Kg)</label>
-                                <input
-                                    className={styles.input}
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="Ej: 0.5"
-                                    value={pesoKg}
-                                    onChange={e => setPesoKg(e.target.value)}
-                                    disabled={loading}
-                                />
-                            </div>
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>Código de barras base (EAN-13)</label>
-                                <input
-                                    className={styles.input}
-                                    type="text"
-                                    placeholder="Ej: 7791234567890"
-                                    value={ean13}
-                                    onChange={e => setEan13(e.target.value)}
-                                    disabled={loading}
-                                />
-                            </div>
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>Origen</label>
-                                <select
-                                    className={styles.input}
-                                    value={origen}
-                                    onChange={e => setOrigen(e.target.value)}
-                                    disabled={loading}
-                                >
-                                    <option value="">Seleccionar origen...</option>
-                                    <option value="Nacional">Nacional (Argentina)</option>
-                                    <option value="Importado">Importado</option>
-                                </select>
-                            </div>
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>Escala de Talles</label>
-                                <select
-                                    className={styles.input}
-                                    value={escalaTalles}
-                                    onChange={e => setEscalaTalles(e.target.value)}
-                                    disabled={loading}
-                                >
-                                    <option value="">Seleccionar escala...</option>
-                                    <option value="AR">Argentina (AR)</option>
-                                    <option value="US">Estados Unidos (US)</option>
-                                    <option value="EU">Europa (EU)</option>
-                                    <option value="UK">Reino Unido (UK)</option>
-                                </select>
+                            <div className={styles.grid2}>
+                                {esquemaMetadatos.map(campo => (
+                                    <FieldFactory
+                                        key={campo.id}
+                                        definition={campo}
+                                        value={metadataValues[campo.id]}
+                                        onChange={(val) => handleMetadataChange(campo.id, val)}
+                                        disabled={loading}
+                                    />
+                                ))}
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* ── Generador de variantes ───────────────────────────────────────── */}
                     <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
@@ -1119,100 +1110,182 @@ export function NuevoProductoPage() {
 
                 </form>
             </div>
-            {/* ── Modal de Atributos Específicos ── */}
-            {modalFilaIdx !== null && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, backdropFilter: 'blur(2px)' }}>
-                    <div style={{ backgroundColor: 'white', padding: '1.5rem', borderRadius: '0.75rem', width: '100%', maxWidth: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>Detalles de Variante: {filas[modalFilaIdx].talle} / {filas[modalFilaIdx].color}</h3>
-                            <button type="button" onClick={() => setModalFilaIdx(null)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#6b7280' }}>
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginBottom: '1.25rem' }}>
-                            Agregá características únicas para esta variante (ej: Estampa: "Dragon"). Estos valores sobreescriben los globales del producto.
+            {/* ── Drawer de Detalles de Variante (Sustituye al Modal antiguo) ── */}
+            <Drawer
+                isOpen={modalFilaIdx !== null}
+                onClose={() => setModalFilaIdx(null)}
+                title={modalFilaIdx !== null ? `Detalles: ${filas[modalFilaIdx].talle} / ${filas[modalFilaIdx].color}` : ""}
+                footer={
+                    <button
+                        type="button"
+                        onClick={() => setModalFilaIdx(null)}
+                        style={{ 
+                            width: '100%', 
+                            padding: '0.6rem', 
+                            backgroundColor: 'var(--color-primary)', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '6px', 
+                            fontWeight: 600, 
+                            cursor: 'pointer' 
+                        }}
+                    >
+                        Listo
+                    </button>
+                }
+            >
+                {modalFilaIdx !== null && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+                            Agregá características únicas para esta variante. Estos valores sobreescriben los globales del producto.
                         </p>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxHeight: '400px', overflowY: 'auto' }}>
                             {Object.entries(filas[modalFilaIdx].atributos || {}).map(([clave, valor]) => (
-                                <div key={clave} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                                    <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#374151', minWidth: '80px' }}>{clave}:</span>
-                                    <span style={{ fontSize: '0.8rem', color: '#6b7280', flex: 1 }}>{valor}</span>
+                                <div key={clave} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.75rem', backgroundColor: 'var(--color-background)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                                    <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text)', minWidth: '80px' }}>{clave}:</span>
+                                    <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', flex: 1 }}>{valor}</span>
                                     <button
                                         type="button"
                                         onClick={() => quitarAtributoEspecifico(modalFilaIdx, clave)}
-                                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#ef4444', padding: '2px' }}
+                                        style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-error)', padding: '4px' }}
                                     >
-                                        <Trash size={14} />
+                                        <Trash size={16} />
                                     </button>
                                 </div>
                             ))}
                             {Object.keys(filas[modalFilaIdx].atributos || {}).length === 0 && (
-                                <div style={{ textAlign: 'center', padding: '1rem', color: '#9ca3af', fontSize: '0.8rem', border: '2px dashed #e5e7eb', borderRadius: '8px' }}>
-                                    No hay detalles específicos cargados.
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)', fontSize: '0.875rem', border: '2px dashed var(--color-border)', borderRadius: '12px' }}>
+                                    No hay detalles específicos.
                                 </div>
                             )}
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-                            <input
-                                id="modalAttrClave"
-                                className={styles.tableInput}
-                                placeholder="Clave (ej: Estampa)"
-                                style={{ flex: 1 }}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const val = (document.getElementById('modalAttrValor') as HTMLInputElement).value;
-                                        agregarAtributoEspecifico(modalFilaIdx, e.currentTarget.value, val);
-                                        e.currentTarget.value = "";
-                                        (document.getElementById('modalAttrValor') as HTMLInputElement).value = "";
-                                        e.currentTarget.focus();
-                                    }
-                                }}
-                            />
-                            <input
-                                id="modalAttrValor"
-                                className={styles.tableInput}
-                                placeholder="Valor"
-                                style={{ flex: 1 }}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const clave = (document.getElementById('modalAttrClave') as HTMLInputElement).value;
-                                        agregarAtributoEspecifico(modalFilaIdx, clave, e.currentTarget.value);
-                                        (document.getElementById('modalAttrClave') as HTMLInputElement).value = "";
-                                        e.currentTarget.value = "";
-                                        document.getElementById('modalAttrClave')?.focus();
-                                    }
-                                }}
-                            />
-                            <button
-                                type="button"
-                                className={styles.addAtributoBtn}
-                                onClick={() => {
-                                    const c = (document.getElementById('modalAttrClave') as HTMLInputElement).value;
-                                    const v = (document.getElementById('modalAttrValor') as HTMLInputElement).value;
-                                    agregarAtributoEspecifico(modalFilaIdx, c, v);
-                                    (document.getElementById('modalAttrClave') as HTMLInputElement).value = "";
-                                    (document.getElementById('modalAttrValor') as HTMLInputElement).value = "";
-                                }}
-                            >
-                                <Plus size={14} />
-                            </button>
+                        <div className={styles.grid2} style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem', gap: '8px' }}>
+                            <div className={styles.fieldGroup} style={{ marginBottom: 0 }}>
+                                <input
+                                    id="modalAttrClave"
+                                    className={styles.input}
+                                    placeholder="Clave (ej: Estampa)"
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            document.getElementById('modalAttrValor')?.focus();
+                                        }
+                                    }}
+                                />
+                            </div>
+                            <div className={styles.fieldGroup} style={{ marginBottom: 0, display: 'flex', gap: '8px' }}>
+                                <input
+                                    id="modalAttrValor"
+                                    className={styles.input}
+                                    placeholder="Valor"
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const c = (document.getElementById('modalAttrClave') as HTMLInputElement).value;
+                                            const v = (document.getElementById('modalAttrValor') as HTMLInputElement).value;
+                                            if (c && v) {
+                                                agregarAtributoEspecifico(modalFilaIdx, c, v);
+                                                (document.getElementById('modalAttrClave') as HTMLInputElement).value = "";
+                                                (document.getElementById('modalAttrValor') as HTMLInputElement).value = "";
+                                                document.getElementById('modalAttrClave')?.focus();
+                                            }
+                                        }
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    className={styles.addAtributoBtn}
+                                    onClick={() => {
+                                        const c = (document.getElementById('modalAttrClave') as HTMLInputElement).value;
+                                        const v = (document.getElementById('modalAttrValor') as HTMLInputElement).value;
+                                        if (c && v) {
+                                            agregarAtributoEspecifico(modalFilaIdx, c, v);
+                                            (document.getElementById('modalAttrClave') as HTMLInputElement).value = "";
+                                            (document.getElementById('modalAttrValor') as HTMLInputElement).value = "";
+                                            document.getElementById('modalAttrClave')?.focus();
+                                        }
+                                    }}
+                                >
+                                    <Plus size={18} weight="bold" />
+                                </button>
+                            </div>
                         </div>
+                    </div>
+                )}
+            </Drawer>
 
-                        <button
-                            type="button"
-                            onClick={() => setModalFilaIdx(null)}
-                            style={{ width: '100%', marginTop: '1.5rem', padding: '0.6rem', backgroundColor: '#111827', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
-                        >
-                            Listo
-                        </button>
+            {/* ── Drawer de Nueva Categoría ── */}
+            <Drawer
+                isOpen={showCategoryDrawer}
+                onClose={() => setShowCategoryDrawer(false)}
+                title="Nueva Categoría"
+                footer={
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            if (!newCatName.trim()) return;
+                            setCreatingCategory(true);
+                            try {
+                                const id = await categoriasApi.crearCategoria({
+                                    nombre: newCatName,
+                                    descripcion: newCatDesc,
+                                    codigoNcm: "",
+                                    parentCategoryId: null
+                                });
+                                // Recargar categorías y seleccionar la nueva
+                                const actualizadas = await categoriasApi.obtenerCategorias();
+                                setCategoriasRaw(actualizadas);
+                                setCategoriaId(id);
+                                setShowCategoryDrawer(false);
+                                setNewCatName("");
+                                setNewCatDesc("");
+                            } catch (e) {
+                                console.error(e);
+                            } finally {
+                                setCreatingCategory(false);
+                            }
+                        }}
+                        disabled={creatingCategory || !newCatName.trim()}
+                        style={{ 
+                            width: '100%', 
+                            padding: '0.75rem', 
+                            backgroundColor: 'var(--color-primary)', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '8px', 
+                            fontWeight: 600, 
+                            cursor: (creatingCategory || !newCatName.trim()) ? 'not-allowed' : 'pointer',
+                            opacity: (creatingCategory || !newCatName.trim()) ? 0.6 : 1
+                        }}
+                    >
+                        {creatingCategory ? "Creado..." : "Crear Categoría"}
+                    </button>
+                }
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div className={styles.fieldGroup}>
+                        <label className={styles.label}>Nombre</label>
+                        <input
+                            className={styles.input}
+                            value={newCatName}
+                            onChange={e => setNewCatName(e.target.value)}
+                            placeholder="ej: Remeras, Pantalones..."
+                        />
+                    </div>
+                    <div className={styles.fieldGroup}>
+                        <label className={styles.label}>Descripción (opcional)</label>
+                        <textarea
+                            className={styles.input}
+                            value={newCatDesc}
+                            onChange={e => setNewCatDesc(e.target.value)}
+                            rows={3}
+                            placeholder="Breve descripción de la categoría"
+                        />
                     </div>
                 </div>
-            )}
+            </Drawer>
         </div>
     );
 }

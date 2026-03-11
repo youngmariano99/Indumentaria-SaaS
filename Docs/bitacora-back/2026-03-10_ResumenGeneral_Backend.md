@@ -10,9 +10,11 @@ El corazón de la aplicación utiliza **Clean Architecture**. Todos los comandos
 - **Multi-tenancy Férreo:** El sistema es Súper-Multi-Tenant (`IMustHaveTenant`). Implementado mediante **Global Query Filters** en EF Core y **Row Level Security (RLS)** en PostgreSQL. El `TenantId` se inyecta vía JWT Middleware en cada transacción.
 - **Auditoría Transparente:** Logs automáticos en formato `JSONB` a través de `AuditInterceptor` para cada operación de escritura.
 
-## 🔐 2. Autenticación y Acceso
+## 🔐 2. Autenticación, Acceso y Features
 - **Subdominios Dinámicos:** Acceso segmentado por identificador de subdominio, permitiendo colisión de emails entre diferentes tenants sin conflictos.
-- **Seguridad JWT:** Emisión de tokens cifrados con `BCrypt` e inyección de Claims nativos para roles y pertenencia.
+- **Seguridad JWT:** Emisión de tokens cifrados con `BCrypt` e inyección de Claims nativos para roles y configuración de rubro.
+- **Feature Toggles Jerárquicos (SaaS 2.0 - Sprint 3):** Resolvedor de funcionalidades con caché L1 que permite activar módulos por Usuario > Sucursal > Inquilino > Rubro.
+- **UI Mutante (SaaS 2.0 - Sprint 4):** El backend ahora provee `EsquemaMetadatosJson` durante el login, permitiendo que el frontend autoconfigure sus formularios.
 
 ## 🗃️ 3. Catálogo Inteligente y Carga Masiva
 - **Matriz de Stock:** Arquitectura de Producto Padre y Variantes Hijas (Talle/Color) con propiedades dinámicas JSON.

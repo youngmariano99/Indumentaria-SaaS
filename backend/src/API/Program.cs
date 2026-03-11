@@ -3,6 +3,8 @@ using Core.Interfaces;
 using Infrastructure.Services;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Persistence.Interceptors;
+using Infrastructure.Localization;
+using Microsoft.Extensions.Localization;
 using API.Middleware;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,6 +26,9 @@ builder.Services.AddScoped<AuditInterceptor>();
 builder.Services.AddScoped<TenantSessionInterceptor>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IStringLocalizer, RubroLocalizer>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IFeatureResolver, FeatureResolver>();
 
 // 1.5. Configuración de MediatR y FluentValidation (CQRS)
 builder.Services.AddMediatR(cfg => {
@@ -106,6 +111,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<TenantResolverMiddleware>();
+app.UseMiddleware<DiccionarioRubroMiddleware>();
 
 app.MapControllers(); // Registrar los endpoints de los controllers
 app.UseHttpsRedirection();
