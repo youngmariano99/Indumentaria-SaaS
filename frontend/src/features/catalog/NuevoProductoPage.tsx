@@ -1,10 +1,8 @@
-import { useState, useEffect, type KeyboardEvent } from "react";
+import { useState, useEffect, type KeyboardEvent, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
     Package,
-    Palette,
-    Rows,
     PlusCircle,
     CheckCircle,
     WarningCircle,
@@ -18,21 +16,15 @@ import { categoriasApi } from "./api/categoriasApi";
 import type { CategoriaDto } from "./api/categoriasApi";
 import { ajustesApi } from "../ajustes/api/ajustesApi";
 import type { FilaVariante } from "./types";
-import { TALLES_POR_TIPO, NOMBRE_TIPO, TIPOS_PRODUCTO } from "./data/tallesPorTipo";
+import { TALLES_POR_TIPO, TIPOS_PRODUCTO } from "./data/tallesPorTipo";
 import styles from "./NuevoProductoPage.module.css";
 import { useRubroStore } from "../../store/rubroStore";
 import { FieldFactory, Drawer } from "../../components/common";
 import type { FieldDefinition } from "../../components/common";
+import { ComponentRegistry } from "../../core/registry/ComponentRegistry";
 import { useRubro } from "../../hooks/useRubro";
 
-const TEMPORADAS = [
-    "",  // sin temporada
-    "Primavera-Verano 2025",
-    "Otoño-Invierno 2025",
-    "Primavera-Verano 2026",
-    "Otoño-Invierno 2026",
-    "Todo el año",
-];
+
 
 import { useParams } from "react-router-dom";
 
@@ -40,6 +32,9 @@ export function NuevoProductoPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id;
+    
+    // Resolución dinámica de componente vertical
+    const VariantesGridDynamic = ComponentRegistry.VariantesGrid.indumentaria;
 
     // ── Datos base del producto ────────────────────────────────────────────────
     const [nombre, setNombre] = useState("");
@@ -59,6 +54,10 @@ export function NuevoProductoPage() {
     const handleMetadataChange = (key: string, value: any) => {
         setMetadataValues(prev => ({ ...prev, [key]: value }));
     };
+
+    // Esquema dinámico del servidor
+    const [formSchema, setFormSchema] = useState<any>(null);
+    const [ean13, setEan13] = useState("");
 
     // Aplicar Smart Defaults al inicio si no es edición
     useEffect(() => {
@@ -130,6 +129,11 @@ export function NuevoProductoPage() {
             const defaults = data.atributosPorTipo?.[tipo] ?? [];
             if (defaults.length > 0) setAtributos(defaults);
         }).catch(() => { });
+
+        // Cargar esquema de metadatos del servidor
+        catalogApi.obtenerFormSchema().then(schema => {
+            setFormSchema(schema);
+        }).catch(() => { });
     }, []);
 
     // ── Pre-carga talles al cambiar tipo de producto ───────────────────────────
@@ -155,6 +159,7 @@ export function NuevoProductoPage() {
             setTemporada(prod.temporada || "");
             setTipoProducto(prod.tipoProducto);
             setCategoriaId(prod.categoriaId);
+            if (prod.ean13) setEan13(prod.ean13);
 
             // Metadatos dinámicos
             try {
@@ -446,6 +451,7 @@ export function NuevoProductoPage() {
                     categoriaId: categoriaId,
                     temporada,
                     tipoProducto,
+                    ean13,
                     metadatosJson: JSON.stringify(metadataValues),
                     variantes: filas.map(f => {
                         const finalAttrs = { ...atributosMap, ...(f.atributos || {}) };
@@ -503,117 +509,90 @@ export function NuevoProductoPage() {
                             Datos del Producto
                         </h2>
 
-                        <div className={styles.grid2}>
-                            <div className={`${styles.fieldGroup} ${styles.fullSpan}`}>
-                                <label className={styles.label}>Nombre <span className={styles.required}>*</span></label>
-                                <input
-                                    className={styles.input}
-                                    type="text"
-                                    placeholder="Ej: Jeans Duko Corte Mom"
-                                    value={nombre}
-                                    onChange={e => setNombre(e.target.value)}
-                                    disabled={loading}
-                                />
-                            </div>
+                        {/* Formulario dinámico cargado del Backend */}
+                        {formSchema ? (
+                            <div className={styles.grid2}>
+                                {formSchema.fields.map((campo: any) => {
+                                    // Custom render para categoría porque tiene árbol anidado y botón flotante
+                                    if (campo.name === "categoriaId") {
+                                        return (
+                                            <div key={campo.name} className={`${styles.fieldGroup} ${campo.gridSpan === 2 ? styles.fullSpan : ''}`}>
+                                                <label className={styles.label}>
+                                                    <Tag size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
+                                                    {campo.label} {campo.required && <span className={styles.required}>*</span>}
+                                                </label>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <select
+                                                        className={styles.input}
+                                                        value={categoriaId}
+                                                        onChange={e => setCategoriaId(e.target.value)}
+                                                        disabled={loading || categoriasRaw.length === 0}
+                                                        style={{ flex: 1 }}
+                                                    >
+                                                        <option value="">Seleccione una categoría...</option>
+                                                        {(function aplanar(cats: CategoriaDto[], prefix = ""): React.ReactNode[] {
+                                                            let opts: React.ReactNode[] = [];
+                                                            for (const c of cats) {
+                                                                opts.push(<option key={c.id} value={c.id}>{prefix}{c.nombre}</option>);
+                                                                if (c.subcategorias?.length > 0) {
+                                                                    opts = opts.concat(aplanar(c.subcategorias, prefix + "— "));
+                                                                }
+                                                            }
+                                                            return opts;
+                                                        })(categoriasRaw)}
+                                                    </select>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.addAtributoBtn}
+                                                        onClick={() => setShowCategoryDrawer(true)}
+                                                        title="Nueva Categoría"
+                                                        disabled={loading}
+                                                    >
+                                                        <Plus size={18} weight="bold" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
 
-                            <div className={`${styles.fieldGroup} ${styles.fullSpan}`}>
-                                <label className={styles.label}>Descripción</label>
-                                <input
-                                    className={styles.input}
-                                    type="text"
-                                    placeholder="Ej: Jean de corte recto, tela premium"
-                                    value={descripcion}
-                                    onChange={e => setDescripcion(e.target.value)}
-                                    disabled={loading}
-                                />
-                            </div>
-
-                            {/* Categoría Seleccionable */}
-                            <div className={`${styles.fieldGroup} ${styles.fullSpan}`}>
-                                <label className={styles.label}>
-                                    <Tag size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
-                                    Categoría <span className={styles.required}>*</span>
-                                </label>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <select
-                                        className={styles.input}
-                                        value={categoriaId}
-                                        onChange={e => setCategoriaId(e.target.value)}
-                                        disabled={loading || categoriasRaw.length === 0}
-                                        style={{ flex: 1 }}
-                                    >
-                                        <option value="">Seleccione una categoría...</option>
-                                        {(function aplanar(cats: CategoriaDto[], prefix = ""): React.ReactNode[] {
-                                            let opts: React.ReactNode[] = [];
-                                            for (const c of cats) {
-                                                opts.push(<option key={c.id} value={c.id}>{prefix}{c.nombre}</option>);
-                                                if (c.subcategorias?.length > 0) {
-                                                    opts = opts.concat(aplanar(c.subcategorias, prefix + "— "));
-                                                }
+                                    // Renderizado base de FieldFactory
+                                    return (
+                                        <FieldFactory
+                                            key={campo.name}
+                                            definition={{
+                                                id: campo.name,
+                                                label: campo.label,
+                                                type: campo.type,
+                                                required: campo.required,
+                                                fullWidth: campo.gridSpan === 2,
+                                                options: campo.options ? campo.options.map((o: string) => ({ label: o || "Ninguno", value: o })) : undefined,
+                                            }}
+                                            value={
+                                                campo.name === 'nombre' ? nombre :
+                                                campo.name === 'descripcion' ? descripcion :
+                                                campo.name === 'precioBase' ? precioBase :
+                                                campo.name === 'ean13' ? ean13 :
+                                                campo.name === 'temporada' ? temporada :
+                                                campo.name === 'tipoProducto' ? tipoProducto :
+                                                metadataValues[campo.name]
                                             }
-                                            return opts;
-                                        })(categoriasRaw)}
-                                    </select>
-                                    <button
-                                        type="button"
-                                        className={styles.addAtributoBtn}
-                                        onClick={() => setShowCategoryDrawer(true)}
-                                        title="Nueva Categoría"
-                                        disabled={loading}
-                                    >
-                                        <Plus size={18} weight="bold" />
-                                    </button>
-                                </div>
+                                            onChange={val => {
+                                                if (campo.name === 'nombre') setNombre(val);
+                                                else if (campo.name === 'descripcion') setDescripcion(val);
+                                                else if (campo.name === 'precioBase') setPrecioBase(val);
+                                                else if (campo.name === 'ean13') setEan13(val);
+                                                else if (campo.name === 'temporada') setTemporada(val);
+                                                else if (campo.name === 'tipoProducto') handleTipoChange(val);
+                                                else handleMetadataChange(campo.name, val);
+                                            }}
+                                            disabled={loading}
+                                        />
+                                    );
+                                })}
                             </div>
-
-                            {/* Tipo de producto — pre-carga los talles */}
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>
-                                    <Tag size={14} style={{ verticalAlign: "middle", marginRight: 4 }} />
-                                    Tipo de producto <span className={styles.required}>*</span>
-                                </label>
-                                <select
-                                    className={styles.input}
-                                    value={tipoProducto}
-                                    onChange={e => handleTipoChange(e.target.value)}
-                                    disabled={loading}
-                                >
-                                    {TIPOS_PRODUCTO.map(tipo => (
-                                        <option key={tipo} value={tipo}>{NOMBRE_TIPO[tipo]}</option>
-                                    ))}
-                                </select>
-                                <span className={styles.chipHint}>
-                                    Al seleccionar el tipo, los talles se pre-cargan automáticamente
-                                </span>
-                            </div>
-
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>Temporada <span className={styles.chipHint}>(opcional)</span></label>
-                                <select
-                                    className={styles.input}
-                                    value={temporada}
-                                    onChange={e => setTemporada(e.target.value)}
-                                    disabled={loading}
-                                >
-                                    <option value="">Sin temporada asignada</option>
-                                    {TEMPORADAS.filter(t => t !== "").map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                            </div>
-
-                            <div className={styles.fieldGroup}>
-                                <label className={styles.label}>Precio de venta base <span className={styles.required}>*</span></label>
-                                <input
-                                    className={styles.input}
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    placeholder="$25.000"
-                                    value={precioBase}
-                                    onChange={e => setPrecioBase(e.target.value)}
-                                    disabled={loading}
-                                />
-                            </div>
-                        </div>
+                        ) : (
+                            <div style={{ padding: "3rem", textAlign: "center", color: "#666" }}>Cargando campos del producto...</div>
+                        )}
                     </div>
 
                     {/* ── Metadatos Dinámicos (UI Mutante) ─────────────────────────────────── */}
@@ -638,342 +617,25 @@ export function NuevoProductoPage() {
                         </div>
                     )}
 
-                    {/* ── Generador de variantes ───────────────────────────────────────── */}
-                    <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
-                        <h2 className={styles.cardTitle}>
-                            <Palette size={20} weight="bold" />
-                            Generador de Variantes (Talle × Color)
-                        </h2>
-
-                        <div className={styles.grid2}>
-                            {/* Chips de talles */}
-                            <div className={styles.chipsSection}>
-                                <label className={styles.label}>Talles <span className={styles.required}>*</span></label>
-                                <div className={styles.chipsWrap} onClick={() => document.getElementById("inputTalle")?.focus()}>
-                                    {talles.map(t => (
-                                        <span key={t} className={styles.chip}>
-                                            {t}
-                                            <button
-                                                type="button"
-                                                className={styles.chipRemove}
-                                                onClick={() => setTalles(prev => prev.filter(x => x !== t))}
-                                                aria-label={`Quitar talle ${t}`}
-                                            >
-                                                <X size={12} weight="bold" />
-                                            </button>
-                                        </span>
-                                    ))}
-                                    <input
-                                        id="inputTalle"
-                                        className={styles.chipInput}
-                                        value={inputTalle}
-                                        onChange={e => setInputTalle(e.target.value.toUpperCase())}
-                                        onKeyDown={onKeyTalle}
-                                        onBlur={agregarTalle}
-                                        placeholder={talles.length === 0 ? "S, M, L, XL…" : ""}
-                                        disabled={loading}
-                                    />
-                                </div>
-                                <span className={styles.chipHint}>
-                                    Pre-cargados según tipo · Podés editar libremente · Enter para agregar
-                                </span>
-                            </div>
-
-                            {/* Chips de colores */}
-                            <div className={styles.chipsSection}>
-                                <label className={styles.label}>Colores <span className={styles.required}>*</span></label>
-                                <div className={styles.chipsWrap} onClick={() => document.getElementById("inputColor")?.focus()}>
-                                    {colores.map(c => (
-                                        <span key={c} className={styles.chip} style={{ backgroundColor: "var(--color-success)" }}>
-                                            {c}
-                                            <button
-                                                type="button"
-                                                className={styles.chipRemove}
-                                                onClick={() => setColores(prev => prev.filter(x => x !== c))}
-                                                aria-label={`Quitar color ${c}`}
-                                            >
-                                                <X size={12} weight="bold" />
-                                            </button>
-                                        </span>
-                                    ))}
-                                    <input
-                                        id="inputColor"
-                                        className={styles.chipInput}
-                                        value={inputColor}
-                                        onChange={e => setInputColor(e.target.value)}
-                                        onKeyDown={onKeyColor}
-                                        onBlur={agregarColor}
-                                        placeholder={colores.length === 0 ? "Negro, Azul, Blanco…" : ""}
-                                        disabled={loading}
-                                    />
-                                </div>
-                                <span className={styles.chipHint}>Escribí un color y presioná Enter</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ── Tabla de variantes generadas ────────────────────────────────── */}
-                    <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
-                        <div className={styles.matrixHeader}>
-                            <h2 className={styles.cardTitle} style={{ margin: 0 }}>
-                                <Rows size={20} weight="bold" />
-                                Variantes Generadas
-                            </h2>
-                            {filas.length > 0 && (
-                                <span className={styles.matrixCount}>
-                                    {filas.length} variante{filas.length !== 1 ? "s" : ""}
-                                    {seleccionadas.size > 0 && (
-                                        <span style={{ marginLeft: 6, color: "var(--color-primary)", fontWeight: 700 }}>
-                                            · {seleccionadas.size} seleccionada{seleccionadas.size !== 1 ? "s" : ""}
-                                        </span>
-                                    )}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* ── Barra de edición masiva ──────────────────────────────────── */}
-                        {seleccionadas.size > 0 && (
-                            <div className={styles.bulkBar}>
-                                <div className={styles.bulkHeader}>
-                                    <span className={styles.bulkLabel}>Acción masiva ({seleccionadas.size} variantes seleccionadas)</span>
-                                    <button
-                                        type="button"
-                                        className={styles.bulkCancelBtn}
-                                        onClick={() => setSeleccionadas(new Set())}
-                                    >
-                                        Deseleccionar
-                                    </button>
-                                </div>
-
-                                <div className={styles.bulkSection}>
-                                    {/* Grupo 1: Precios y Stock */}
-                                    <div className={styles.bulkGroup}>
-                                        <div className={styles.bulkGroupTitle}>
-                                            <Tag size={12} weight="bold" /> Valores Generales
-                                        </div>
-                                        <div className={styles.bulkFields}>
-                                            <div className={styles.bulkField}>
-                                                <span className={styles.bulkFieldLabel}>Precio $</span>
-                                                <input
-                                                    className={styles.tableInput}
-                                                    type="number"
-                                                    placeholder="ej: 15000"
-                                                    value={bulkPrecio}
-                                                    onChange={e => setBulkPrecio(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className={styles.bulkField}>
-                                                <span className={styles.bulkFieldLabel}>Costo $</span>
-                                                <input
-                                                    className={styles.tableInput}
-                                                    type="number"
-                                                    placeholder="ej: 12000"
-                                                    value={bulkCosto}
-                                                    onChange={e => setBulkCosto(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className={styles.bulkField}>
-                                                <span className={styles.bulkFieldLabel}>Stock</span>
-                                                <input
-                                                    className={styles.tableInput}
-                                                    type="number"
-                                                    placeholder="ej: 20"
-                                                    value={bulkStock}
-                                                    onChange={e => setBulkStock(e.target.value)}
-                                                />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className={styles.bulkApplyBtn}
-                                                onClick={aplicarASeleccionadas}
-                                                disabled={!bulkPrecio && !bulkCosto && !bulkStock}
-                                                title="Aplicar valores a seleccionadas"
-                                            >
-                                                <CheckCircle size={14} weight="bold" />
-                                                Aplicar
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.bulkDivider}></div>
-
-                                    {/* Grupo 2: Detalles/Atributos */}
-                                    <div className={styles.bulkGroup}>
-                                        <div className={styles.bulkGroupTitle}>
-                                            <Plus size={12} weight="bold" /> Detalles Específicos
-                                        </div>
-                                        <div className={styles.bulkFields}>
-                                            <div className={styles.bulkField}>
-                                                <span className={styles.bulkFieldLabel}>Clave</span>
-                                                <input
-                                                    className={styles.tableInput}
-                                                    placeholder="ej: Estampa"
-                                                    value={bulkAtributoClave}
-                                                    onChange={e => setBulkAtributoClave(e.target.value)}
-                                                />
-                                            </div>
-                                            <div className={styles.bulkField}>
-                                                <span className={styles.bulkFieldLabel}>Valor</span>
-                                                <input
-                                                    className={styles.tableInput}
-                                                    placeholder="ej: Dragon"
-                                                    value={bulkAtributoValor}
-                                                    onChange={e => setBulkAtributoValor(e.target.value)}
-                                                />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className={styles.bulkApplyBtn}
-                                                style={{ backgroundColor: '#6366f1' }}
-                                                onClick={aplicarAtributoMasivo}
-                                                disabled={!bulkAtributoClave.trim()}
-                                                title="Asignar detalle a seleccionadas"
-                                            >
-                                                <Plus size={14} weight="bold" />
-                                                Asignar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {filas.length === 0 ? (
-                            <div className={styles.emptyMatrix}>
-                                <PlusCircle size={48} weight="thin" className={styles.emptyMatrixIcon} />
-                                <p className={styles.emptyMatrixText}>
-                                    Seleccioná el tipo de producto para pre-cargar los talles, luego agregá colores.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className={styles.tableWrap}>
-                                <table className={styles.table}>
-                                    <thead>
-                                        <tr>
-                                            <th style={{ width: 100 }}>Detalles</th>
-                                            <th style={{ width: 32, textAlign: "center" }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={seleccionadas.size === filas.length && filas.length > 0}
-                                                    onChange={toggleTodas}
-                                                    title="Seleccionar todas"
-                                                    style={{ cursor: "pointer", accentColor: "var(--color-primary)" }}
-                                                />
-                                            </th>
-                                            <th style={{ width: 32 }}></th>
-                                            <th>Talle</th>
-                                            <th>Color</th>
-                                            <th>SKU (opcional)</th>
-                                            <th>Costo $</th>
-                                            <th>Precio especial $</th>
-                                            <th>Stock inicial</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filas.map((fila, idx) => (
-                                            <tr
-                                                key={`${fila.talle}-${fila.color}-${idx}`}
-                                                className={`${styles.tableRow} ${seleccionadas.has(idx) ? styles.tableRowSelected : ""}`}
-                                                onClick={() => toggleFila(idx)}
-                                                style={{ cursor: "pointer" }}
-                                            >
-                                                <td onClick={e => e.stopPropagation()}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setModalFilaIdx(idx)}
-                                                        className={styles.detailsBtn}
-                                                        style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            fontSize: '0.7rem',
-                                                            padding: '2px 6px',
-                                                            backgroundColor: Object.keys(fila.atributos || {}).length > 0 ? '#eff6ff' : '#f3f4f6',
-                                                            color: Object.keys(fila.atributos || {}).length > 0 ? '#2563eb' : '#6b7280',
-                                                            border: '1px solid',
-                                                            borderColor: Object.keys(fila.atributos || {}).length > 0 ? '#bfdbfe' : '#d1d5db',
-                                                            borderRadius: '4px'
-                                                        }}
-                                                    >
-                                                        <PlusCircle size={12} />
-                                                        {Object.keys(fila.atributos || {}).length > 0 ? `${Object.keys(fila.atributos || {}).length} detalles` : "Añadir"}
-                                                    </button>
-                                                </td>
-                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: "center" }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={seleccionadas.has(idx)}
-                                                        onChange={() => toggleFila(idx)}
-                                                        style={{ cursor: "pointer", accentColor: "var(--color-primary)" }}
-                                                    />
-                                                </td>
-                                                <td onClick={e => e.stopPropagation()}>
-                                                    <button
-                                                        type="button"
-                                                        className={styles.deleteRowBtn}
-                                                        onClick={() => eliminarFila(idx)}
-                                                        aria-label={`Eliminar variante ${fila.talle} ${fila.color}`}
-                                                        title="Eliminar esta variante"
-                                                    >
-                                                        <Trash size={13} weight="bold" />
-                                                    </button>
-                                                </td>
-                                                <td><span className={styles.talleChip}>{fila.talle}</span></td>
-                                                <td><span className={styles.colorChip}>{fila.color}</span></td>
-                                                <td>
-                                                    <input
-                                                        className={styles.tableInput}
-                                                        type="text"
-                                                        placeholder="Auto"
-                                                        value={fila.sku}
-                                                        onChange={e => editarFila(idx, "sku", e.target.value)}
-                                                        disabled={loading}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <input
-                                                        className={styles.tableInput}
-                                                        type="number"
-                                                        min="0"
-                                                        step="0.01"
-                                                        placeholder="$0"
-                                                        value={fila.precioCosto}
-                                                        onChange={e => editarFila(idx, "precioCosto", e.target.value)}
-                                                        disabled={loading}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <input
-                                                        className={styles.tableInput}
-                                                        type="number"
-                                                        min="0"
-                                                        step="0.01"
-                                                        placeholder="Sin override"
-                                                        value={fila.precioOverride}
-                                                        onChange={e => editarFila(idx, "precioOverride", e.target.value)}
-                                                        disabled={loading}
-                                                    />
-                                                </td>
-                                                <td>
-                                                    <input
-                                                        className={styles.tableInput}
-                                                        type="number"
-                                                        min="0"
-                                                        step="1"
-                                                        placeholder="0"
-                                                        value={fila.stockInicial}
-                                                        onChange={e => editarFila(idx, "stockInicial", e.target.value)}
-                                                        disabled={loading}
-                                                        style={{ borderColor: Number(fila.stockInicial || 0) > 0 ? "var(--color-success)" : undefined }}
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
+                    {/* ── Generador de variantes Dinámico (Feature-Sliced Design) ── */}
+                    <Suspense fallback={<div className={styles.card} style={{ marginTop: "var(--space-6)", textAlign: "center", padding: "2rem" }}>Cargando grilla del rubro...</div>}>
+                        <VariantesGridDynamic
+                            talles={talles} colores={colores} inputTalle={inputTalle} inputColor={inputColor}
+                            loading={loading} filas={filas} seleccionadas={seleccionadas}
+                            bulkPrecio={bulkPrecio} bulkCosto={bulkCosto} bulkStock={bulkStock}
+                            bulkAtributoClave={bulkAtributoClave} bulkAtributoValor={bulkAtributoValor}
+                            
+                            setTalles={setTalles} setColores={setColores} setInputTalle={setInputTalle} setInputColor={setInputColor}
+                            agregarTalle={agregarTalle} agregarColor={agregarColor}
+                            onKeyTalle={onKeyTalle} onKeyColor={onKeyColor}
+                            setSeleccionadas={setSeleccionadas} toggleTodas={toggleTodas} toggleFila={toggleFila}
+                            eliminarFila={eliminarFila} editarFila={editarFila} setModalFilaIdx={setModalFilaIdx}
+                            setBulkPrecio={setBulkPrecio} setBulkCosto={setBulkCosto} setBulkStock={setBulkStock}
+                            setBulkAtributoClave={setBulkAtributoClave} setBulkAtributoValor={setBulkAtributoValor}
+                            aplicarASeleccionadas={aplicarASeleccionadas} aplicarAtributoMasivo={aplicarAtributoMasivo}
+                        />
+                    </Suspense>
+                    {/* ────────────────────────────────────────────────────────────── */}
 
                     {/* ── Atributos adicionales ─────────────────────────────────────── */}
                     <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>

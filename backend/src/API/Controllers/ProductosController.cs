@@ -4,6 +4,7 @@ using Application.Features.Catalog.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Application.Shared.Interfaces;
 
 namespace API.Controllers;
 
@@ -13,10 +14,16 @@ namespace API.Controllers;
 public class ProductosController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IValidadorProducto _validadorProducto;
+    private readonly ISchemaRegistry _schemaRegistry;
+    private readonly Core.Interfaces.ITenantResolver _tenantResolver;
 
-    public ProductosController(IMediator mediator)
+    public ProductosController(IMediator mediator, IValidadorProducto validadorProducto, ISchemaRegistry schemaRegistry, Core.Interfaces.ITenantResolver tenantResolver)
     {
         _mediator = mediator;
+        _validadorProducto = validadorProducto;
+        _schemaRegistry = schemaRegistry;
+        _tenantResolver = tenantResolver;
     }
 
     /// <summary>
@@ -31,12 +38,30 @@ public class ProductosController : ControllerBase
     }
 
     /// <summary>
+    /// Retorna el manifiesto (schema) necesario para crear la UI dinámica por Rubro.
+    /// GET /api/productos/schema
+    /// </summary>
+    [HttpGet("schema")]
+    public async Task<ActionResult<FormSchemaDto>> GetSchema()
+    {
+        var tenantId = _tenantResolver.TenantId ?? Guid.Empty;
+        var result = await _schemaRegistry.ObtenerEsquemaProductoAsync(tenantId);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Crea un producto con toda su matriz de variantes en una sola transacción.
     /// POST /api/productos/matrix
     /// </summary>
     [HttpPost("matrix")]
     public async Task<IActionResult> CrearProductoConMatriz([FromBody] CrearProductoDto request)
     {
+        var errores = await _validadorProducto.ValidarAsync(request);
+        if (errores.Any())
+        {
+            return BadRequest(new { mensaje = "Errores de validación específicos del rubro", detalles = errores });
+        }
+
         var productId = await _mediator.Send(new CrearProductoConVariantesCommand { Payload = request });
         return CreatedAtAction(nameof(GetProductoById), new { id = productId }, new { id = productId });
     }

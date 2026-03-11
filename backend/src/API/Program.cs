@@ -14,6 +14,9 @@ using Core.Interfaces.Auth;
 using Infrastructure.Auth;
 using MediatR;
 using FluentValidation;
+using Application.Shared.Interfaces;
+using Application.Verticals.Indumentaria.Services;
+using Application.Verticals.Ferreteria.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +32,50 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IStringLocalizer, RubroLocalizer>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IFeatureResolver, FeatureResolver>();
+
+// 1.2 Patrón Estrategia - Validadores y Creadores Verticales multi-rubro
+builder.Services.AddScoped<IndumentariaValidadorProducto>();
+builder.Services.AddScoped<FerreteriaValidadorProducto>();
+builder.Services.AddScoped<IndumentariaCreadorProductoStrategy>();
+builder.Services.AddScoped<FerreteriaCreadorProductoStrategy>();
+
+builder.Services.AddScoped<IValidadorProducto>(provider => 
+{
+    var tenantResolver = provider.GetRequiredService<Core.Interfaces.ITenantResolver>();
+    var rubroId = tenantResolver.RubroId;
+
+    // d1e0f6a2-1234-5678-90ab-cdef01234567 es Indumentaria
+    if (rubroId == new Guid("d1e0f6a2-1234-5678-90ab-cdef01234567"))
+        return provider.GetRequiredService<IndumentariaValidadorProducto>();
+    
+    // Fallback o Ferretería
+    return provider.GetRequiredService<FerreteriaValidadorProducto>();
+});
+
+builder.Services.AddScoped<ICreadorProductoStrategy>(provider => 
+{
+    var tenantResolver = provider.GetRequiredService<Core.Interfaces.ITenantResolver>();
+    var rubroId = tenantResolver.RubroId;
+
+    if (rubroId == new Guid("d1e0f6a2-1234-5678-90ab-cdef01234567"))
+        return provider.GetRequiredService<IndumentariaCreadorProductoStrategy>();
+    
+    return provider.GetRequiredService<FerreteriaCreadorProductoStrategy>();
+});
+
+builder.Services.AddScoped<IndumentariaSchemaRegistry>();
+builder.Services.AddScoped<FerreteriaSchemaRegistry>();
+
+builder.Services.AddScoped<ISchemaRegistry>(provider => 
+{
+    var tenantResolver = provider.GetRequiredService<Core.Interfaces.ITenantResolver>();
+    var rubroId = tenantResolver.RubroId;
+
+    if (rubroId == new Guid("d1e0f6a2-1234-5678-90ab-cdef01234567"))
+        return provider.GetRequiredService<IndumentariaSchemaRegistry>();
+    
+    return provider.GetRequiredService<FerreteriaSchemaRegistry>();
+});
 
 // 1.5. Configuración de MediatR y FluentValidation (CQRS)
 builder.Services.AddMediatR(cfg => {

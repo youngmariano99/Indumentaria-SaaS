@@ -50,5 +50,33 @@ Este plan se construye sobre los hitos alcanzados en la versión actual (ver Ref
 
 ---
 
-> [!IMPORTANT]
+## 🚀 Refactorización: Arquitectura Multi-Rubro (Fase 1 y Fase 2)
+
+### Sprint 6: Arquitectura Base y Patrón Estrategia (COMPLETADO)
+*Foco: Sentar las bases del Monolito Modular y Extracción del Frontend.*
+- **Backend:** 
+    - Implementado `IValidadorProducto` y patrón estrategia por `RubroId` en `Program.cs`.
+- **Frontend:** 
+    - Extraído `VariantesGrid` a su vertical (`Indumentaria`).
+    - Implementada carga perezosa (`React.lazy`) en `NuevoProductoPage` a través de `ComponentRegistry`.
+
+### Sprint 7: Estrategia de Creación de Productos (COMPLETADO)
+*Foco: Modularizar la lógica de persistencia y guardado en la base de datos para no depender de Indumentaria en el Core.*
+- **Backend:**
+    - Refactorizar `CrearProductoConVariantesCommandHandler`.
+    - Crear `ICreadorProductoStrategy` para delegar la creación de variantes, atributos y stock a implementaciones por rubro.
+
+### Sprint 8: Carga de Formularios Metadata-Driven (COMPLETADO)
+*Foco: Construcción dinámica de UI según el tenant activo, sin condicionales estáticos en React.*
+- **Frontend / Backend:**
+    - Schema Registry: El backend provee un JSON que define qué campos se renderizan al crear/editar productos (ej: Ferretería usa "Material", Indumentaria usa "Talle").
+    - Implementación de `FormularioProductoBase` en el front para ingerir este Manifiesto JSON.
+
+### Sprint 9: Modelo de Base de Datos Dinámico (Próximo)
+*Foco: Asegurar campos dinámicos a nivel base de datos y búsqueda de alta velocidad.*
+- **Base de Datos (PostgreSQL):**
+    - Uso profundo de campos `JSONB` para Atributos dinámicos.
+    - Índices GIN sobre atributos variables usando el Fluent API (`HasMethod("gin")`).
+
+---
 > **Regla de Oro:** Queda prohibido el uso de `if (rubro === 'X')` en todo el codebase. Toda variabilidad debe ser inyectada por el motor de metadatos.

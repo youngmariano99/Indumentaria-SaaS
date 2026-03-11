@@ -12,6 +12,15 @@ export const catalogApi = {
     },
 
     /**
+     * Obtiene el manifiesto JSON (Schema) del backend para renderizar el formulario dinámicamente.
+     * Endpoint: GET /api/productos/schema
+     */
+    obtenerFormSchema: async (): Promise<any> => {
+        const response = await apiClient.get<any>('/productos/schema');
+        return response.data;
+    },
+
+    /**
      * Obtiene un producto individual por ID.
      * Endpoint: GET /api/productos/{id}
      */

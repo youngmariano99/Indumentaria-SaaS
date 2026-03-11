@@ -35,6 +35,7 @@ export interface CrearProductoDto {
     categoriaId: string;    // UUID (placeholder hasta que existan categorías)
     temporada: string;      // Puede ser vacío ""
     tipoProducto: string;   // Valor del enum TipoProducto (ej: "Ropa", "Calzado")
+    ean13?: string;         // Código de barras (opcional)
     metadatosJson: string;  // JSON stringificado con metadatos del rubro
     variantes: VarianteDto[];
 }
@@ -62,6 +63,7 @@ export interface ProductoConVariantes {
     categoriaId: string;
     temporada: string;
     tipoProducto: string;   // Valor del enum TipoProducto
+    ean13?: string;
     metadatosJson: string;  // JSON stringificado
     variantes: VarianteResumen[];
 }
