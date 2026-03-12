@@ -14,6 +14,11 @@ public class Categoria : BaseEntity, IMustHaveTenant, ISoftDelete
 
     // Jerarquía (Árbol de categorías)
     public Guid? ParentId { get; set; }
-    
+    public virtual Categoria? Parent { get; set; }
+    public virtual ICollection<Categoria> Subcategorias { get; set; } = new HashSet<Categoria>();
+
+    // Esquema de atributos requeridos (JSON)
+    public string EsquemaAtributosJson { get; set; } = "[]";
+
     public bool IsDeleted { get; set; }
 }

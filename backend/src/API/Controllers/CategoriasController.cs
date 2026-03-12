@@ -55,4 +55,11 @@ public class CategoriasController : ControllerBase
             return BadRequest(new { Mensaje = ex.Message });
         }
     }
+
+    [HttpGet("{id}/esquema")]
+    public async Task<ActionResult<string>> GetEsquemaHeredado(Guid id)
+    {
+        var result = await _mediator.Send(new ObtenerEsquemaHeredadoQuery { CategoriaId = id });
+        return Ok(result);
+    }
 }

@@ -29,7 +29,8 @@ public class ObtenerCategoriasQueryHandler : IRequestHandler<ObtenerCategoriasQu
             Nombre = c.Nombre,
             Descripcion = c.Descripcion,
             CodigoNcm = c.Ncm,
-            ParentCategoryId = c.ParentId
+            ParentCategoryId = c.ParentId,
+            EsquemaAtributosJson = c.EsquemaAtributosJson
         }).ToList();
 
         // Construir el árbol en memoria

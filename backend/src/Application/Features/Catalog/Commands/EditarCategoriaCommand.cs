@@ -35,6 +35,7 @@ public class EditarCategoriaCommandHandler : IRequestHandler<EditarCategoriaComm
         categoria.Descripcion = request.Payload.Descripcion;
         categoria.Ncm = request.Payload.CodigoNcm;
         categoria.ParentId = request.Payload.ParentCategoryId;
+        categoria.EsquemaAtributosJson = request.Payload.EsquemaAtributosJson;
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;

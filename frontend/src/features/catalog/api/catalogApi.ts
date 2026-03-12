@@ -61,5 +61,24 @@ export const catalogApi = {
     importarBatch: async (data: any[]): Promise<number> => {
         const response = await apiClient.post<number>('/productos/batch', data);
         return response.data;
+    },
+
+    /**
+     * Importa un lote de productos especializados de ferretería con metadatos planos.
+     * Endpoint: POST /api/productos/importar-ferreteria
+     */
+    importarFerreteria: async (data: any[]): Promise<number> => {
+        const response = await apiClient.post<number>('/productos/importar-ferreteria', data);
+        return response.data;
+    },
+
+    /**
+     * Obtiene el esquema de atributos consolidado por herencia de la categoría.
+     * Endpoint: GET /api/categorias/{id}/esquema
+     */
+    obtenerEsquemaHeredado: async (categoriaId: string): Promise<any[]> => {
+        const response = await apiClient.get<string>(`/categorias/${categoriaId}/esquema`);
+        // El servidor devuelve un string JSON (jsonb stringificado en el handler)
+        return JSON.parse(response.data || "[]");
     }
 };

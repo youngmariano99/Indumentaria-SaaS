@@ -100,7 +100,7 @@ export function CatalogoPage() {
     const [inputTalle, setInputTalle] = useState("");
     const [inputColor, setInputColor] = useState("");
     const [etiquetasParaImprimir, setEtiquetasParaImprimir] = useState<any[] | null>(null);
-    const { t } = useRubro();
+    const { t, isIndumentaria } = useRubro();
 
     const cargarCatalogo = async () => {
         setLoading(true); setError(null);
@@ -370,10 +370,10 @@ export function CatalogoPage() {
                                             <Button
                                                 variant="secundario"
                                                 size="sm"
-                                                onClick={() => navigate('/catalogo/importar')}
+                                                onClick={() => navigate(isIndumentaria ? '/catalogo/importar' : '/catalogo/importar-ferreteria')}
                                                 iconLeft={<UploadSimple size={18} />}
                                             >
-                                                Importar
+                                                {isIndumentaria ? 'Importar' : 'Carga Técnica'}
                                             </Button>
                                             <Button
                                                 size="sm"

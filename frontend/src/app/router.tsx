@@ -14,6 +14,7 @@ import { PerfilClientePage } from "../features/catalog/PerfilClientePage";
 import { DevolucionesPage } from "../features/pos/DevolucionesPage";
 import { AccountPage } from "../features/account/AccountPage";
 import { ImportarCatalogoPage } from "../features/catalog/ImportarCatalogoPage";
+import { ImportarFerreteriaPage } from "../features/catalog/ImportarFerreteriaPage";
 import { ReportesPage } from "../features/reports/ReportesPage";
 import { ArqueoPage } from "../features/arqueo/ArqueoPage";
 import { ShareTargetPage } from "../features/catalog/ShareTargetPage";
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
       { path: "/catalogo/nuevo", element: <NuevoProductoPage /> },
       { path: "/catalogo/editar/:id", element: <NuevoProductoPage /> },
       { path: "/catalogo/importar", element: <ImportarCatalogoPage /> },
+      { path: "/catalogo/importar-ferreteria", element: <ImportarFerreteriaPage /> },
       { path: "/categorias", element: <CategoriasPage /> },
       { path: "/cuenta", element: <AccountPage /> },
       { path: "/ajustes", element: <AjustesPage /> },

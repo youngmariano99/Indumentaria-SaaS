@@ -3,6 +3,7 @@ import {
     Folder, FolderOpen, CaretRight, CaretDown,
     Plus, PencilSimple, Trash, X, MagnifyingGlass, Funnel
 } from "@phosphor-icons/react";
+import { CategoryAttributesEditor } from "./components/CategoryAttributesEditor";
 import { categoriasApi } from "./api/categoriasApi";
 import type { CategoriaDto } from "./api/categoriasApi";
 import layoutStyles from "../dashboard/DashboardPage.module.css";
@@ -114,7 +115,8 @@ export function CategoriasPage() {
         nombre: "",
         descripcion: "",
         codigoNcm: "",
-        parentCategoryId: "" as string | null
+        parentCategoryId: "" as string | null,
+        esquemaAtributosJson: "[]"
     });
 
     const initLoad = async () => {
@@ -173,13 +175,13 @@ export function CategoriasPage() {
 
     const handleCreateRoot = () => {
         setModoEdicion(false);
-        setFormData({ id: "", nombre: "", descripcion: "", codigoNcm: "", parentCategoryId: null });
+        setFormData({ id: "", nombre: "", descripcion: "", codigoNcm: "", parentCategoryId: null, esquemaAtributosJson: "[]" });
         setModalOpen(true);
     };
 
     const handleAddSub = (parentId: string) => {
         setModoEdicion(false);
-        setFormData({ id: "", nombre: "", descripcion: "", codigoNcm: "", parentCategoryId: parentId });
+        setFormData({ id: "", nombre: "", descripcion: "", codigoNcm: "", parentCategoryId: parentId, esquemaAtributosJson: "[]" });
         setModalOpen(true);
     };
 
@@ -190,7 +192,8 @@ export function CategoriasPage() {
             nombre: cat.nombre,
             descripcion: cat.descripcion || "",
             codigoNcm: cat.codigoNcm || "",
-            parentCategoryId: cat.parentCategoryId
+            parentCategoryId: cat.parentCategoryId,
+            esquemaAtributosJson: cat.esquemaAtributosJson || "[]"
         });
         setModalOpen(true);
     };
@@ -212,7 +215,8 @@ export function CategoriasPage() {
                 nombre: formData.nombre,
                 descripcion: formData.descripcion,
                 codigoNcm: formData.codigoNcm,
-                parentCategoryId: formData.parentCategoryId || null
+                parentCategoryId: formData.parentCategoryId || null,
+                esquemaAtributosJson: formData.esquemaAtributosJson
             };
 
             if (modoEdicion) {
@@ -490,6 +494,11 @@ export function CategoriasPage() {
                                     placeholder="Ej. 6205.20.00"
                                 />
                             </div>
+
+                            <CategoryAttributesEditor 
+                                esquemaJson={formData.esquemaAtributosJson}
+                                onChange={(val) => setFormData({ ...formData, esquemaAtributosJson: val })}
+                            />
 
                             <div className={styles.modalActions}>
                                 <button type="button" className={styles.btnSecondary} onClick={() => setModalOpen(false)}>Cancelar</button>

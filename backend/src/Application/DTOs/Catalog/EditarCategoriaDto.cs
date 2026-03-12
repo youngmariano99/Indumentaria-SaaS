@@ -6,4 +6,5 @@ public class EditarCategoriaDto
     public string Descripcion { get; set; } = string.Empty;
     public string CodigoNcm { get; set; } = string.Empty;
     public Guid? ParentCategoryId { get; set; }
+    public string EsquemaAtributosJson { get; set; } = "[]";
 }

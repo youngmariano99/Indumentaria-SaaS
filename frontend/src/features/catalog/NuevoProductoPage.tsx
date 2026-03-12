@@ -57,6 +57,7 @@ export function NuevoProductoPage() {
 
     // Esquema dinámico del servidor
     const [formSchema, setFormSchema] = useState<any>(null);
+    const [inheritedSchema, setInheritedSchema] = useState<FieldDefinition[]>([]);
     const [ean13, setEan13] = useState("");
 
     // Aplicar Smart Defaults al inicio si no es edición
@@ -130,11 +131,30 @@ export function NuevoProductoPage() {
             if (defaults.length > 0) setAtributos(defaults);
         }).catch(() => { });
 
-        // Cargar esquema de metadatos del servidor
         catalogApi.obtenerFormSchema().then(schema => {
             setFormSchema(schema);
         }).catch(() => { });
     }, []);
+
+    // Cargar esquema heredado de la categoría
+    useEffect(() => {
+        if (!categoriaId) {
+            setInheritedSchema([]);
+            return;
+        }
+        catalogApi.obtenerEsquemaHeredado(categoriaId).then(schema => {
+            const fields: FieldDefinition[] = schema.map((s: any) => ({
+                id: s.id,
+                label: s.label,
+                type: 'text',
+                required: true,
+                fullWidth: false
+            }));
+            setInheritedSchema(fields);
+        }).catch(err => {
+            console.error("Error cargando esquema heredado", err);
+        });
+    }, [categoriaId]);
 
     // ── Pre-carga talles al cambiar tipo de producto ───────────────────────────
     const handleTipoChange = (nuevo: string) => {
@@ -617,9 +637,33 @@ export function NuevoProductoPage() {
                         </div>
                     )}
 
+                    {/* ── Atributos Requeridos por Categoría (Ferretería / Herencia) ── */}
+                    {inheritedSchema.length > 0 && (
+                        <div className={styles.card} style={{ marginTop: "var(--space-6)", borderLeft: "4px solid var(--color-primary)" }}>
+                            <h2 className={styles.cardTitle}>
+                                <CheckCircle size={20} weight="bold" color="var(--color-primary)" />
+                                Especificaciones Requeridas
+                                <span className={styles.chipHint} style={{ fontWeight: 400, marginLeft: 4 }}>(basado en la categoría seleccionada)</span>
+                            </h2>
+
+                            <div className={styles.grid2}>
+                                {inheritedSchema.map(campo => (
+                                    <FieldFactory
+                                        key={campo.id}
+                                        definition={campo}
+                                        value={metadataValues[campo.id]}
+                                        onChange={(val) => handleMetadataChange(campo.id, val)}
+                                        disabled={loading}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* ── Generador de variantes Dinámico (Feature-Sliced Design) ── */}
                     <Suspense fallback={<div className={styles.card} style={{ marginTop: "var(--space-6)", textAlign: "center", padding: "2rem" }}>Cargando grilla del rubro...</div>}>
                         <VariantesGridDynamic
+                            inheritedSchema={inheritedSchema}
                             talles={talles} colores={colores} inputTalle={inputTalle} inputColor={inputColor}
                             loading={loading} filas={filas} seleccionadas={seleccionadas}
                             bulkPrecio={bulkPrecio} bulkCosto={bulkCosto} bulkStock={bulkStock}
@@ -894,7 +938,8 @@ export function NuevoProductoPage() {
                                     nombre: newCatName,
                                     descripcion: newCatDesc,
                                     codigoNcm: "",
-                                    parentCategoryId: null
+                                    parentCategoryId: null,
+                                    esquemaAtributosJson: "[]"
                                 });
                                 // Recargar categorías y seleccionar la nueva
                                 const actualizadas = await categoriasApi.obtenerCategorias();

@@ -78,6 +78,17 @@ public class ProductosController : ControllerBase
     }
 
     /// <summary>
+    /// Importación especializada para ferretería (planillas planas con metadatos).
+    /// POST /api/productos/importar-ferreteria
+    /// </summary>
+    [HttpPost("importar-ferreteria")]
+    public async Task<IActionResult> ImportarFerreteria([FromBody] List<ImportarFerreteriaDto> request)
+    {
+        var productosCreados = await _mediator.Send(new ImportarCatalogoFerreteriaCommand { Productos = request });
+        return Ok(new { Count = productosCreados });
+    }
+
+    /// <summary>
     /// Obtiene un producto por ID (para usar como ruta de CreatedAtAction).
     /// GET /api/productos/{id}
     /// </summary>

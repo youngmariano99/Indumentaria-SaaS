@@ -1,9 +1,11 @@
 import type { KeyboardEvent } from "react";
 import { Palette, X, Rows, PlusCircle, CheckCircle, Plus, Trash, Tag } from "@phosphor-icons/react";
 import type { FilaVariante } from "../../../features/catalog/types";
+import type { FieldDefinition } from "../../../components/common";
 import styles from "../../../features/catalog/NuevoProductoPage.module.css";
 
 interface VariantesGridProps {
+    inheritedSchema?: FieldDefinition[];
     talles: string[];
     colores: string[];
     inputTalle: string;

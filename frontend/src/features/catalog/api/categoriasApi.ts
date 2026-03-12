@@ -6,6 +6,7 @@ export interface CategoriaDto {
     descripcion: string;
     codigoNcm: string;
     parentCategoryId: string | null;
+    esquemaAtributosJson: string;
     subcategorias: CategoriaDto[];
 }
 
@@ -14,6 +15,7 @@ export interface CrearCategoriaDto {
     descripcion: string;
     codigoNcm: string;
     parentCategoryId: string | null;
+    esquemaAtributosJson: string;
 }
 
 export interface EditarCategoriaDto {
@@ -21,6 +23,7 @@ export interface EditarCategoriaDto {
     descripcion: string;
     codigoNcm: string;
     parentCategoryId: string | null;
+    esquemaAtributosJson: string;
 }
 
 export const categoriasApi = {

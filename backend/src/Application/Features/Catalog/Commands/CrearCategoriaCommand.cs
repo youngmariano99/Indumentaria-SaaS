@@ -32,7 +32,8 @@ public class CrearCategoriaCommandHandler : IRequestHandler<CrearCategoriaComman
             Nombre = request.Payload.Nombre,
             Descripcion = request.Payload.Descripcion,
             Ncm = request.Payload.CodigoNcm,
-            ParentId = request.Payload.ParentCategoryId
+            ParentId = request.Payload.ParentCategoryId,
+            EsquemaAtributosJson = request.Payload.EsquemaAtributosJson
         };
 
         await _dbContext.Categorias.AddAsync(categoria, cancellationToken);

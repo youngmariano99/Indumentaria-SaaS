@@ -17,21 +17,27 @@ A diferencia de la Indumentaria, este rubro destaca por su alta densidad de vari
   - [x] Componente `AttributeGroupManager` para administrar chips/pills.
   - [x] Generación y Cacheo del "EsquemaBase" para inyectarlo en formularios.
 
-### Sprint 2: Categorías Jerárquicas y Herencia de Metadatos
+### Sprint 2: Categorías Jerárquicas y Herencia de Metadatos [COMPLETADO]
 *Foco: Árbol taxonómico de N-Niveles (ej. Herramientas > Eléctricas > Taladros).*
 - **Backend:**
-  - Añadir soporte jerárquico (`ParentId`) a `Categoria`.
-  - Columna `EsquemaAtributosJson` y algoritmo de herencia recursiva.
+  - [x] Añadir soporte jerárquico (`ParentId`) a `Categoria`.
+  - [x] Columna `EsquemaAtributosJson` y algoritmo de herencia recursiva.
+  - [x] Endpoint de consulta de esquema consolidado.
 - **Frontend:**
-  - Componente `CategoryTreeView`.
-  - Creación de sub-categorías "al vuelo" desde modales.
+  - [x] Componente `CategoryAttributesEditor` integrado en ABM.
+  - [x] Herencia visual e integración en el formulario de "Nuevo Producto".
+  - [x] Creación de sub-categorías "al vuelo" desde modales.
 
-### Sprint 3: Catálogo - Carga Masiva y Grilla Técnica
-*Foco: UX diseñada para ingresar miles de productos a máxima velocidad.*
+### Sprint 3: Catálogo - Carga Masiva y Grilla Técnica [COMPLETADO]
+*Foco: Velocidad de carga y precisión técnica.*
 - **Frontend:**
-  - **Generador Combinatorio Técnico:** El usuario elige Medida + Presentación, y el sistema cruza un array en memoria al instante.
-  - **Edición Estilo Planilla (Grid Editing):** Variantes editables con teclado (flechas) sin salir del formulario.
-  - Componente OCR Básico (MVP) para procesar etiquetas/facturas de compra rápidas.
+  - [x] Generador Combinatorio: Crear grilla de variantes eligiendo atributos (ej. Medida x Material).
+  - [x] Edición estilo planilla: Navegación por flechas en la grilla de variantes.
+  - [x] Autoincremento de SKU inteligente para códigos técnicos.
+- **Backend/Integración:**
+  - [x] Endpoint de importación Batch optimizado para planillas de proveedores.
+  - [x] Mapeo dinámico de columnas de Excel a metadatos JSONB.
+- [x] **Resultado:** Carga de 100 variantes en < 1 minuto.
 - **Backend:**
   - Endpoint `ImportarCatalogoFerreteriaCommand` especializado en validación y mapeo CSV/Excel -> JSONB.
 

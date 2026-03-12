@@ -183,6 +183,17 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasOne(x => x.MetodoPago).WithMany().HasForeignKey(x => x.MetodoPagoId).OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<Categoria>(entity =>
+        {
+            entity.HasOne(x => x.Parent)
+                .WithMany(x => x.Subcategorias)
+                .HasForeignKey(x => x.ParentId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(x => x.EsquemaAtributosJson).HasColumnType("jsonb");
+        });
+
         builder.Entity<Producto>(entity =>
         {
             entity.Property(p => p.MetadatosJson).HasColumnType("jsonb");

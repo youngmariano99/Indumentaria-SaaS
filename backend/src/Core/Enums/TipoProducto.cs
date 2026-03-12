@@ -12,5 +12,6 @@ public enum TipoProducto
     Accesorio = 2,
     RopaInterior = 3,
     Deporte = 4,
-    RopaDeTrabajo = 5
+    RopaDeTrabajo = 5,
+    Ferreteria = 6
 }
