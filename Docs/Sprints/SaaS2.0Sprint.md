@@ -72,7 +72,7 @@ Este plan se construye sobre los hitos alcanzados en la versión actual (ver Ref
     - Schema Registry: El backend provee un JSON que define qué campos se renderizan al crear/editar productos (ej: Ferretería usa "Material", Indumentaria usa "Talle").
     - Implementación de `FormularioProductoBase` en el front para ingerir este Manifiesto JSON.
 
-### Sprint 9: Modelo de Base de Datos Dinámico (Próximo)
+### Sprint 9: Modelo de Base de Datos Dinámico (COMPLETADO)
 *Foco: Asegurar campos dinámicos a nivel base de datos y búsqueda de alta velocidad.*
 - **Base de Datos (PostgreSQL):**
     - Uso profundo de campos `JSONB` para Atributos dinámicos.
