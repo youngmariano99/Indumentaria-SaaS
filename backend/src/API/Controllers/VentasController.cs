@@ -26,6 +26,13 @@ public class VentasController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("buscar")]
+    public async Task<IActionResult> BuscarProductosPos([FromQuery] string t)
+    {
+        var result = await _mediator.Send(new BuscarProductosPosQuery(t));
+        return Ok(result);
+    }
+
     [HttpGet("metodos-pago")]
     public async Task<IActionResult> ObtenerMetodosPago()
     {
@@ -47,5 +54,27 @@ public class VentasController : ControllerBase
     {
         var devolucionId = await _mediator.Send(new CrearDevolucionCommand(payload));
         return Ok(new { DevolucionId = devolucionId, Mensaje = "Devolución y/o Cambio registrado correctamente. El saldo del cliente ha sido actualizado." });
+    }
+
+    [HttpPost("pagar-deuda")]
+    public async Task<IActionResult> RegistrarPago([FromBody] RegistrarPagoDto payload)
+    {
+        var movimientoId = await _mediator.Send(new RegistrarPagoCuentaCorrienteCommand(payload));
+        return Ok(new { MovimientoId = movimientoId, Mensaje = "Pago registrado con éxito. El saldo del cliente ha sido actualizado." });
+    }
+
+    [HttpGet("ticket/{identificador}")]
+    public async Task<IActionResult> GetVentaByIdentificador(string identificador)
+    {
+        var result = await _mediator.Send(new ObtenerVentaPorIdentificadorQuery(identificador));
+        if (result == null) return NotFound("Ticket no encontrado.");
+        return Ok(result);
+    }
+
+    [HttpGet("cliente/{clienteId:guid}/cuenta-corriente")]
+    public async Task<IActionResult> GetCuentaCorriente(Guid clienteId)
+    {
+        var result = await _mediator.Send(new ObtenerMovimientosCuentaCorrienteQuery(clienteId));
+        return Ok(result);
     }
 }

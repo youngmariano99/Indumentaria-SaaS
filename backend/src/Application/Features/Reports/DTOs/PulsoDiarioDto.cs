@@ -29,6 +29,6 @@ public class MetodoPagoResumenDto
 public class RankingProductoDto
 {
     public string Nombre { get; set; } = string.Empty;
-    public int CantidadVendida { get; set; }
+    public decimal CantidadVendida { get; set; }
     public decimal TotalMonto { get; set; }
 }

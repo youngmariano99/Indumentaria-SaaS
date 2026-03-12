@@ -136,5 +136,15 @@ export const clientesApi = {
             prendaId,
             nuevoEstado,
         });
+    },
+
+    registrarPagoCC: async (pago: { clienteId: string; monto: number; metodoPagoId: string; notas?: string }): Promise<{ movimientoId: string; mensaje: string }> => {
+        const response = await apiClient.post<{ movimientoId: string; mensaje: string }>('/ventas/pagar-deuda', pago);
+        return response.data;
+    },
+
+    getMovimientosCC: async (clienteId: string): Promise<any[]> => {
+        const response = await apiClient.get<any[]>(`/ventas/cliente/${clienteId}/cuenta-corriente`);
+        return response.data;
     }
 }

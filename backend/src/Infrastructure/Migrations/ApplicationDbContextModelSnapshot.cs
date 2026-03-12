@@ -276,8 +276,8 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("numeric");
 
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uuid");
@@ -439,11 +439,17 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("ProductVariantId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("StockActual")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("StockActual")
+                        .HasColumnType("numeric");
 
-                    b.Property<int>("StockMinimo")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("StockDefectuoso")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("StockMinimo")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("StockRevision")
+                        .HasColumnType("numeric");
 
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid");
@@ -679,6 +685,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Ean13")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("EsFraccionable")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("EscalaTalles")
                         .IsRequired()
@@ -1003,8 +1012,8 @@ namespace Infrastructure.Migrations
                     b.Property<decimal>("AlicuotaIvaPct")
                         .HasColumnType("numeric");
 
-                    b.Property<int>("Cantidad")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("numeric");
 
                     b.Property<decimal>("CostoUnitarioAplicado")
                         .HasColumnType("numeric");

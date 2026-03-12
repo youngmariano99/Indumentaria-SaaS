@@ -4,6 +4,7 @@ import { CaretLeft, ShoppingBag, Money, CalendarBlank, UserGear, Wallet, Whatsap
 import { clientesApi } from './api/clientesApi';
 import type { Cliente360Dto } from './api/clientesApi';
 import { posApi, type MetodoPagoDto, type ProductoLayerPosDto, type VarianteLayerPosDto } from '../pos/api/posApi';
+import { CuentaCorrienteTab } from './components/CuentaCorrienteTab';
 
 export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp?: string, onCloseModal?: () => void }) {
     const { id } = useParams<{ id: string }>();
@@ -41,6 +42,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
     const [deudaSeleccionadaId, setDeudaSeleccionadaId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'movimientos' | 'cuenta-corriente'>('movimientos');
 
     const condicionIvaLabels: Record<number, string> = {
         0: 'Consumidor Final',
@@ -249,7 +251,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                         <button
                             onClick={abrirModalPrenda}
                             style={{ flex: 1, padding: '0.5rem', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', borderRadius: '0.375rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}
-                            title="Crear una nueva condicional desde prendas en prueba / en curso"
+                            title="Crear una nueva condicional desde artículos en curso"
                         >
                             <PlusCircle size={16} /> Nueva condicional
                         </button>
@@ -397,19 +399,19 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                     <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', padding: '1.5rem' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', gap: '0.75rem' }}>
                             <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0, color: '#111827' }}>
-                                Prendas en prueba / en curso
+                                Artículos en condicional / en curso
                             </h2>
                             <button
                                 type="button"
                                 onClick={abrirModalPrenda}
                                 style={{ padding: '0.35rem 0.7rem', borderRadius: '9999px', border: '1px solid #d1d5db', backgroundColor: '#f9fafb', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                             >
-                                <PlusCircle size={14} /> Agregar prenda en prueba
+                                <PlusCircle size={14} /> Agregar artículo a condicional
                             </button>
                         </div>
                         {(!cliente.prendasEnCurso || cliente.prendasEnCurso.length === 0) ? (
                             <p style={{ color: '#6b7280', fontSize: '0.9rem', margin: 0 }}>
-                                Este cliente no tiene prendas en prueba actualmente.
+                                Este cliente no tiene artículos en condicional actualmente.
                             </p>
                         ) : (
                             <div style={{ maxHeight: '260px', overflowY: 'auto', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}>
@@ -479,108 +481,148 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                     </div>
                 </div>
 
-                {/* Historial Unificado de Transacciones (Ventas y Billetera) */}
+                {/* Historial Unificado o Cuenta Corriente */}
                 <div style={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0, color: '#111827' }}>Historial de Movimientos</h2>
-                        <input
-                            type="text"
-                            placeholder="Buscar ticket, tipo o monto..."
-                            value={searchTerm}
-                            onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                            style={{ padding: '0.5rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '0.375rem', fontSize: '0.875rem', width: '250px' }}
-                        />
+                    <div style={{ display: 'flex', gap: '2rem', borderBottom: '1px solid #e5e7eb', marginBottom: '1.5rem' }}>
+                        <button 
+                            onClick={() => setActiveTab('movimientos')}
+                            style={{ 
+                                padding: '0.75rem 0.5rem', 
+                                background: 'none', 
+                                border: 'none', 
+                                borderBottom: activeTab === 'movimientos' ? '2px solid #2563eb' : '2px solid transparent',
+                                color: activeTab === 'movimientos' ? '#2563eb' : '#64748b',
+                                fontWeight: activeTab === 'movimientos' ? 600 : 500,
+                                cursor: 'pointer',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            Historial de Compras
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('cuenta-corriente')}
+                            style={{ 
+                                padding: '0.75rem 0.5rem', 
+                                background: 'none', 
+                                border: 'none', 
+                                borderBottom: activeTab === 'cuenta-corriente' ? '2px solid #2563eb' : '2px solid transparent',
+                                color: activeTab === 'cuenta-corriente' ? '#2563eb' : '#64748b',
+                                fontWeight: activeTab === 'cuenta-corriente' ? 600 : 500,
+                                cursor: 'pointer',
+                                fontSize: '0.95rem'
+                            }}
+                        >
+                            💰 Cuenta Corriente (Pagos y Deudas)
+                        </button>
                     </div>
-                    {historialFiltrado.length === 0 ? (
-                        <p style={{ color: '#6b7280' }}>
-                            {searchTerm ? 'No hay resultados para la búsqueda.' : 'No existen movimientos registrados para este cliente aún.'}
-                        </p>
-                    ) : (
-                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflowX: 'auto', width: '100%' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-                                    <tr>
-                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Fecha</th>
-                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Tipo</th>
-                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Descripción / Referencia</th>
-                                        <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem', textAlign: 'right' }}>Total</th>
-                                        <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedHistorial.map((tx, idx) => (
-                                        <tr key={tx.id} style={{ borderBottom: idx < paginatedHistorial.length - 1 ? '1px solid #e5e7eb' : 'none', backgroundColor: tx.tipo === 'Venta' ? '#ffffff' : '#f8fafc' }}>
-                                            <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem' }}>
-                                                {new Date(tx.fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
-                                            </td>
-                                            <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem' }}>
-                                                <span style={{
-                                                    padding: '0.25rem 0.5rem',
-                                                    borderRadius: '9999px',
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 500,
-                                                    backgroundColor: tx.tipo === 'Venta' ? '#eff6ff' : (tx.tipo === 'Ingreso de Saldo' ? '#dcfce7' : '#fee2e2'),
-                                                    color: tx.tipo === 'Venta' ? '#1d4ed8' : (tx.tipo === 'Ingreso de Saldo' ? '#166534' : '#991b1b')
-                                                }}>
-                                                    {tx.tipo}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {tx.descripcion || '-'}
-                                                {tx.tipo === 'Venta' && tx.detalles && (
-                                                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
-                                                        {tx.detalles.length} artículo(s)
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td style={{ padding: '0.75rem 1rem', color: '#111827', fontWeight: 500, fontSize: '0.875rem', textAlign: 'right' }}>
-                                                <span style={{ color: tx.tipo === 'Egreso de Saldo' ? '#dc2626' : (tx.tipo === 'Ingreso de Saldo' ? '#16a34a' : '#111827') }}>
-                                                    {tx.tipo === 'Ingreso de Saldo' ? '+' : (tx.tipo === 'Egreso de Saldo' ? '-' : '')}${tx.montoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                                                </span>
-                                            </td>
-                                            <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                                                {tx.tipo === 'Venta' && (
-                                                    <button
-                                                        onClick={() => setDetalleTxSeleccionada(tx)}
-                                                        style={{
-                                                            background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
-                                                            fontSize: '0.75rem', fontWeight: 500, textDecoration: 'underline'
-                                                        }}
-                                                    >
-                                                        Ver Detalles
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
 
-                            {/* Control de Paginación */}
-                            {totalPages > 1 && (
-                                <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f9fafb' }}>
-                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                        Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, historialFiltrado.length)} de {historialFiltrado.length} movimientos
-                                    </span>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <button
-                                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                            disabled={currentPage === 1}
-                                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white', color: currentPage === 1 ? '#9ca3af' : '#374151', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-                                        >
-                                            Anterior
-                                        </button>
-                                        <button
-                                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                            disabled={currentPage === totalPages}
-                                            style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: currentPage === totalPages ? '#f3f4f6' : 'white', color: currentPage === totalPages ? '#9ca3af' : '#374151', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                                        >
-                                            Siguiente
-                                        </button>
-                                    </div>
+                    {activeTab === 'cuenta-corriente' ? (
+                        <CuentaCorrienteTab clienteId={effectiveId!} onUpdate={() => loadPerfil(effectiveId!)} />
+                    ) : (
+                        <>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0, color: '#111827' }}>Historial</h2>
+                                <input
+                                    type="text"
+                                    placeholder="Buscar ticket, tipo o monto..."
+                                    value={searchTerm}
+                                    onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                    style={{ padding: '0.5rem 0.75rem', border: '1px solid #e5e7eb', borderRadius: '0.375rem', fontSize: '0.875rem', width: '250px' }}
+                                />
+                            </div>
+
+                            {historialFiltrado.length === 0 ? (
+                                <p style={{ color: '#6b7280' }}>
+                                    {searchTerm ? 'No hay resultados para la búsqueda.' : 'No existen movimientos registrados para este cliente aún.'}
+                                </p>
+                            ) : (
+                                <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', overflowX: 'auto', width: '100%' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                        <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+                                            <tr>
+                                                <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Fecha</th>
+                                                <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Tipo</th>
+                                                <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem' }}>Descripción / Referencia</th>
+                                                <th style={{ padding: '0.75rem 1rem', color: '#374151', fontWeight: 500, fontSize: '0.875rem', textAlign: 'right' }}>Total</th>
+                                                <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {paginatedHistorial.map((tx, idx) => (
+                                                <tr key={tx.id} style={{ borderBottom: idx < paginatedHistorial.length - 1 ? '1px solid #e5e7eb' : 'none', backgroundColor: tx.tipo === 'Venta' ? '#ffffff' : '#f8fafc' }}>
+                                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem' }}>
+                                                        {new Date(tx.fecha).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                                                    </td>
+                                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem' }}>
+                                                        <span style={{
+                                                            padding: '0.25rem 0.5rem',
+                                                            borderRadius: '9999px',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 500,
+                                                            backgroundColor: tx.tipo === 'Venta' ? '#eff6ff' : (tx.tipo === 'Ingreso de Saldo' ? '#dcfce7' : '#fee2e2'),
+                                                            color: tx.tipo === 'Venta' ? '#1d4ed8' : (tx.tipo === 'Ingreso de Saldo' ? '#166534' : '#991b1b')
+                                                        }}>
+                                                            {tx.tipo}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '0.75rem 1rem', color: '#4b5563', fontSize: '0.875rem', maxWidth: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {tx.descripcion || '-'}
+                                                        {tx.tipo === 'Venta' && tx.detalles && (
+                                                            <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                                                                {tx.detalles.length} artículo(s)
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '0.75rem 1rem', color: '#111827', fontWeight: 500, fontSize: '0.875rem', textAlign: 'right' }}>
+                                                        <span style={{ color: tx.tipo === 'Egreso de Saldo' ? '#dc2626' : (tx.tipo === 'Ingreso de Saldo' ? '#16a34a' : '#111827') }}>
+                                                            {tx.tipo === 'Ingreso de Saldo' ? '+' : (tx.tipo === 'Egreso de Saldo' ? '-' : '')}${tx.montoTotal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                                                        {tx.tipo === 'Venta' && (
+                                                            <button
+                                                                onClick={() => setDetalleTxSeleccionada(tx)}
+                                                                style={{
+                                                                    background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer',
+                                                                    fontSize: '0.75rem', fontWeight: 500, textDecoration: 'underline'
+                                                                }}
+                                                            >
+                                                                Ver Detalles
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+
+                                    {/* Control de Paginación */}
+                                    {totalPages > 1 && (
+                                        <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+                                            <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                                Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, historialFiltrado.length)} de {historialFiltrado.length} movimientos
+                                            </span>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: currentPage === 1 ? '#f3f4f6' : 'white', color: currentPage === 1 ? '#9ca3af' : '#374151', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                                                >
+                                                    Anterior
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', backgroundColor: currentPage === totalPages ? '#f3f4f6' : 'white', color: currentPage === totalPages ? '#9ca3af' : '#374151', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                                                >
+                                                    Siguiente
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                        </div>
+                        </>
                     )}
                 </div>
             </div>
@@ -677,13 +719,13 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                 </div>
             )}
 
-            {/* Modal Prenda en Prueba */}
+            {/* Modal Artículo en Condicional */}
             {showPrendaModal && (
                 <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '1rem' }}>
                     <div style={{ backgroundColor: 'white', borderRadius: '0.75rem', padding: '1.5rem 1.75rem', width: '100%', maxWidth: '1080px', maxHeight: '92vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                             <h2 style={{ margin: 0, fontSize: '1.35rem' }}>
-                                Agregar prenda en prueba
+                                Agregar artículo a condicional / prueba
                             </h2>
                             <button
                                 type="button"
@@ -938,7 +980,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                                 </>
                                             ) : (productoSeleccionado && varianteSeleccionada ? (
                                                 <>
-                                                    <div style={{ fontWeight: 600, color: '#111827' }}>{productoSeleccionado.nombre}</div>
+                                                    <div style={{ fontWeight: 600, color: '#111827' }}>{productoSeleccionado!.nombre}</div>
                                                     <div style={{ marginTop: '0.15rem' }}>
                                                         Variante:&nbsp;
                                                         <span style={{ fontWeight: 500 }}>
@@ -984,7 +1026,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                             ? 'La carga manual registra una deuda histórica sin impactar stock actual y queda en estado Deuda.'
                                             : estadoInicialPrenda === 'Deuda'
                                                 ? 'Se descontará stock de la variante, se registrará deuda inmediata y se afectará el saldo del cliente.'
-                                                : 'Se descontará stock y quedará en EnPrueba para resolverla luego como Paga, Deuda o Devuelta.'}
+                                                : 'Se descontará stock y quedará en condicional para resolverla luego como Paga, Deuda o Devuelta.'}
                                     </p>
                                 </div>
                             </div>
@@ -1001,7 +1043,7 @@ export function PerfilClientePage({ clientIdProp, onCloseModal }: { clientIdProp
                                     disabled={savingPrenda}
                                     style={{ padding: '0.5rem 1rem', border: 'none', backgroundColor: '#2563eb', color: 'white', borderRadius: '0.375rem', cursor: 'pointer', fontWeight: 500, fontSize: '0.9rem' }}
                                 >
-                                    {savingPrenda ? 'Guardando...' : (estadoInicialPrenda === 'Deuda' ? 'Crear deuda' : 'Crear prenda en prueba')}
+                                    {savingPrenda ? 'Guardando...' : (estadoInicialPrenda === 'Deuda' ? 'Crear deuda' : 'Crear condicional')}
                                 </button>
                             </div>
                         </form>

@@ -1,47 +1,35 @@
-# Frontend (React + TypeScript + Vite) 
-Dado que el POS necesita ser offline-first (con SQLite/IndexedDB) y contar con una UX móvil-first ("Zona del Pulgar"), una arquitectura por "Features" permite escalar las vistas de escritorio (Admin) y las de tablet (POS) manteniendo orden y reusabilidad.
+# Estructura del Frontend (React + TypeScript + Vite) ⚛️
 
+Arquitectura basada en **Feature-Sliced Design** adaptada para soportar múltiples verticales (rubros) mediante un registro dinámico de componentes.
+
+```text
 frontend/
-├── index.html
-├── package.json
-├── vite.config.ts
 ├── src/
-│   ├── app/                            # Configuración global y punto de entrada
-│   │   ├── App.tsx                     # Ruteador principal y Proveedores (Providers)
-│   │   └── router.tsx                  # Definición de rutas (React Router)
+│   ├── app/                            # Punto de entrada y configuraciones globales
+│   ├── core/                           # Lógica core del sistema (Agnóstica al rubro)
+│   │   └── registry/                   # ComponentRegistry.ts (Cerebro de la UI Mutante)
 │   │
-│   ├── assets/                         # Imágenes, íconos y estilos globales
-│   │   ├── styles/                     # Variables CSS globales, tipografía
-│   │   └── icons/                      # SVGs para la "Zona del Pulgar"
+│   ├── features/                       # Módulos de negocio compartidos
+│   │   ├── auth/                       # Login y persistencia de RubroSlug
+│   │   ├── catalog/                    # Páginas base de carga de productos
+│   │   ├── dashboard/                  # Dashboard adaptativo
+│   │   └── reports/                    # API de reportes compartida
 │   │
-│   ├── components/                     # Componentes reusables "Tontos" (Presentacionales)
-│   │   ├── ui/                         # Botones, Inputs, Modales genéricos
-│   │   └── layout/                     # Sidebar, Topbar, Layout responsivo
+│   ├── verticals/                      # 📁 Piezas específicas por cada rubro
+│   │   ├── indumentaria/               # Grillas de Talles/Colores, Reportes de Temporada
+│   │   └── ferreteria/                 # Grillas de Medidas, Aging Report, Alertas Reposición
 │   │
-│   ├── features/                       # Módulos del modelo de negocio de pago (Cohesión alta)
-│   │   ├── auth/                       # Lógica de Login y cambio por PIN
-│   │   ├── catalog/                    # Carga masiva (matriz de stock)
-│   │   ├── pos/                        # Punto de venta (Mobile-first app)
-│   │   ├── fiscal/                     # Configuración de ARCA y emisión
-│   │   └── wallet/                     # Módulo C: Billetera y devoluciones
+│   ├── hooks/                          # Hooks transversales
+│   │   ├── useRubro.ts                 # Hook clave: resolveComponent() y traducciones
+│   │   └── useAuth.ts
 │   │
-│   ├── hooks/                          # Custom hooks globales
-│   │   ├── useTenant.ts                # Info del Inquilino actual y Feature Flags
-│   │   └── useSyncManager.ts           # Hook para orquestar la sincronización offline/online
-│   │
-│   ├── services/                       # Comunicación externa y Base de Datos Local
-│   │   ├── api/                        # Configuración de Axios/Fetch y clientes REST
-│   │   └── localDb/                    # Implementación de SQLite local para el Offline-First
-│   │
-│   ├── store/                          # Estado global de la aplicación (Zustand/Redux)
-│   │   ├── authStore.ts
-│   │   └── posStore.ts                 # Estado del carrito de compra (crítico para offline)
-│   │
-│   ├── types/                          # Interfaces y Tipos TypeScript compartidos
-│   └── utils/                          # Funciones auxiliares genéricas
-│       ├── formatters.ts               # Formato de monedas, fechas
-│       └── validators.ts               # Validaciones básicas
-│
-└── tests/                              # Pruebas Frontend (Vitest / Playwright)
-    ├── components/
-    └── features/
+│   ├── store/                          # Zustand: rubroStore.ts, authStore.ts
+│   ├── components/                     # UI base (Botones, Modales, Inputs)
+│   ├── lib/                            # Clientes HTTP (Axios)
+│   └── types/                          # Interfaces de TypeScript
+```
+
+## Mecanismo de Extensión
+1. **Registro:** Cada nuevo componente vertical se registra en `ComponentRegistry.ts`.
+2. **Resolución:** Las páginas en `features/` invocan el hook `useRubro().resolveComponent('Key')`.
+3. **Inyección:** El sistema inyecta el componente correspondiente al rubro del usuario, manteniendo la página principal limpia y reutilizable.

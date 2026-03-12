@@ -12,7 +12,7 @@ public record CrearPrendaEnCursoCommand(
     Guid? VarianteProductoId,
     string? ProductoManualNombre,
     string? VarianteManualNombre,
-    int Cantidad,
+    decimal Cantidad,
     decimal PrecioReferencia,
     EstadoPrendaCliente EstadoInicial
 ) : IRequest<Guid>;

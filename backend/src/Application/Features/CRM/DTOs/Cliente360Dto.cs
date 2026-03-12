@@ -31,7 +31,7 @@ public class CompraRecienteDetalleDto
     public Guid VarianteProductoId { get; set; }
     public string ProductoNombre { get; set; } = string.Empty;
     public string VarianteNombre { get; set; } = string.Empty;
-    public int Cantidad { get; set; }
+    public decimal Cantidad { get; set; }
     public decimal PrecioUnitario { get; set; }
     public bool PosibleDevolucion { get; set; }
 }
@@ -42,7 +42,7 @@ public class PrendaEnCursoDto
     public Guid? VarianteProductoId { get; set; }
     public string ProductoNombre { get; set; } = string.Empty;
     public string VarianteNombre { get; set; } = string.Empty;
-    public int Cantidad { get; set; }
+    public decimal Cantidad { get; set; }
     public decimal PrecioReferencia { get; set; }
     public string Estado { get; set; } = string.Empty;
     public DateTime Fecha { get; set; }

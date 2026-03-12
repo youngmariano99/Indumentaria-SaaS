@@ -48,7 +48,7 @@ public class TenantResolverMiddleware
 
             if (inquilino?.Rubro != null)
             {
-                tenantResolver.SetRubro(inquilino.RubroId, inquilino.Rubro.DiccionarioJson);
+                tenantResolver.SetRubro(inquilino.RubroId, inquilino.Rubro.Slug, inquilino.Rubro.DiccionarioJson);
             }
         }
 

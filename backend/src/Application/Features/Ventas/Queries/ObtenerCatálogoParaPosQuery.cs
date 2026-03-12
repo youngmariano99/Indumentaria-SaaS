@@ -11,6 +11,7 @@ public record ProductoLayerPosDto
     public decimal PrecioBase { get; set; }
     /// <summary>Código de barras a nivel producto (EAN13).</summary>
     public string Ean13 { get; set; } = string.Empty;
+    public bool EsFraccionable { get; set; }
     public List<VarianteLayerPosDto> Variantes { get; set; } = new();
 }
 
@@ -22,7 +23,7 @@ public record VarianteLayerPosDto
     public string Color { get; set; } = string.Empty;
     public string Sku { get; set; } = string.Empty;
     /// <summary>Stock actual (suma de Inventarios por variante).</summary>
-    public int StockActual { get; set; }
+    public decimal StockActual { get; set; }
 }
 
 public record ObtenerCatálogoParaPosQuery() : IRequest<List<ProductoLayerPosDto>>;
@@ -40,7 +41,7 @@ public class ObtenerCatálogoParaPosQueryHandler : IRequestHandler<ObtenerCatál
     {
         var productos = await _context.Productos
             .Where(p => !p.IsDeleted)
-            .Select(p => new { p.Id, p.Nombre, p.PrecioBase, p.Ean13 })
+            .Select(p => new { p.Id, p.Nombre, p.PrecioBase, p.Ean13, p.EsFraccionable })
             .ToListAsync(cancellationToken);
 
         var productoIds = productos.Select(p => p.Id).ToList();
@@ -68,6 +69,7 @@ public class ObtenerCatálogoParaPosQueryHandler : IRequestHandler<ObtenerCatál
             Nombre = p.Nombre,
             PrecioBase = p.PrecioBase,
             Ean13 = p.Ean13 ?? string.Empty,
+            EsFraccionable = p.EsFraccionable,
             Variantes = variantesPorProducto.TryGetValue(p.Id, out var vars)
                 ? vars.Select(v => new VarianteLayerPosDto
                 {

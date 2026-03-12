@@ -12,7 +12,7 @@ public class VentaDetalle : BaseEntity, IMustHaveTenant
     public Guid VarianteProductoId { get; set; }
     
     // Cuántas unidades de la variante compraron
-    public int Cantidad { get; set; }
+    public decimal Cantidad { get; set; }
     
     // Congela el precio pagado en caso de inflación futura
     public decimal PrecioUnitarioAplicado { get; set; }

@@ -19,6 +19,7 @@ export interface LoginResponse {
     tenantId: string;
     rol: string | number;
     rubroId?: string;
+    rubroSlug?: string;
     diccionarioJson?: string;
     esquemaMetadatosJson?: string;
 }

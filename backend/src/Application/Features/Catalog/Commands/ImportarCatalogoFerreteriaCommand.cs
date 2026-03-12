@@ -91,11 +91,13 @@ public class ImportarCatalogoFerreteriaCommandHandler : IRequestHandler<Importar
 
                 // 3. Crear Variante (Cada fila de importación se trata como una variante única)
                 // Adaptamos Talle/Color a los metadatos más comunes de ferretería para mantener compatibilidad
-                string talle = dto.Metadatos.ContainsKey("Medida") ? dto.Metadatos["Medida"] : 
-                               (dto.Metadatos.Count > 0 ? dto.Metadatos.Values.First() : "Única");
+                var metadatos = dto.Metadatos ?? new Dictionary<string, string>();
                 
-                string color = dto.Metadatos.ContainsKey("Material") ? dto.Metadatos["Material"] : 
-                               (dto.Metadatos.Count > 1 ? dto.Metadatos.Values.ElementAt(1) : "Estándar");
+                string talle = metadatos.ContainsKey("Medida") ? metadatos["Medida"] : 
+                               (metadatos.Count > 0 ? metadatos.Values.First() : "Única");
+                
+                string color = metadatos.ContainsKey("Material") ? metadatos["Material"] : 
+                               (metadatos.Count > 1 ? metadatos.Values.ElementAt(1) : "Estándar");
 
                 var variante = new VarianteProducto
                 {
@@ -118,7 +120,7 @@ public class ImportarCatalogoFerreteriaCommandHandler : IRequestHandler<Importar
                     TenantId = tenantId,
                     StoreId = Guid.Empty, // Placeholder para sucursal principal
                     ProductVariantId = variante.Id,
-                    StockActual = (int)dto.StockInicial,
+                    StockActual = dto.StockInicial,
                     StockMinimo = 5
                 };
 

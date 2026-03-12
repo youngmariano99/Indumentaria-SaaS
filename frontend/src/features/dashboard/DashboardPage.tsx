@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Storefront, UserPlus } from "@phosphor-icons/react";
+import { Suspense } from "react";
+import { useRubro } from "../../hooks/useRubro";
 import { reportsApi, type DashboardDto } from "../reports/api/reportsApi";
 import styles from "./DashboardPage.module.css";
 
@@ -111,6 +113,11 @@ export function DashboardPage() {
   const [contexto, setContexto] = useState<Contexto>("saas");
   const [hoveredDayIndex, setHoveredDayIndex] = useState<number | null>(null);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
+  const { resolveComponent } = useRubro();
+
+  const FinancialsWidget = resolveComponent('FinancialsWidget');
+  const AgingWidget = resolveComponent('AgingWidget');
+  const StockAlertWidget = resolveComponent('StockAlertWidget');
 
   const [data, setData] = useState<DashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -294,6 +301,14 @@ export function DashboardPage() {
                 </div>
               </div>
 
+              {StockAlertWidget && (
+                <div style={{ gridColumn: "span 4 / span 4" }}>
+                  <Suspense fallback={<div>Cargando alertas...</div>}>
+                    <StockAlertWidget />
+                  </Suspense>
+                </div>
+              )}
+
               <div style={{ gridColumn: "span 4 / span 4" }}>
                 <div className={`${styles.card} ${styles.cardTall}`}>
                   <div className={styles.cardHeader}>
@@ -309,51 +324,57 @@ export function DashboardPage() {
                       Hoy
                     </span>
                   </div>
-                  <div className={styles.paymentDonutWrap}>
-                    <div className={styles.paymentDonut}>
-                      <svg viewBox="0 0 42 42" role="img" aria-label="Ingresos por método de pago">
-                        <circle
-                          className={styles.paymentDonutBg}
-                          cx="21"
-                          cy="21"
-                          r="15.915"
-                        />
-                        {paymentSegmentsWithOffset.map((seg) => (
+                  {FinancialsWidget ? (
+                    <Suspense fallback={<div>Cargando detalle...</div>}>
+                      <FinancialsWidget />
+                    </Suspense>
+                  ) : (
+                    <div className={styles.paymentDonutWrap}>
+                      <div className={styles.paymentDonut}>
+                        <svg viewBox="0 0 42 42" role="img" aria-label="Ingresos por método de pago">
                           <circle
-                            key={seg.label}
+                            className={styles.paymentDonutBg}
                             cx="21"
                             cy="21"
                             r="15.915"
-                            fill="none"
-                            stroke={seg.color}
-                            strokeWidth="3"
-                            strokeDasharray={`${seg.pct} ${100 - seg.pct}`}
-                            strokeDashoffset={seg.offset}
                           />
-                        ))}
-                      </svg>
-                    </div>
-                    <div className={styles.paymentDonutTotal}>
-                      ${totalIngresosHoy.toLocaleString("es-AR")}
-                    </div>
-                    <div className={styles.paymentLegend}>
-                      {paymentSegments.map((seg) => (
-                        <div key={seg.label} className={styles.paymentLegendItem}>
-                          <div className={styles.paymentLegendLabel}>
-                            <span
-                              className={styles.paymentLegendDot}
-                              style={{ backgroundColor: seg.color }}
+                          {paymentSegmentsWithOffset.map((seg) => (
+                            <circle
+                              key={seg.label}
+                              cx="21"
+                              cy="21"
+                              r="15.915"
+                              fill="none"
+                              stroke={seg.color}
+                              strokeWidth="3"
+                              strokeDasharray={`${seg.pct} ${100 - seg.pct}`}
+                              strokeDashoffset={seg.offset}
                             />
-                            <span>{seg.label}</span>
+                          ))}
+                        </svg>
+                      </div>
+                      <div className={styles.paymentDonutTotal}>
+                        ${totalIngresosHoy.toLocaleString("es-AR")}
+                      </div>
+                      <div className={styles.paymentLegend}>
+                        {paymentSegments.map((seg) => (
+                          <div key={seg.label} className={styles.paymentLegendItem}>
+                            <div className={styles.paymentLegendLabel}>
+                              <span
+                                className={styles.paymentLegendDot}
+                                style={{ backgroundColor: seg.color }}
+                              />
+                              <span>{seg.label}</span>
+                            </div>
+                            <span className={styles.paymentLegendPct}>
+                              ${seg.amount.toLocaleString("es-AR")} ·{" "}
+                              {Math.round(seg.pct)}%
+                            </span>
                           </div>
-                          <span className={styles.paymentLegendPct}>
-                            ${seg.amount.toLocaleString("es-AR")} ·{" "}
-                            {Math.round(seg.pct)}%
-                          </span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
@@ -367,33 +388,39 @@ export function DashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <div className={styles.carteraStats}>
-                    <div className={styles.carteraStatMain}>
-                      <span className={styles.carteraStatValue}>
-                        {data.carteraClientes.clientesConDeuda}
-                      </span>
-                      <span className={styles.carteraStatLabel}>
-                        clientes con saldo pendiente
-                      </span>
+                  {AgingWidget ? (
+                    <Suspense fallback={<div>Cargando morosidad...</div>}>
+                      <AgingWidget />
+                    </Suspense>
+                  ) : (
+                    <div className={styles.carteraStats}>
+                      <div className={styles.carteraStatMain}>
+                        <span className={styles.carteraStatValue}>
+                          {data.carteraClientes.clientesConDeuda}
+                        </span>
+                        <span className={styles.carteraStatLabel}>
+                          clientes con saldo pendiente
+                        </span>
+                      </div>
+                      <div className={styles.carteraStatRow}>
+                        <span className={styles.carteraStatLabel}>Clientes activos</span>
+                        <span className={styles.carteraStatValueSmall}>
+                          {data.carteraClientes.clientesActivos}
+                        </span>
+                      </div>
+                      <div className={styles.carteraStatRow}>
+                        <span className={styles.carteraStatLabel}>Deuda total</span>
+                        <span className={styles.carteraStatValueSmall}>
+                          ${data.carteraClientes.deudaTotal.toLocaleString("es-AR")}
+                        </span>
+                      </div>
                     </div>
-                    <div className={styles.carteraStatRow}>
-                      <span className={styles.carteraStatLabel}>Clientes activos</span>
-                      <span className={styles.carteraStatValueSmall}>
-                        {data.carteraClientes.clientesActivos}
-                      </span>
-                    </div>
-                    <div className={styles.carteraStatRow}>
-                      <span className={styles.carteraStatLabel}>Deuda total</span>
-                      <span className={styles.carteraStatValueSmall}>
-                        ${data.carteraClientes.deudaTotal.toLocaleString("es-AR")}
-                      </span>
-                    </div>
-                  </div>
+                  )}
                   <Link to="/clientes/nuevo" className={styles.carteraBtn}>
                     <UserPlus size={18} weight="bold" />
                     Gestionar nuevo cliente
                   </Link>
-                  <p className={styles.cardSub} style={{ marginTop: 0 }}>
+                  <p className={styles.cardSub} style={{ marginTop: 10 }}>
                     Próximamente: alta y listado de clientes.
                   </p>
                 </div>

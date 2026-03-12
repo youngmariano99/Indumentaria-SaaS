@@ -4,6 +4,7 @@ using Infrastructure.Services;
 using Infrastructure.Persistence.Contexts;
 using Infrastructure.Persistence.Interceptors;
 using Infrastructure.Localization;
+using Infrastructure.Verticals;
 using Microsoft.Extensions.Localization;
 using API.Middleware;
 
@@ -33,6 +34,11 @@ builder.Services.AddScoped<IStringLocalizer, RubroLocalizer>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IFeatureResolver, FeatureResolver>();
 
+// 1.1 Reglas Verticales y Diccionarios
+builder.Services.AddScoped<IVerticalRules, IndumentariaRules>();
+builder.Services.AddScoped<IVerticalRules, FerreteriaRules>();
+builder.Services.AddScoped<IVerticalRulesFactory, VerticalRulesFactory>();
+
 // 1.2 Patrón Estrategia - Validadores y Creadores Verticales multi-rubro
 builder.Services.AddScoped<IndumentariaValidadorProducto>();
 builder.Services.AddScoped<FerreteriaValidadorProducto>();
@@ -41,23 +47,23 @@ builder.Services.AddScoped<FerreteriaCreadorProductoStrategy>();
 
 builder.Services.AddScoped<IValidadorProducto>(provider => 
 {
-    var tenantResolver = provider.GetRequiredService<Core.Interfaces.ITenantResolver>();
-    var rubroId = tenantResolver.RubroId;
+    var tenantResolver = provider.GetRequiredService<ITenantResolver>();
+    var rulesFactory = provider.GetRequiredService<IVerticalRulesFactory>();
+    var rules = rulesFactory.GetRules(tenantResolver.RubroSlug!);
 
-    // d1e0f6a2-1234-5678-90ab-cdef01234567 es Indumentaria
-    if (rubroId == new Guid("d1e0f6a2-1234-5678-90ab-cdef01234567"))
+    if (rules.RubroSlug == "indumentaria")
         return provider.GetRequiredService<IndumentariaValidadorProducto>();
     
-    // Fallback o Ferretería
     return provider.GetRequiredService<FerreteriaValidadorProducto>();
 });
 
 builder.Services.AddScoped<ICreadorProductoStrategy>(provider => 
 {
-    var tenantResolver = provider.GetRequiredService<Core.Interfaces.ITenantResolver>();
-    var rubroId = tenantResolver.RubroId;
+    var tenantResolver = provider.GetRequiredService<ITenantResolver>();
+    var rulesFactory = provider.GetRequiredService<IVerticalRulesFactory>();
+    var rules = rulesFactory.GetRules(tenantResolver.RubroSlug!);
 
-    if (rubroId == new Guid("d1e0f6a2-1234-5678-90ab-cdef01234567"))
+    if (rules.RubroSlug == "indumentaria")
         return provider.GetRequiredService<IndumentariaCreadorProductoStrategy>();
     
     return provider.GetRequiredService<FerreteriaCreadorProductoStrategy>();
@@ -68,10 +74,11 @@ builder.Services.AddScoped<FerreteriaSchemaRegistry>();
 
 builder.Services.AddScoped<ISchemaRegistry>(provider => 
 {
-    var tenantResolver = provider.GetRequiredService<Core.Interfaces.ITenantResolver>();
-    var rubroId = tenantResolver.RubroId;
+    var tenantResolver = provider.GetRequiredService<ITenantResolver>();
+    var rulesFactory = provider.GetRequiredService<IVerticalRulesFactory>();
+    var rules = rulesFactory.GetRules(tenantResolver.RubroSlug!);
 
-    if (rubroId == new Guid("d1e0f6a2-1234-5678-90ab-cdef01234567"))
+    if (rules.RubroSlug == "indumentaria")
         return provider.GetRequiredService<IndumentariaSchemaRegistry>();
     
     return provider.GetRequiredService<FerreteriaSchemaRegistry>();

@@ -1,99 +1,43 @@
-Vertical SaaS de Indumentaria, estructurada bajo una Clean Architecture y optimizada para el stack de .NET 8+, React y PostgreSQL que han seleccionado.
+# Arquitectura General: SaaS Multi-Rubro (Vertical SaaS)
 
-1. Stack Tecnológico Completo
-Backend: .NET 8 (LTS). Es la versión recomendada para manejar sistemas distribuidos y servicios SOAP de alta densidad.
+Este documento describe la arquitectura técnica del sistema, diseñada para ser altamente escalable, multi-inquilino y capaz de adaptarse a diversos rubros de negocio (Verticales) de forma dinámica.
 
+## 1. Stack Tecnológico Completo
+- **Backend:** .NET 8 (LTS). Estructurado bajo Clean Architecture y CQRS con MediatR.
+- **Frontend:** React + TypeScript + Vite. Estética premium con Tailwind CSS (opcional) y Vanilla CSS.
+- **Base de Datos:** PostgreSQL con soporte para JSONB (Metadatos dinámicos) y Row Level Security (RLS) para aislamiento de tenants.
+- **Infraestructura:** Docker para contenedores y Redis para caché de sesiones y tokens fiscales.
 
-Frontend: React con TypeScript y Vite. Permite un desarrollo ágil y tipado fuerte. Se utiliza **Recharts** para la visualización de datos de alto rendimiento y estética premium.
+## 2. Arquitectura de Verticales (Multi-Rubro)
+A diferencia de un SaaS monolítico, el sistema utiliza un modelo de **Núcleo Compartido con Extensiones Verticales**, lo que permite que una misma base de código sirva a rubros tan distintos como Indumentaria y Ferretería sin "código espagueti".
 
+### 2.1 Backend: Patrón Estrategia Dinámico
+Se eliminan los condicionales estáticos (`if rubro == X`). En su lugar, el sistema implementa:
+- **IVerticalRules:** Interfaz core que define el contrato de comportamiento para cada rubro (terminología, validaciones, lógica de stock).
+- **VerticalRulesFactory:** Factoría que inyecta la implementación correcta (ej: `FerreteriaRules`) en tiempo de ejecución basada en el contexto del inquilino activo.
+- **Estrategias Dinámicas:** Los validadores de productos y creadores de variantes se resuelven mediante el Factory, permitiendo que el núcleo del sistema sea agnóstico al rubro.
 
-Base de Datos: PostgreSQL con soporte para JSONB y Row Level Security (RLS) para el aislamiento de datos.
+### 2.2 Frontend: Registro Dinámico de Componentes
+El frontend utiliza una arquitectura de **UI Mutante**:
+- **ComponentRegistry:** Un registro central que mapea "Keys" de componentes a implementaciones específicas por rubro.
+- **Hook useRubro:** Provee la función `resolveComponent(key)`, que permite a las páginas base cargar sus piezas visuales específicas (ej: Matrix de Talles para indumentaria vs Lista de Unidades para ferretería) de forma transparente.
+- **Lazy Loading:** Los componentes específicos se cargan bajo demanda, optimizando el rendimiento inicial.
 
+## 3. Estrategias de Multi-tenancy
+- **Aislamiento de Datos:** Se utiliza un `TenantId` global inyectado en cada consulta de base de datos mediante filtros globales de EF Core.
+- **Configuración por Rubro:** Cada inquilino está asociado a un `Rubro` que define su "Personalidad Técnica" mediante un `Slug` (ej: "ferreteria").
+- **Terminología Dinámica:** La capa de localización adapta el vocabulario técnico (ej: "Prenda" -> "Artículo") mediante un diccionario JSON inyectado desde la base de datos para cada rubro.
 
-Caché: Redis. Esencial para la gestión de Tickets de Acceso (TA) de ARCA indexados por CUIT y servicio.
+## 4. Módulos Core y su Adaptabilidad
+- **Catálogo:** Estructura base común, pero con grillas de carga de variantes que mutan según el rubro.
+- **Ventas (POS):** Flujo de cobro unificado con soporte para métodos de pago dinámicos.
+- **Dashboard e Inteligencia de Negocio:** Widgets especializados que se activan según la vertical (ej: Reposición de Stock Crítico para Ferretería vs Análisis de Temporada para Indumentaria).
+- **Cuentas Corrientes:** Gestión de deuda de clientes con desgloses financieros adaptados al flujo de cada negocio.
 
-2. Librerías Clave y Justificación
-MediatR: Para implementar CQRS (Command Query Responsibility Segregation) dentro de la Clean Architecture, manteniendo desacoplada la lógica de negocio.
+## 5. Mobile-First y Offline-First
+- **UX Adaptativa:** Diseño optimizado para la "Zona del Pulgar" y uso intensivo en tablets de salón.
+- **Resiliencia:** Capacidad futura de sincronización offline para operaciones críticas en puntos de venta con conectividad inestable.
 
-
-FluentValidation: Para validaciones de negocio complejas, como asegurar que los importes netos e IVA sumen exactamente el total antes de enviar a ARCA.
-
-
-System.ServiceModel: Para la integración de servicios SOAP legados de ARCA en un entorno moderno.
-
-
-System.Security.Cryptography: Para la gestión de certificados RSA de 2048 bits y firma de mensajes CMS por cada tenant.
-
-
-Source Generators (.NET): Para la serialización XML eficiente, reduciendo el uso de CPU y memoria en el middleware fiscal.
-
-
-Recharts (React): Librería de gráficos basada en componentes SVG para visualización de métricas en tiempo real con soporte para animaciones fluidas y tooltips dinámicos.
-
-3. Arquitectura Sugerida: Clean Architecture + Multi-tenancy
-Para soportar su modelo de negocio modular y multi-inquilino, la arquitectura debe dividirse en:
-
-
-Domain: Entidades puras (Producto, Matriz, Comprobante) y lógica de talles/colores.
-
-Application: Casos de uso y lógica de Feature Flags. Incluye un motor de **Inteligencia de Negocio (BI)** que consolida métricas temporales (ventas de 7 días, ABC de inventario) mediante queries optimizadas que evitan el sobreprocesamiento en el cliente.
-
-Infrastructure:
-
-Data: Implementación de Global Query Filters en EF Core para filtrar automáticamente por TenantId.
-
-External Services: Integración con ARCA y pasarelas de pago.
-
-API: Controladores y autenticación mediante JWT.
-
-4. Estrategias de Seguridad y Multi-tenancy
-
-Soberanía de Certificados: Almacenar las claves privadas cifradas en un Azure Key Vault o HSM, separando la lógica de firma de la de negocio.
-
-Row Level Security (RLS): Habilitar RLS en PostgreSQL para garantizar que un tenant nunca acceda a los datos de otro, reconociendo el TenantId inyectado en el JWT.
-
-Estrategia de Login (Subdominios): Se utiliza un modelo de subdominios (`zara.tusaas.com`) para identificar al tenant previo al login. Esto facilita la experiencia Mobile-First en PWA, ya que el empleado solo debe recordar su Email y Password.
-
-Auditoría con JSONB: Registrar cada request y response XML de ARCA en columnas JSONB para peritajes fiscales.
-
-5. Mobile-First y Offline-First
-
-Arquitectura Offline-first: Utilizar una base de datos local embebida (como SQLite) en el dispositivo para procesar ventas y actualizar stock local sin latencia.
-
-
-Sync Manager: Un componente en segundo plano que resuelva conflictos de concurrencia al sincronizar con la nube cuando vuelve la red.
-
-
-UX Móvil: Diseño optimizado para la "Zona del Pulgar" (Thumb Zone), con botones de acción frecuente accesibles para operar con una sola mano.
-
-
-Mesh Networking: Permitir que las tablets de los vendedores se sincronicen entre sí vía Bluetooth o Wi-Fi Direct si el router principal falla.
-
-6. Despliegue y Eficiencia
-Despliegue: Utilizar contenedores Docker para asegurar la consistencia entre entornos.
-
-Infraestructura: Iniciar con niveles gratuitos (Free Tier) de Oracle Cloud o Azure para el backend, y servicios de alta velocidad para el frontend como Netlify.
-
-
-Eficiencia de Datos: Implementar índices compuestos (tenant_id + fecha_emision) y particionamiento de tablas para grandes cadenas de locales.
-
-Telemetría: Crear una tabla de Uso para registrar cada acción cobrable (facturas, talles cargados), fundamental para su modelo de facturación híbrida.
-
-7. Estrategia de Etiquetado e Impresión Industrial
-
-Generación de Etiquetas: Se utiliza un motor dual que renderiza códigos de barras (1D) para logística interna y QR (2D) para interacción del cliente, garantizando la trazabilidad por variante única.
-
-Motor de Renderizado PDF: A diferencia del `window.print()` convencional, se optó por una estrategia de captura DOM via `html2canvas` y orquestación con `jsPDF`. Esto permite:
-- Control MILIMÉTRICO de márgenes para impresoras térmicas (Zebra/Brother).
-- Paginación inteligente automática para lotes de cientos de etiquetas.
-- Descarga directa asíncrona que no bloquea el hilo principal de la UI.
-
-Estandarización de Grillas: Uso de CSS Grid calculado dinámicamente para ajustar N-etiquetas por fila según el soporte físico (Térmico, A4 o A3).
-
-8. Business Intelligence y Análisis Temporal
-
-Trazabilidad Nativa: Todas las entidades principales (`Producto`, `Cliente`, `Categoria`, `Venta`) implementan la propiedad `CreatedAt`. Esto garantiza una línea de tiempo coherente para métricas de "Nuevos hoy" y análisis de crecimiento sin depender de logs externos.
-
-Consolidación de Métricas: El sistema evita el "State Management Overload" en el frontend mediante el uso de DTOs de consolidación (`DashboardDto`). El backend es responsable de realizar los cálculos de agregación, promedios y agrupaciones (ej: métodos de pago), entregando al cliente datos listos para ser renderizados.
-
-Matriz ABC Automática: Implementación nativa de la Ley de Pareto (80/20) en el motor de reportes, clasificando el inventario dinámicamente según su impacto en la facturación y rentabilidad neta.
+## 6. Seguridad
+- **JWT con Contexto:** El token de autenticación incluye no solo el ID de usuario, sino también el `TenantId` y el `RubroSlug`.
+- **Auditoría:** Registro de acciones sensibles mediante interceptores de EF Core que guardan quién, cuándo y qué cambió en cada entidad.

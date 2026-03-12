@@ -23,7 +23,7 @@ public class GhostInventoryDto
     public string TenantName { get; set; } = string.Empty;
     public Guid ProductoId { get; set; }
     public string NombreProducto { get; set; } = string.Empty;
-    public int StockActual { get; set; }
+    public decimal StockActual { get; set; }
     public DateTime UltimaVenta { get; set; }
     public double ProbabilidadDiscrepancia { get; set; } // 0 a 100
 }

@@ -1,21 +1,30 @@
 import { useRubroStore } from '../store/rubroStore';
 import { useCallback } from 'react';
+import { ComponentRegistry } from '../core/registry/ComponentRegistry';
 
 /**
- * Hook universal para adaptar la UI al rubro actual.
- * Permite traducir etiquetas dinámicamente y obtener valores predeterminados.
+ * Hook universal para adaptar la UI al rubro actual de forma dinámica.
+ * Permite traducir etiquetas y resolver componentes verticales sin if/else.
  */
 export const useRubro = () => {
   const translate = useRubroStore((state) => state.translate);
   const rubroId = useRubroStore((state) => state.rubroId);
+  const rubroSlug = useRubroStore((state) => state.rubroSlug);
 
   const t = useCallback((key: string, fallback?: string) => {
     return translate(key, fallback);
   }, [translate]);
 
+  /**
+   * Resuelve dinámicamente el componente correcto del registro
+   */
+  const resolveComponent = useCallback((key: any) => {
+    return ComponentRegistry.resolve(key, rubroSlug);
+  }, [rubroSlug]);
+
   const getSmartDefaults = useCallback(() => {
-    // ID fijo de Indumentaria según Seed del backend
-    if (rubroId === 'd1e0f6a2-1234-5678-90ab-cdef01234567') {
+    // Usamos el slug en lugar de IDs harcodeados
+    if (rubroSlug === 'indumentaria') {
       return {
         tipoProducto: 'Ropa',
         escalaTalles: 'AR',
@@ -25,13 +34,24 @@ export const useRubro = () => {
         }
       };
     }
+    if (rubroSlug === 'ferreteria') {
+      return {
+        tipoProducto: 'Herramienta',
+        metadata: {
+          material: 'Acero'
+        }
+      };
+    }
     return {};
-  }, [rubroId]);
+  }, [rubroSlug]);
 
   return {
     t,
     rubroId,
-    isIndumentaria: rubroId === 'd1e0f6a2-1234-5678-90ab-cdef01234567',
-    getSmartDefaults
+    rubroSlug,
+    isIndumentaria: rubroSlug === 'indumentaria',
+    isFerreteria: rubroSlug === 'ferreteria',
+    getSmartDefaults,
+    resolveComponent
   };
 };

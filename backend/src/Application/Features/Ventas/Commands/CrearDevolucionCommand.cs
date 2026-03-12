@@ -55,24 +55,36 @@ public class CrearDevolucionCommandHandler : IRequestHandler<CrearDevolucionComm
                 var precioUnidad = varianteDb.PrecioOverride ?? prod.PrecioBase;
                 totalDevueltoALaTienda += precioUnidad * devuelto.Cantidad;
                 
-                // Actualizar Stock: INCREMENTO (Vuelve a la tienda)
+                // Actualizar Stock: Según Destino (Vuelve a la tienda, a revisión o a defectuoso)
                 var inv = await _context.Inventarios
                     .FirstOrDefaultAsync(i => i.ProductVariantId == varianteDb.Id && i.TenantId == tenantId, cancellationToken);
                 
-                if (inv != null)
+                if (inv == null)
                 {
-                    inv.StockActual += devuelto.Cantidad;
-                }
-                else
-                {
-                    _context.Inventarios.Add(new Inventario
+                    inv = new Inventario
                     {
                         TenantId = tenantId,
                         StoreId = Guid.Empty,
                         ProductVariantId = varianteDb.Id,
-                        StockActual = devuelto.Cantidad,
                         StockMinimo = 0
-                    });
+                    };
+                    _context.Inventarios.Add(inv);
+                }
+
+                switch (devuelto.Destino)
+                {
+                    case DestinoDevolucion.VentaDirecta:
+                        inv.StockActual += devuelto.Cantidad;
+                        break;
+                    case DestinoDevolucion.Defectuoso:
+                        inv.StockDefectuoso += devuelto.Cantidad;
+                        break;
+                    case DestinoDevolucion.GarantiaProveedor:
+                        inv.StockRevision += devuelto.Cantidad;
+                        break;
+                    case DestinoDevolucion.Descarte:
+                        // Merma: Se registra el monto devuelto al cliente pero no se recupera stock
+                        break;
                 }
             }
 

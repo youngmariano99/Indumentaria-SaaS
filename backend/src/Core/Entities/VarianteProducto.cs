@@ -22,4 +22,7 @@ public class VarianteProducto : BaseEntity, IMustHaveTenant, ISoftDelete
     public string AtributosJson { get; set; } = "{}";
 
     public bool IsDeleted { get; set; }
+
+    // Navigation
+    public virtual Producto Producto { get; set; } = null!;
 }

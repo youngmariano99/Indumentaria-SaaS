@@ -41,31 +41,44 @@ A diferencia de la Indumentaria, este rubro destaca por su alta densidad de vari
 - **Backend:**
   - Endpoint `ImportarCatalogoFerreteriaCommand` especializado en validación y mapeo CSV/Excel -> JSONB.
 
-### Sprint 4: Punto de Venta (POS) - Alta Velocidad & Fraccionamiento
+### Sprint 4: Punto de Venta (POS) - Alta Velocidad & Fraccionamiento [COMPLETADO]
 *Foco: Vender en segundos tolerando métricas fraccionadas y errores de tipeo.*
 - **Backend:**
-  - `BuscarProductosPosQuery`: Búsqueda de alta velocidad usando pg_trgm difuso sobre `Nombre` y `AtributosJson`.
+  - [x] `BuscarProductosPosQuery`: Búsqueda de alta velocidad usando pg_trgm difuso sobre `Nombre` y `AtributosJson`.
 - **Frontend:**
-  - Ingreso de Cantidades Decimales con popovers dinámicos basados en la flag `EsFraccionable`.
-  - Botón "Ítem Vario" para ventas rápidas de mostrador sin inventario estricto.
-  - Integración Web Serial API (futuro) para balanzas.
+  - [x] Ingreso de Cantidades Decimales con popovers dinámicos basados en la flag `EsFraccionable`.
+  - [x] Botón "Ítem Vario" para ventas rápidas de mostrador sin inventario estricto.
+  - [ ] Integración Web Serial API (futuro) para balanzas.
 
-### Sprint 5: Devoluciones Fraccionadas y Módulo de Cuentas Corrientes
+### Sprint 5: Devoluciones Fraccionadas y Módulo de Cuentas Corrientes [COMPLETADO]
 *Foco: Gestión precisa de notas de crédito y defectuosos.*
 - **Backend:**
-  - Modificación de inventario para soportar "Stock Defectuoso/Garantía".
-  - Entidad `MovimientoCuentaCorriente` para saldo a favor (Notas de Crédito) y Fiados.
+  - [x] Modificación de inventario para soportar "Stock Defectuoso/Garantía".
+  - [x] Entidad `MovimientoSaldoCliente` para saldo a favor (Notas de Crédito) y Fiados.
+  - [x] `ObtenerVentaPorIdentificadorQuery` para búsqueda rápida de tickets.
 - **Frontend:**
-  - Modal de devoluciones que recupere el ticket rápidamente y permita definir el destino de la mercadería por línea de ítem.
+  - [x] Modal de devoluciones que recupere el ticket rápidamente y permita definir el destino de la mercadería por línea de ítem.
+  - [x] `CuentaCorrienteTab` integrada en el perfil del cliente para gestión de deudas y saldos.
+  - [x] Registro de pagos manuales para cancelar deudas de cuenta corriente.
 
-### Sprint 6: Arqueos y Explotación Financiera
+### Sprint 5.5: Abstracción de Verticales (Multi-Todo Architecture) [COMPLETADO]
+*Foco: Eliminar acoplamiento y asegurar que el sistema sea agnóstico al rubro.*
+- **Backend/Arquitectura:**
+  - [x] Definir Interfaz `IVerticalRules` para desacoplar lógica de negocio (Saldos, IVA, Validaciones).
+  - [x] Implementar Provider dinámico basado en el `TipoRubro` del Tenant.
+- **Frontend/UX:**
+  - [x] Crear Hook `useVerticalConfig` (implementado como `useRubro`) para centralizar vocabulario y componentes específicos.
+  - [x] Reemplazar términos estáticos ("Prenda/Artículo") por tokens dinámicos (`{vocab.item}`).
+  - [x] Implementar `VerticalRegistry` (implementado como `ComponentRegistry`) para cargar vistas dinámicamente sin usar `if/else`.
+
+### Sprint 6: Arqueos y Explotación Financiera [COMPLETADO]
 *Foco: Inteligencia de Negocio orientada al reaprovisionamiento, no a la "temporada".*
 - **Backend/DB:**
-  - `GetProductosBajoStockQuery`: Alerta precisa de quiebre de stock ligada a tiempos de reposición de proveedor.
-  - Query de Valorización de Inventario (Suma de Costo * StockActual) estructurada por Categoría.
+  - [x] `GetProductosBajoStockQuery`: Alerta precisa de quiebre de stock ligada a tiempos de reposición de proveedor.
+  - [x] Query de Valorización de Inventario (Suma de Costo * StockActual) estructurada por Categoría.
 - **Frontend:**
-  - Dashboard de Caja con separación visual dura entre "Cobranzas de Deudas de Cuentas Corrientes" y "Ventas Diarias Puras".
-  - Aging Report (Ranking de Morosidad de Clientes).
+  - [x] Dashboard de Caja con separación visual dura entre "Cobranzas de Deudas de Cuentas Corrientes" y "Ventas Diarias Puras".
+  - [x] Aging Report (Ranking de Morosidad de Clientes).
 
 ---
 

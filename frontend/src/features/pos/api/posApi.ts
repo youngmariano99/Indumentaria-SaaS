@@ -15,6 +15,7 @@ export interface ProductoLayerPosDto {
     nombre: string;
     precioBase: number;
     ean13: string;
+    esFraccionable: boolean;
     variantes: VarianteLayerPosDto[];
 }
 
@@ -104,6 +105,7 @@ export const posApi = {
                     marcaId: null,
                     marcaNombre: null,
                     precioBase: p.precioBase,
+                    esFraccionable: p.esFraccionable,
                     impuestoPorcentaje: null,
                     estado: 'Activo',
                     _searchIndex: `${p.nombre} ${p.ean13 || ''}`.toLowerCase(),
@@ -126,6 +128,16 @@ export const posApi = {
 
     procesarDevolucion: async (payload: any): Promise<{ devolucionId: string; mensaje: string }> => {
         const response = await apiClient.post<{ devolucionId: string; mensaje: string }>("/ventas/devolucion", payload);
+        return response.data;
+    },
+
+    buscarProductos: async (termino: string): Promise<ProductoLayerPosDto[]> => {
+        const response = await apiClient.get<ProductoLayerPosDto[]>("/ventas/buscar", { params: { t: termino } });
+        return response.data;
+    },
+
+    getVentaByTicket: async (identificador: string): Promise<any> => {
+        const response = await apiClient.get<any>(`/ventas/ticket/${identificador}`);
         return response.data;
     },
 };

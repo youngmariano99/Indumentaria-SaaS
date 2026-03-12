@@ -11,7 +11,7 @@ public class VarianteStockResumenDto
     public string SKU { get; set; } = string.Empty;
     public string Talle { get; set; } = string.Empty;
     public string Color { get; set; } = string.Empty;
-    public int StockActual { get; set; }
+    public decimal StockActual { get; set; }
 }
 
 /// <summary>
@@ -27,7 +27,7 @@ public class ProductoStockResumenDto
     /// En el caso de la consulta de "sin stock", este valor se reutiliza para
     /// indicar la cantidad de variantes sin stock de ese producto.
     /// </summary>
-    public int StockTotal { get; set; }
+    public decimal StockTotal { get; set; }
 
     public List<VarianteStockResumenDto> Variantes { get; set; } = new();
 }
@@ -39,7 +39,7 @@ public class ProductoVentaSemanaDto
 {
     public Guid ProductoId { get; set; }
     public string Nombre { get; set; } = string.Empty;
-    public int UnidadesVendidas { get; set; }
+    public decimal UnidadesVendidas { get; set; }
     public decimal ImporteTotal { get; set; }
 }
 

@@ -37,4 +37,28 @@ public class ReportesController : ControllerBase
     {
         return await _mediator.Send(new ObtenerDashboardQuery());
     }
+
+    [HttpGet("bajo-stock")]
+    public async Task<ActionResult<System.Collections.Generic.List<BajoStockDto>>> GetBajoStock()
+    {
+        return await _mediator.Send(new ObtenerBajoStockQuery());
+    }
+
+    [HttpGet("valorizacion-inventario")]
+    public async Task<ActionResult<System.Collections.Generic.List<ValorizacionInventarioDto>>> GetValorizacionInventario()
+    {
+        return await _mediator.Send(new ObtenerValorizacionInventarioQuery());
+    }
+
+    [HttpGet("aging-report")]
+    public async Task<ActionResult<System.Collections.Generic.List<AgingReportDto>>> GetAgingReport()
+    {
+        return await _mediator.Send(new ObtenerAgingReportQuery());
+    }
+
+    [HttpGet("caja-ferreteria")]
+    public async Task<ActionResult<CajaDetalleFerreteriaDto>> GetCajaFerreteria()
+    {
+        return await _mediator.Send(new ObtenerCajaFerreteriaQuery());
+    }
 }

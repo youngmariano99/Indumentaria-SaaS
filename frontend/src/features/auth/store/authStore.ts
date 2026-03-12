@@ -22,6 +22,7 @@ export const useAuthStore = create<AuthStore>()(
                 if (data.rubroId) {
                     useRubroStore.getState().setRubro(
                         data.rubroId, 
+                        data.rubroSlug || 'indumentaria', // Fallback por si volvemos a un estado anterior
                         data.diccionarioJson || '{}', 
                         data.esquemaMetadatosJson || '[]'
                     );

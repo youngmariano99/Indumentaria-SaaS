@@ -9,6 +9,7 @@ namespace Core.Entities;
 public class Rubro : BaseEntity
 {
     public string Nombre { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty; // Identificador técnico (ej: "ferreteria", "indumentaria")
     public string Icono { get; set; } = string.Empty;
 
     /// <summary>

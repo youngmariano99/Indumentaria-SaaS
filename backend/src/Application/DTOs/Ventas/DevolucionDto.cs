@@ -1,3 +1,5 @@
+using Core.Enums;
+
 namespace Application.DTOs.Ventas;
 
 public class DevolucionDto
@@ -16,5 +18,6 @@ public class DevolucionDto
 public class DevolucionDetalleDto
 {
     public Guid VarianteProductoId { get; set; }
-    public int Cantidad { get; set; }
+    public decimal Cantidad { get; set; }
+    public DestinoDevolucion Destino { get; set; } = DestinoDevolucion.VentaDirecta;
 }

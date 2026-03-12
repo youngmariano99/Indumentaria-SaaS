@@ -11,6 +11,7 @@ public class LoginResponse
     public Guid TenantId { get; set; }
     public SystemRole Rol { get; set; }
     public Guid? RubroId { get; set; }
+    public string? RubroSlug { get; set; }
     public string? DiccionarioJson { get; set; }
     public string? EsquemaMetadatosJson { get; set; }
 }

@@ -9,7 +9,7 @@ public class VarianteDto
     public decimal? PrecioOverride { get; set; }            // Opcional
 
     /// <summary>Cantidad inicial de unidades en stock para esta variante.</summary>
-    public int StockInicial { get; set; } = 0;
+    public decimal StockInicial { get; set; } = 0;
 
     /// <summary>Atributos adicionales clave/valor. Ej: {"Uso":"F11","Material":"Cuero"}</summary>
     public Dictionary<string, string> Atributos { get; set; } = new();

@@ -19,7 +19,7 @@ public class ClientePrendaEnCurso : BaseEntity, IMustHaveTenant
     public string? ProductoManualNombre { get; set; }
     public string? VarianteManualNombre { get; set; }
 
-    public int Cantidad { get; set; }
+    public decimal Cantidad { get; set; }
 
     public decimal PrecioReferencia { get; set; }
 

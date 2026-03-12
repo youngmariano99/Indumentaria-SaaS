@@ -3,13 +3,36 @@ import { lazy } from 'react';
 // Registro de componentes híbridos (Feature-Sliced Design)
 // El "Feature Toggle" o contexto de rubro usará este registro para resolver
 // la vista a importar en tiempo de ejecución.
-export const ComponentRegistry = {
+const RegistryItems = {
     VariantesGrid: {
-        // Por ahora, apuntamos la lógica existente de indumentaria aquí.
-        // En un futuro, si el rubro es Ferretería, React cargará perezosamente
-        // import('../../verticals/ferreteria/components/VariantesGrid')
         indumentaria: lazy(() => import('../../verticals/indumentaria/components/VariantesGrid.tsx')),
         ferreteria: lazy(() => import('../../verticals/ferreteria/components/VariantesGrid.tsx')),
+    },
+    FinancialsWidget: {
+        ferreteria: lazy(() => import('../../verticals/ferreteria/components/CajaDetalleFerreteria.tsx')),
+        indumentaria: null, // Fallback a componente base o nulo
+    },
+    AgingWidget: {
+        ferreteria: lazy(() => import('../../verticals/ferreteria/components/AgingReport.tsx')),
+        indumentaria: null,
+    },
+    StockAlertWidget: {
+        ferreteria: lazy(() => import('../../verticals/ferreteria/components/BajoStockFerreteria.tsx')),
+        indumentaria: null,
     }
-    // Agregar aquí más componentes modulares en el futuro (ej. ResumenDashboard)
+};
+
+export const ComponentRegistry = {
+    ...RegistryItems,
+    /**
+     * Resuelve un componente basado en la llave y el slug del rubro.
+     */
+    resolve: (key: keyof typeof RegistryItems, rubroSlug: string | null) => {
+        const repo = (RegistryItems as any)[key];
+        if (!repo) return null;
+        // 1. Intenta rubro específico
+        if (rubroSlug && repo[rubroSlug]) return repo[rubroSlug];
+        // 2. Fallback a indumentaria (por defecto)
+        return repo.indumentaria;
+    }
 };

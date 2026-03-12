@@ -21,7 +21,6 @@ import styles from "./NuevoProductoPage.module.css";
 import { useRubroStore } from "../../store/rubroStore";
 import { FieldFactory, Drawer } from "../../components/common";
 import type { FieldDefinition } from "../../components/common";
-import { ComponentRegistry } from "../../core/registry/ComponentRegistry";
 import { useRubro } from "../../hooks/useRubro";
 
 
@@ -33,8 +32,9 @@ export function NuevoProductoPage() {
     const { id } = useParams();
     const isEditMode = !!id;
     
+    const { getSmartDefaults, resolveComponent } = useRubro();
     // Resolución dinámica de componente vertical
-    const VariantesGridDynamic = ComponentRegistry.VariantesGrid.indumentaria;
+    const VariantesGridDynamic = resolveComponent('VariantesGrid');
 
     // ── Datos base del producto ────────────────────────────────────────────────
     const [nombre, setNombre] = useState("");
@@ -47,7 +47,7 @@ export function NuevoProductoPage() {
     const [categoriasRaw, setCategoriasRaw] = useState<CategoriaDto[]>([]);
     const [categoriaId, setCategoriaId] = useState("");
 
-    const { getSmartDefaults } = useRubro();
+    // const { getSmartDefaults } = useRubro(); // Ya declarado arriba
     const esquemaMetadatos = useRubroStore(state => state.esquema as FieldDefinition[]);
     const [metadataValues, setMetadataValues] = useState<Record<string, any>>({});
 

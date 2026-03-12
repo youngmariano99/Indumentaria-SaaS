@@ -12,6 +12,7 @@ interface DevLineItem {
     variante: string;
     precioUnitario: number;
     cantidad: number;
+    destino?: number;
 }
 
 function getVarianteLabel(v: VarianteLayerPosDto): string {
@@ -29,6 +30,8 @@ export function DevolucionesPage() {
 
     // Búsqueda
     const [busqueda, setBusqueda] = useState("");
+    const [busquedaTicket, setBusquedaTicket] = useState("");
+    const [buscandoTicket, setBuscandoTicket] = useState(false);
 
     // Modal de opciones de Variante (Talle/Color)
     const [productoModal, setProductoModal] = useState<{ prod: ProductoLayerPosDto, type: 'devuelve' | 'lleva' } | null>(null);
@@ -143,6 +146,36 @@ export function DevolucionesPage() {
         setPaginaActual(1);
     }, [busqueda]);
 
+    const handleBuscarTicket = async () => {
+        if (!busquedaTicket.trim()) return;
+        setBuscandoTicket(true);
+        try {
+            const ticket = await posApi.getVentaByTicket(busquedaTicket.trim());
+            if (ticket.clienteId) {
+                setClienteSeleccionadoId(ticket.clienteId);
+                setClienteInput(ticket.clienteNombre || "");
+            }
+
+            const lineas = ticket.detalles.map((d: any) => ({
+                id: `dev-devuelve-${Date.now()}-${Math.random()}`,
+                productId: d.productoId,
+                varianteId: d.varianteProductoId,
+                nombre: d.productoNombre,
+                variante: d.varianteNombre,
+                precioUnitario: d.precioUnitario,
+                cantidad: d.cantidad,
+                destino: 1
+            }));
+
+            setPrendasDevueltas(lineas);
+            setBusquedaTicket("");
+        } catch (e) {
+            alert("No se encontró el ticket o hubo un error en la búsqueda.");
+        } finally {
+            setBuscandoTicket(false);
+        }
+    };
+
     const agregarLista = (prod: ProductoLayerPosDto, variante: VarianteLayerPosDto, tipo: 'devuelve' | 'lleva') => {
         const stock = (variante as any).stockActual ?? (variante as any).StockActual ?? 0;
 
@@ -203,7 +236,6 @@ export function DevolucionesPage() {
         } else {
             const item = prendasLlevadas.find(i => i.id === id);
             if (item && delta > 0) {
-                // Buscar stock actual en el catálogo para validar
                 const pOrig = productos.find(p => p.id === item.productId);
                 const vOrig = pOrig?.variantes?.find(v => v.varianteId === item.varianteId);
                 const stock = (vOrig as any)?.stockActual ?? (vOrig as any)?.StockActual ?? 0;
@@ -215,6 +247,10 @@ export function DevolucionesPage() {
             }
             setPrendasLlevadas(prev => prev.map(i => i.id === id ? { ...i, cantidad: Math.max(0, i.cantidad + delta) } : i).filter(i => i.cantidad > 0));
         }
+    };
+
+    const actualizarDestino = (id: string, destino: number) => {
+        setPrendasDevueltas(prev => prev.map(i => i.id === id ? { ...i, destino } : i));
     };
 
     const totalDevuelve = prendasDevueltas.reduce((acc, i) => acc + (i.precioUnitario * i.cantidad), 0);
@@ -232,8 +268,15 @@ export function DevolucionesPage() {
         try {
             const payload = {
                 clienteId: clienteSeleccionadoId,
-                variantesDevueltas: prendasDevueltas.map(i => ({ varianteProductoId: i.varianteId, cantidad: i.cantidad })),
-                variantesLlevadas: prendasLlevadas.map(i => ({ varianteProductoId: i.varianteId, cantidad: i.cantidad }))
+                variantesDevueltas: prendasDevueltas.map(i => ({
+                    varianteProductoId: i.varianteId,
+                    cantidad: i.cantidad,
+                    destino: i.destino || 1
+                })),
+                variantesLlevadas: prendasLlevadas.map(i => ({
+                    varianteProductoId: i.varianteId,
+                    cantidad: i.cantidad
+                }))
             };
 
             const res = await posApi.procesarDevolucion(payload);
@@ -263,16 +306,36 @@ export function DevolucionesPage() {
 
                 {/* PANEL IZQUIERDO: Buscador General */}
                 <div style={{ flex: '1', display: 'flex', flexDirection: 'column', backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
-                    <div style={{ padding: '1rem', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+                    <div style={{ padding: '1rem', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', backgroundColor: 'white', border: '1px solid #d1d5db', borderRadius: '0.375rem', padding: '0.5rem 0.75rem', gap: '0.5rem' }}>
                             <MagnifyingGlass size={20} color="#9ca3af" />
                             <input
                                 type="search"
-                                placeholder="Buscar por nombre, código de barras o SKU..."
+                                placeholder="Buscar artículo por nombre o SKU..."
                                 value={busqueda}
                                 onChange={e => setBusqueda(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem' }}
                             />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff7ed', border: '1px solid #fdba74', borderRadius: '0.375rem', padding: '0.4rem 0.75rem', gap: '0.5rem', flex: 1 }}>
+                                <Swap size={18} color="#f97316" />
+                                <input
+                                    type="text"
+                                    placeholder="Recuperar Ticket (Ej: TCK-1234)..."
+                                    value={busquedaTicket}
+                                    onChange={e => setBusquedaTicket(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && handleBuscarTicket()}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.85rem' }}
+                                />
+                            </div>
+                            <button
+                                onClick={handleBuscarTicket}
+                                disabled={buscandoTicket || !busquedaTicket.trim()}
+                                style={{ padding: '0.5rem 1rem', backgroundColor: '#f97316', color: 'white', border: 'none', borderRadius: '0.375rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', opacity: (buscandoTicket || !busquedaTicket.trim()) ? 0.6 : 1 }}
+                            >
+                                {buscandoTicket ? "..." : "Cargar"}
+                            </button>
                         </div>
                     </div>
 
@@ -428,6 +491,21 @@ export function DevolucionesPage() {
                                     {prendasDevueltas.map(l => (
                                         <li key={l.id} className={styles.cartItem} style={{ padding: '0.5rem' }}>
                                             <div className={styles.cartItemTop}><span style={{ fontSize: '0.85rem' }}>{l.nombre} <span className={styles.cartItemVariante}>· {l.variante}</span></span></div>
+
+                                            <div style={{ margin: '0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <span style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600 }}>DESTINO:</span>
+                                                <select
+                                                    value={l.destino || 1}
+                                                    onChange={(e) => actualizarDestino(l.id, parseInt(e.target.value))}
+                                                    style={{ fontSize: '0.7rem', padding: '0.1rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', backgroundColor: '#f9fafb' }}
+                                                >
+                                                    <option value={1}>✅ Stock Venta</option>
+                                                    <option value={2}>❌ Defectuoso</option>
+                                                    <option value={3}>🛠️ Garantía</option>
+                                                    <option value={4}>🗑️ Descarte</option>
+                                                </select>
+                                            </div>
+
                                             <div className={styles.cartItemBottom}>
                                                 <div className={styles.cartItemActions}>
                                                     <button className={styles.qtyBtn} onClick={() => modificarCantidad(l.id, -1, 'devuelve')}><Minus size={12} /></button>

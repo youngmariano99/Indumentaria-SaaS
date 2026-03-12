@@ -8,9 +8,10 @@ public interface ITenantResolver
     Guid? SucursalId { get; }
     Guid? UserId { get; }
     Guid? RubroId { get; }
+    string? RubroSlug { get; }
     string? DiccionarioJson { get; }
     void SetTenantId(Guid tenantId);
     void SetSucursalId(Guid sucursalId);
     void SetUserId(Guid userId);
-    void SetRubro(Guid rubroId, string diccionarioJson);
+    void SetRubro(Guid rubroId, string slug, string diccionarioJson);
 }

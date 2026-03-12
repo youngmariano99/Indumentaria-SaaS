@@ -11,6 +11,7 @@ export interface LocalProducto {
     marcaNombre: string | null;
     precioBase: number;
     impuestoPorcentaje: number | null;
+    esFraccionable: boolean;
     estado: string; // "Activo", "Inactivo"
     // Atributos de búsqueda rápida offline
     _searchIndex: string;
@@ -42,8 +43,8 @@ export class PosDatabase extends Dexie {
     constructor() {
         super('IndumentariaPosDB');
 
-        // Versión 1 de la metadata local
-        this.version(1).stores({
+        // Versión 2: Se agrega esFraccionable a productos
+        this.version(2).stores({
             productos: 'id, codigoBodega, _searchIndex',
             syncQueue: '++id, type, status, timestamp'
         });

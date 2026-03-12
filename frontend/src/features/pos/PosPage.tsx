@@ -38,6 +38,7 @@ type LineItem = {
   descuentoPct: number;
   recargoPct: number;
   posibleDevolucion: boolean;
+  esFraccionable: boolean;
 };
 
 /** Acepta respuestas en camelCase o PascalCase del API */
@@ -101,6 +102,7 @@ export function PosPage() {
       nombre: p.nombre,
       precioBase: p.precioBase,
       ean13: p.codigoBodega || "",
+      esFraccionable: p.esFraccionable,
       variantes: p.variantes.map(v => ({
         varianteId: v.id,
         sizeColor: v.talle && v.color ? `${v.talle} / ${v.color}` : v.talle || v.color || "",
@@ -111,6 +113,43 @@ export function PosPage() {
       }))
     }));
   }, [localProductos]);
+
+  const [productosServidor, setProductosServidor] = useState<ProductoLayerPosDto[]>([]);
+  const [isSearchingServer, setIsSearchingServer] = useState(false);
+
+  // Búsqueda extendida (Server) con Debounce
+  useEffect(() => {
+    const q = busqueda.trim();
+    if (q.length < 3) {
+      setProductosServidor([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingServer(true);
+      try {
+        const res = await posApi.buscarProductos(q);
+        setProductosServidor(res);
+      } catch (e) {
+        console.error("Error buscando en servidor", e);
+      } finally {
+        setIsSearchingServer(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [busqueda]);
+
+  const productosCombinados = useMemo(() => {
+    const map = new Map<string, ProductoLayerPosDto>();
+    // Prioridad local
+    productos.forEach(p => map.set(p.id, p));
+    // Complemento servidor
+    productosServidor.forEach(p => {
+      if (!map.has(p.id)) map.set(p.id, p);
+    });
+    return Array.from(map.values());
+  }, [productos, productosServidor]);
 
   const [metodosPago, setMetodosPago] = useState<MetodoPagoDto[]>([]);
   const [metodoPagoActivo, setMetodoPagoActivo] = useState<string>("");
@@ -223,10 +262,15 @@ export function PosPage() {
   }, []);
 
   /** Filtro: nombre, código de barra (EAN13 producto o SKU variante), talle, color */
-  const productosFiltrados = productos.filter((p) => {
+  const productosFiltrados = productosCombinados.filter((p) => {
     const q = busqueda.trim();
     if (!q) return true;
     const qLower = q.toLowerCase();
+    
+    // Si viene del servidor, ya está filtrado. Solo filtramos los locales por si las moscas.
+    const esDeServidor = productosServidor.some(ps => ps.id === p.id);
+    if (esDeServidor) return true;
+
     if (p.nombre.toLowerCase().includes(qLower)) return true;
     const ean13 = getEan13(p);
     if (ean13 && ean13.includes(q)) return true;
@@ -280,10 +324,35 @@ export function PosPage() {
           descuentoPct: 0,
           recargoPct: 0,
           posibleDevolucion: false,
+          esFraccionable: producto.esFraccionable
         },
       ]);
     }
     setExpandedProductId(null);
+  };
+
+  const agregarItemVario = () => {
+    const nombre = prompt("Nombre del ítem:");
+    if (!nombre) return;
+    const precio = parseFloat(prompt("Precio:") || "0");
+    if (isNaN(precio) || precio <= 0) return;
+
+    setCarrito(prev => [
+      ...prev,
+      {
+        id: `var-${Date.now()}`,
+        productId: 'vario',
+        varianteId: 'vario',
+        nombre,
+        variante: 'Varios',
+        precioUnitario: precio,
+        cantidad: 1,
+        descuentoPct: 0,
+        recargoPct: 0,
+        posibleDevolucion: false,
+        esFraccionable: true
+      }
+    ]);
   };
 
   const onSeleccionarProducto = (producto: ProductoLayerPosDto) => {
@@ -486,6 +555,7 @@ export function PosPage() {
               aria-label="Buscar o escanear productos"
             />
             <div style={{ right: '0.75rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '0.5rem', position: 'absolute', alignItems: 'center' }}>
+              {isSearchingServer && <div className={styles.spinnerSmall} />}
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.65rem', color: scannerHidActivo ? '#10b981' : '#9ca3af', fontWeight: 600, padding: '2px 6px', backgroundColor: scannerHidActivo ? '#f0fdf4' : '#f3f4f6', borderRadius: '4px' }}>
                 <Circle size={8} weight="fill" color={scannerHidActivo ? '#10b981' : '#9ca3af'} />
                 Scanner Pistola
@@ -501,9 +571,19 @@ export function PosPage() {
                 <Camera size={16} weight="bold" />
               </button>
             </div>
-          </div>
+            </div>
 
-          <div className={styles.productList}>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button
+                    onClick={agregarItemVario}
+                    className={styles.secondaryActionBtn}
+                    style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                    <Plus size={16} /> Ítem Vario (Mostrador)
+                </button>
+            </div>
+
+            <div className={styles.productList}>
             {loadingInitial ? (
               <p className={styles.emptyHint}>Cargando catálogo POS...</p>
             ) : productosFiltrados.length === 0 ? (
@@ -701,23 +781,40 @@ export function PosPage() {
                           </label>
                         </div>
                         <div className={styles.cartItemActions}>
-                          <button
-                            type="button"
-                            className={styles.qtyBtn}
-                            onClick={() => cambiarCantidad(line.id, -1)}
-                            aria-label="Menos uno"
-                          >
-                            <Minus size={14} weight="bold" />
-                          </button>
-                          <span className={styles.qtyNum}>{line.cantidad}</span>
-                          <button
-                            type="button"
-                            className={styles.qtyBtn}
-                            onClick={() => cambiarCantidad(line.id, 1)}
-                            aria-label="Más uno"
-                          >
-                            <Plus size={14} weight="bold" />
-                          </button>
+                          {line.esFraccionable ? (
+                              <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={line.cantidad}
+                                  onChange={(e) => {
+                                      const val = parseFloat(e.target.value.replace(",", "."));
+                                      if (!isNaN(val)) {
+                                          setCarrito(prev => prev.map(item => item.id === line.id ? { ...item, cantidad: val } : item));
+                                      }
+                                  }}
+                                  style={{ width: '50px', padding: '2px', textAlign: 'center', border: '1px solid #d1d5db', borderRadius: '4px' }}
+                              />
+                          ) : (
+                              <>
+                                <button
+                                    type="button"
+                                    className={styles.qtyBtn}
+                                    onClick={() => cambiarCantidad(line.id, -1)}
+                                    aria-label="Menos uno"
+                                >
+                                    <Minus size={14} weight="bold" />
+                                </button>
+                                <span className={styles.qtyNum}>{line.cantidad}</span>
+                                <button
+                                    type="button"
+                                    className={styles.qtyBtn}
+                                    onClick={() => cambiarCantidad(line.id, 1)}
+                                    aria-label="Más uno"
+                                >
+                                    <Plus size={14} weight="bold" />
+                                </button>
+                              </>
+                          )}
                           <button
                             type="button"
                             className={styles.removeBtn}

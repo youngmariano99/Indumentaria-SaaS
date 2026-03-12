@@ -9,12 +9,14 @@ public class TenantResolverService : ITenantResolver
     private Guid? _sucursalId;
     private Guid? _userId;
     private Guid? _rubroId;
+    private string? _rubroSlug;
     private string? _diccionarioJson;
 
     public Guid? TenantId => _tenantId;
     public Guid? SucursalId => _sucursalId;
     public Guid? UserId => _userId;
     public Guid? RubroId => _rubroId;
+    public string? RubroSlug => _rubroSlug;
     public string? DiccionarioJson => _diccionarioJson;
 
     public void SetTenantId(Guid tenantId)
@@ -42,9 +44,10 @@ public class TenantResolverService : ITenantResolver
         _userId = userId;
     }
 
-    public void SetRubro(Guid rubroId, string diccionarioJson)
+    public void SetRubro(Guid rubroId, string slug, string diccionarioJson)
     {
         _rubroId = rubroId;
+        _rubroSlug = slug;
         _diccionarioJson = diccionarioJson;
     }
 }

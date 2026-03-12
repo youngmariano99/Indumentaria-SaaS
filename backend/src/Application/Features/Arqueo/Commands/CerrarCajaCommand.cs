@@ -40,7 +40,7 @@ public class CerrarCajaCommandHandler : IRequestHandler<CerrarCajaCommand, bool>
         try
         {
             // Forzamos el SET SESSION dentro de la transacción para asegurar que el RLS lo vea
-            await _context.Database.ExecuteSqlRawAsync($"SET SESSION \"app.current_tenant\" = '{tenantId}';", cancellationToken);
+            await _context.Database.ExecuteSqlAsync($"SET SESSION \"app.current_tenant\" = {tenantId.ToString()};", cancellationToken);
 
             var fechaCierre = DateTime.UtcNow;
             

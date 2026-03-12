@@ -42,4 +42,13 @@ public class Producto : BaseEntity, IMustHaveTenant, ISoftDelete
     /// Metadatos variables por rubro en formato JSON.
     /// </summary>
     public string MetadatosJson { get; set; } = "{}";
+
+    /// <summary>
+    /// Si es true, permite vender cantidades fraccionadas (decimales) en el POS.
+    /// Ej: Tornillos por Kg, Cable por Metro.
+    /// </summary>
+    public bool EsFraccionable { get; set; }
+
+    // Navigation
+    public virtual Categoria Categoria { get; set; } = null!;
 }

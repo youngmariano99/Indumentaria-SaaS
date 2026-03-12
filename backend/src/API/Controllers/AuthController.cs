@@ -75,6 +75,7 @@ public class AuthController : ControllerBase
             TenantId = usuario.TenantId,
             Rol = usuario.Rol,
             RubroId = inquilino.RubroId,
+            RubroSlug = inquilino.Rubro?.Slug,
             DiccionarioJson = inquilino.Rubro?.DiccionarioJson,
             EsquemaMetadatosJson = inquilino.Rubro?.EsquemaMetadatosJson
         });
