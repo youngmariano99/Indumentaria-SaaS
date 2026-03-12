@@ -61,4 +61,37 @@ public class AjustesController : ControllerBase
         await _mediator.Send(new ActualizarConfiguracionAtributosCommand { Payload = dto });
         return NoContent();
     }
+
+    /// <summary>
+    /// Obtiene el diccionario base de configuración de metadatos (Ferretería).
+    /// GET /api/ajustes/diccionario?grupo=Medida
+    /// </summary>
+    [HttpGet("diccionario")]
+    public async Task<ActionResult<List<AtributoConfiguracionDto>>> GetDiccionario([FromQuery] string? grupo)
+    {
+        var resultado = await _mediator.Send(new ObtenerAtributosConfiguracionQuery { Grupo = grupo });
+        return Ok(resultado);
+    }
+
+    /// <summary>
+    /// Crea un nuevo valor en el diccionario base (Optimistic UI fallback).
+    /// POST /api/ajustes/diccionario
+    /// </summary>
+    [HttpPost("diccionario")]
+    public async Task<ActionResult<Guid>> PostDiccionario([FromBody] CrearAtributoConfiguracionCommand command)
+    {
+        var id = await _mediator.Send(command);
+        return Ok(id);
+    }
+
+    /// <summary>
+    /// Elimina de forma lógica un valor del diccionario (Soft Delete).
+    /// DELETE /api/ajustes/diccionario/{id}
+    /// </summary>
+    [HttpDelete("diccionario/{id:guid}")]
+    public async Task<IActionResult> DeleteDiccionario(Guid id)
+    {
+        await _mediator.Send(new EliminarAtributoConfiguracionCommand { Id = id });
+        return NoContent();
+    }
 }

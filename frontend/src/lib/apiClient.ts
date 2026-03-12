@@ -35,10 +35,9 @@ apiClient.interceptors.response.use(
         const manifest = response.headers['x-rubro-manifest'];
 
         if (rubroId && manifest) {
-            // Importación dinámica para evitar ciclos de dependencia si fuera necesario, 
-            // aunque aquí el store es independiente.
-            const { useRubroStore } = require('../store/rubroStore');
-            useRubroStore.getState().setRubro(rubroId, manifest);
+            import('../store/rubroStore').then(({ useRubroStore }) => {
+                useRubroStore.getState().setRubro(rubroId, manifest);
+            });
         }
         return response;
     },

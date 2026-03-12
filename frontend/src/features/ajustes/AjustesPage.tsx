@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { GearSix, Check, WarningCircle, Spinner, X } from "@phosphor-icons/react";
 import { ajustesApi } from "./api/ajustesApi";
 import { TALLES_POR_TIPO, NOMBRE_TIPO, TIPOS_PRODUCTO } from "../catalog/data/tallesPorTipo";
+import { AttributeGroupManager } from "./components/AttributeGroupManager";
 import styles from "./AjustesPage.module.css";
 
 /**
@@ -21,6 +22,7 @@ export function AjustesPage() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [mainTab, setMainTab] = useState<"TALLES" | "DICCIONARIO">("TALLES");
     const [activeTab, setActiveTab] = useState<string>(TIPOS_PRODUCTO[0]);
     const [inputTalle, setInputTalle] = useState("");
 
@@ -98,10 +100,21 @@ export function AjustesPage() {
                     </div>
                 </div>
 
-                {/* Tabs de secciones futuras */}
+                {/* Tabs Principales */}
                 <div className={styles.tabsBar}>
-                    <button type="button" className={`${styles.tab} ${styles.tabActive}`}>
-                        Talles por tipo
+                    <button 
+                        type="button" 
+                        className={`${styles.tab} ${mainTab === "TALLES" ? styles.tabActive : ""}`}
+                        onClick={() => setMainTab("TALLES")}
+                    >
+                        Talles de Indumentaria
+                    </button>
+                    <button 
+                        type="button" 
+                        className={`${styles.tab} ${mainTab === "DICCIONARIO" ? styles.tabActive : ""}`}
+                        onClick={() => setMainTab("DICCIONARIO")}
+                    >
+                        Diccionario de Atributos (Global)
                     </button>
                     <button type="button" className={styles.tab} disabled>
                         Notificaciones <span className={styles.tabBadge}>Próximamente</span>
@@ -110,122 +123,157 @@ export function AjustesPage() {
 
                 {/* Panel principal */}
                 <div className={styles.panel}>
-                    <div className={styles.panelHeader}>
-                        <div>
-                            <h2 className={styles.panelTitle}>Talles predefinidos por tipo de producto</h2>
-                            <p className={styles.panelDesc}>
-                                Estos talles se pre-cargan automáticamente en el formulario de carga de productos
-                                al seleccionar el tipo. Podés agregar o quitar talles según los productos que vendés.
-                            </p>
-                        </div>
-                    </div>
-
-                    {loading ? (
-                        <div className={styles.loadingRow}>
-                            <Spinner size={20} className={styles.spinIcon} />
-                            <span>Cargando configuración…</span>
-                        </div>
-                    ) : (
-                        <div className={styles.editor}>
-                            {/* Selector de tipo (tabs verticales) */}
-                            <div className={styles.tiposList}>
-                                {TIPOS_PRODUCTO.map(tipo => (
-                                    <button
-                                        key={tipo}
-                                        type="button"
-                                        className={`${styles.tipoBtn} ${activeTab === tipo ? styles.tipoBtnActive : ""}`}
-                                        onClick={() => { setActiveTab(tipo); setInputTalle(""); }}
-                                    >
-                                        <span>{NOMBRE_TIPO[tipo]}</span>
-                                        <span className={styles.tipoBadge}>{tallesPorTipo[tipo]?.length ?? 0}</span>
-                                    </button>
-                                ))}
+                    {mainTab === "TALLES" && (
+                        <>
+                            <div className={styles.panelHeader}>
+                                <div>
+                                    <h2 className={styles.panelTitle}>Talles predefinidos por tipo de producto</h2>
+                                    <p className={styles.panelDesc}>
+                                        Estos talles se pre-cargan automáticamente en el formulario de carga de productos
+                                        al seleccionar el tipo. Podés agregar o quitar talles según los productos que vendés.
+                                    </p>
+                                </div>
                             </div>
 
-                            {/* Editor de chips para el tipo activo */}
-                            <div className={styles.chipsEditor}>
-                                <div className={styles.chipsEditorHeader}>
-                                    <span className={styles.chipsEditorTitle}>
-                                        Talles de&nbsp;<strong>{NOMBRE_TIPO[activeTab]}</strong>
-                                    </span>
-                                    <button
-                                        type="button"
-                                        className={styles.restoreBtn}
-                                        onClick={restaurarDefaults}
-                                    >
-                                        Restaurar defaults
-                                    </button>
+                            {loading ? (
+                                <div className={styles.loadingRow}>
+                                    <Spinner size={20} className={styles.spinIcon} />
+                                    <span>Cargando configuración…</span>
                                 </div>
+                            ) : (
+                                <div className={styles.editor}>
+                                    {/* Selector de tipo (tabs verticales) */}
+                                    <div className={styles.tiposList}>
+                                        {TIPOS_PRODUCTO.map(tipo => (
+                                            <button
+                                                key={tipo}
+                                                type="button"
+                                                className={`${styles.tipoBtn} ${activeTab === tipo ? styles.tipoBtnActive : ""}`}
+                                                onClick={() => { setActiveTab(tipo); setInputTalle(""); }}
+                                            >
+                                                <span>{NOMBRE_TIPO[tipo]}</span>
+                                                <span className={styles.tipoBadge}>{tallesPorTipo[tipo]?.length ?? 0}</span>
+                                            </button>
+                                        ))}
+                                    </div>
 
-                                {/* Chips actuales */}
-                                <div className={styles.chipsGrid}>
-                                    {(tallesPorTipo[activeTab] ?? []).map(talle => (
-                                        <span key={talle} className={styles.chip}>
-                                            {talle}
+                                    {/* Editor de chips para el tipo activo */}
+                                    <div className={styles.chipsEditor}>
+                                        <div className={styles.chipsEditorHeader}>
+                                            <span className={styles.chipsEditorTitle}>
+                                                Talles de&nbsp;<strong>{NOMBRE_TIPO[activeTab]}</strong>
+                                            </span>
                                             <button
                                                 type="button"
-                                                className={styles.chipRemove}
-                                                onClick={() => quitarTalle(activeTab, talle)}
-                                                aria-label={`Quitar talle ${talle}`}
+                                                className={styles.restoreBtn}
+                                                onClick={restaurarDefaults}
                                             >
-                                                <X size={11} weight="bold" />
+                                                Restaurar defaults
                                             </button>
-                                        </span>
-                                    ))}
-                                </div>
+                                        </div>
 
-                                {/* Agregar nuevo talle */}
-                                <div className={styles.addRow}>
-                                    <input
-                                        className={styles.addInput}
-                                        type="text"
-                                        placeholder="Nuevo talle (Enter para agregar)"
-                                        value={inputTalle}
-                                        onChange={e => setInputTalle(e.target.value.toUpperCase())}
-                                        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarTalle(); } }}
-                                    />
-                                    <button type="button" className={styles.addBtn} onClick={agregarTalle}>
-                                        Agregar
-                                    </button>
-                                </div>
+                                        {/* Chips actuales */}
+                                        <div className={styles.chipsGrid}>
+                                            {(tallesPorTipo[activeTab] ?? []).map(talle => (
+                                                <span key={talle} className={styles.chip}>
+                                                    {talle}
+                                                    <button
+                                                        type="button"
+                                                        className={styles.chipRemove}
+                                                        onClick={() => quitarTalle(activeTab, talle)}
+                                                        aria-label={`Quitar talle ${talle}`}
+                                                    >
+                                                        <X size={11} weight="bold" />
+                                                    </button>
+                                                </span>
+                                            ))}
+                                        </div>
 
-                                <p className={styles.chipsHint}>
-                                    Estos talles se muestran como sugerencia en el formulario — el usuario siempre puede escribir talles personalizados adicionales.
+                                        {/* Agregar nuevo talle */}
+                                        <div className={styles.addRow}>
+                                            <input
+                                                className={styles.addInput}
+                                                type="text"
+                                                placeholder="Nuevo talle (Enter para agregar)"
+                                                value={inputTalle}
+                                                onChange={e => setInputTalle(e.target.value.toUpperCase())}
+                                                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarTalle(); } }}
+                                            />
+                                            <button type="button" className={styles.addBtn} onClick={agregarTalle}>
+                                                Agregar
+                                            </button>
+                                        </div>
+
+                                        <p className={styles.chipsHint}>
+                                            Estos talles se muestran como sugerencia en el formulario — el usuario siempre puede escribir talles personalizados adicionales.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Feedback + Guardar (Solo para Talles) */}
+                            {error && (
+                                <div className={styles.errorAlert} role="alert">
+                                    <WarningCircle size={16} />
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className={styles.actions}>
+                                <button
+                                    type="button"
+                                    className={styles.saveBtn}
+                                    onClick={handleGuardar}
+                                    disabled={saving || loading}
+                                >
+                                    {saving ? (
+                                        <><Spinner size={16} className={styles.spinIcon} /> Guardando…</>
+                                    ) : saved ? (
+                                        <><Check size={16} weight="bold" /> Guardado</>
+                                    ) : (
+                                        "Guardar cambios"
+                                    )}
+                                </button>
+                                {saved && (
+                                    <span className={styles.savedConfirm}>
+                                        <Check size={14} weight="bold" />
+                                        Configuración guardada correctamente
+                                    </span>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {mainTab === "DICCIONARIO" && (
+                        <div style={{ padding: "1.5rem" }}>
+                            <div style={{ marginBottom: "2rem" }}>
+                                <h2 className={styles.panelTitle}>Diccionario de Atributos Universales</h2>
+                                <p className={styles.panelDesc}>
+                                    Agregue las clasificaciones que utilizará para segmentar sus productos.
+                                    Esto reemplaza a los "Talles" si su negocio es de un rubro distinto a Indumentaria 
+                                    (por ejemplo: Ferretería, Pinturería).
                                 </p>
                             </div>
+
+                            <AttributeGroupManager 
+                                grupo="Medida" 
+                                titulo="Medidas y Dimensiones" 
+                                descripcion="Ej: 1/2 pulgada, 10mm, 3/4. Usado frecuentemente en tornillos, caños y mangueras."
+                            />
+                            
+                            <AttributeGroupManager 
+                                grupo="Material" 
+                                titulo="Material de Fabricación" 
+                                descripcion="Ej: Acero Inoxidable, Zincado, Aluminio, Bronce." 
+                            />
+                            
+                            <AttributeGroupManager 
+                                grupo="Presentacion" 
+                                titulo="Presentación de Venta" 
+                                descripcion="Ej: Blister, Caja x50, Unidad, Fracción. Define cómo el cliente recibe el producto visualmente." 
+                            />
                         </div>
                     )}
-
-                    {/* Feedback + Guardar */}
-                    {error && (
-                        <div className={styles.errorAlert} role="alert">
-                            <WarningCircle size={16} />
-                            {error}
-                        </div>
-                    )}
-
-                    <div className={styles.actions}>
-                        <button
-                            type="button"
-                            className={styles.saveBtn}
-                            onClick={handleGuardar}
-                            disabled={saving || loading}
-                        >
-                            {saving ? (
-                                <><Spinner size={16} className={styles.spinIcon} /> Guardando…</>
-                            ) : saved ? (
-                                <><Check size={16} weight="bold" /> Guardado</>
-                            ) : (
-                                "Guardar cambios"
-                            )}
-                        </button>
-                        {saved && (
-                            <span className={styles.savedConfirm}>
-                                <Check size={14} weight="bold" />
-                                Configuración guardada correctamente
-                            </span>
-                        )}
-                    </div>
                 </div>
 
             </div>

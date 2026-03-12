@@ -12,6 +12,7 @@ public interface IApplicationDbContext
     DbSet<Rubro> Rubros { get; }
     DbSet<Sucursal> Sucursales { get; }
     DbSet<Categoria> Categorias { get; }
+    DbSet<AtributoConfiguracion> AtributosConfiguracion { get; }
     DbSet<Producto> Productos { get; }
     DbSet<VarianteProducto> VariantesProducto { get; }
     DbSet<Usuario> Usuarios { get; }
