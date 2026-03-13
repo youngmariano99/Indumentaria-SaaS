@@ -4,6 +4,7 @@ import { ajustesApi } from "./api/ajustesApi";
 import { TALLES_POR_TIPO, NOMBRE_TIPO, TIPOS_PRODUCTO } from "../catalog/data/tallesPorTipo";
 import { AttributeGroupManager } from "./components/AttributeGroupManager";
 import styles from "./AjustesPage.module.css";
+import { useRubro } from "../../hooks/useRubro";
 
 /**
  * Página de Configuración.
@@ -22,7 +23,8 @@ export function AjustesPage() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [mainTab, setMainTab] = useState<"TALLES" | "DICCIONARIO">("TALLES");
+    const { isIndumentaria } = useRubro();
+    const [mainTab, setMainTab] = useState<"TALLES" | "DICCIONARIO">(isIndumentaria ? "TALLES" : "DICCIONARIO");
     const [activeTab, setActiveTab] = useState<string>(TIPOS_PRODUCTO[0]);
     const [inputTalle, setInputTalle] = useState("");
 
@@ -102,13 +104,15 @@ export function AjustesPage() {
 
                 {/* Tabs Principales */}
                 <div className={styles.tabsBar}>
-                    <button 
-                        type="button" 
-                        className={`${styles.tab} ${mainTab === "TALLES" ? styles.tabActive : ""}`}
-                        onClick={() => setMainTab("TALLES")}
-                    >
-                        Talles de Indumentaria
-                    </button>
+                    {isIndumentaria && (
+                        <button 
+                            type="button" 
+                            className={`${styles.tab} ${mainTab === "TALLES" ? styles.tabActive : ""}`}
+                            onClick={() => setMainTab("TALLES")}
+                        >
+                            Talles de Indumentaria
+                        </button>
+                    )}
                     <button 
                         type="button" 
                         className={`${styles.tab} ${mainTab === "DICCIONARIO" ? styles.tabActive : ""}`}

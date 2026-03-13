@@ -15,4 +15,9 @@ export const authApi = {
     register: async (data: RegisterRequest): Promise<void> => {
         await apiClient.post('/auth/register-admin-temp', data);
     },
+
+    obtenerRubros: async (): Promise<any[]> => {
+        const response = await apiClient.get<any[]>('/rubros');
+        return response.data;
+    }
 };

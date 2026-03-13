@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { EnvelopeSimple, Lock, User, UserPlus, Tag } from "@phosphor-icons/react";
 import { Button, Input } from "../../components/ui";
@@ -16,8 +16,18 @@ export function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmarPassword, setConfirmarPassword] = useState("");
+  const [rubros, setRubros] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    authApi.obtenerRubros().then(setRubros).catch(() => {
+      // Fallback estático si el endpoint falla
+      setRubros([
+        { id: "d1e0f6a2-1234-5678-90ab-cdef01234567", nombre: "Indumentaria / Ropa" }
+      ]);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,9 +136,9 @@ export function RegisterPage() {
               }}
             >
               <option value="">Seleccionar rubro...</option>
-              <option value="d1e0f6a2-1234-5678-90ab-cdef01234567">Indumentaria / Ropa</option>
-              <option value="ferreteria">Ferretería (Próximamente)</option>
-              <option value="gastronomia">Gastronomía (Próximamente)</option>
+              {rubros.map(r => (
+                <option key={r.id} value={r.id}>{r.nombre}</option>
+              ))}
             </select>
           </div>
         </div>

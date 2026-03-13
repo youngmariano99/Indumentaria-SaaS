@@ -198,12 +198,25 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         {
             entity.Property(p => p.MetadatosJson).HasColumnType("jsonb");
             entity.HasIndex(p => p.MetadatosJson).HasMethod("gin");
+            entity.HasOne(p => p.Categoria)
+                .WithMany()
+                .HasForeignKey(p => p.CategoriaId);
         });
 
         builder.Entity<VarianteProducto>(entity =>
         {
             entity.Property(v => v.AtributosJson).HasColumnType("jsonb");
             entity.HasIndex(v => v.AtributosJson).HasMethod("gin");
+            entity.HasOne(v => v.Producto)
+                .WithMany()
+                .HasForeignKey(v => v.ProductId);
+        });
+
+        builder.Entity<Inventario>(entity =>
+        {
+            entity.HasOne(i => i.VarianteProducto)
+                .WithMany()
+                .HasForeignKey(i => i.ProductVariantId);
         });
     }
 

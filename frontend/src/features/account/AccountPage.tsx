@@ -2,9 +2,12 @@ import { UserCircle, Headset } from "@phosphor-icons/react";
 import { useAuthStore } from "../auth/store/authStore";
 import layoutStyles from "../dashboard/DashboardPage.module.css";
 import ajustesStyles from "../ajustes/AjustesPage.module.css";
+import { useRubro } from "../../hooks/useRubro";
+import { Storefront } from "@phosphor-icons/react";
 
 export function AccountPage() {
   const user = useAuthStore(state => state.user);
+  const { rubroSlug } = useRubro();
 
   return (
     <>
@@ -136,6 +139,22 @@ export function AccountPage() {
                       }}
                     >
                       {user?.rol ?? "—"}
+                    </dd>
+
+                    <dt style={{ fontWeight: 500, color: "var(--color-gray-600)" }}>Rubro</dt>
+                    <dd
+                      style={{
+                        margin: 0,
+                        fontWeight: 600,
+                        color: "var(--color-primary)",
+                        textTransform: "capitalize",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                    >
+                      <Storefront size={16} weight="bold" />
+                      {rubroSlug ?? "No asignado"}
                     </dd>
                   </dl>
                 </div>
