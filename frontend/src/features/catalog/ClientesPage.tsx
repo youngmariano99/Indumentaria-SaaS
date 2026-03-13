@@ -4,6 +4,7 @@ import { clientesApi } from './api/clientesApi';
 import type { ClienteDto, CrearClienteDto } from './api/clientesApi';
 import { CondicionIva } from './types';
 import { PerfilClientePage } from './PerfilClientePage';
+import { Pagination } from '../../components/ui';
 import styles from './CatalogoPage.module.css'; // Reutilizamos estilos de catálogo
 import layoutStyles from '../dashboard/DashboardPage.module.css';
 
@@ -45,6 +46,10 @@ export function ClientesPage() {
         condicionIva: CondicionIva.ConsumidorFinal,
         preferenciasJson: '{}'
     });
+
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
 
     useEffect(() => {
         loadClientes();
@@ -119,6 +124,17 @@ export function ClientesPage() {
             return true;
         });
     }, [clientes, filtros]);
+
+    // Reiniciar página al filtrar
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filtros]);
+
+    const totalPages = Math.ceil(clientesFiltrados.length / itemsPerPage);
+    const clientesPaginados = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return clientesFiltrados.slice(start, start + itemsPerPage);
+    }, [clientesFiltrados, currentPage, itemsPerPage]);
 
     const opcionesCategorias = useMemo(() => {
         const cats = clientes.map(c => c.categoriaPreferida).filter(c => c && c !== 'Sin compras');
@@ -263,7 +279,7 @@ export function ClientesPage() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {clientesFiltrados.map(c => (
+                                        {clientesPaginados.map(c => (
                                             <tr key={c.id} className={styles.tableRow} onClick={() => setClienteModalId(c.id)} title="Asomarse al Perfil 360" style={{ cursor: "pointer" }}>
                                                 <td>
                                                     <div className={styles.cellNombre}>{c.nombre}</div>
@@ -305,6 +321,15 @@ export function ClientesPage() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                itemsPerPage={itemsPerPage}
+                                onItemsPerPageChange={setItemsPerPage}
+                                totalItems={clientesFiltrados.length}
+                            />
                         </>
                     )}
                 </div>

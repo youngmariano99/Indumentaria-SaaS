@@ -178,30 +178,11 @@ export function DashboardPage() {
       <header className={styles.topbar}>
         <div className={styles.topbarRow}>
           <div className={styles.topbarTitle}>
-            <h1>Resumen general</h1>
-            <p>Visión rápida de cómo viene tu negocio hoy.</p>
+            <h1>Dashboard Industrial</h1>
+            <p>Control de operaciones en tiempo real.</p>
           </div>
 
-          <div className={styles.userMetrics} aria-label="Usuarios del sistema">
-            <div className={styles.userMetricsTitle}>Usuarios</div>
-            <div className={styles.userMetricsRow}>
-              <div
-                className={`${styles.userMetricPill} ${styles.userMetricPillActive}`}
-              >
-                <span className={styles.userMetricLabel}>Activos</span>
-                <span className={styles.userMetricValue}>{data.usuariosActivos}</span>
-              </div>
-              <div className={styles.userMetricPill}>
-                <span className={styles.userMetricLabel}>Registrados</span>
-                <span className={styles.userMetricValue}>{data.usuariosRegistrados}</span>
-              </div>
-            </div>
-            <div className={styles.userMetricsFootnote}>
-              {data.diasRestantesMembresia} días de servicio restantes
-            </div>
-          </div>
-
-          <div className={styles.topbarControls}>
+          <div className={styles.topbarActions}>
             <div
               className={styles.segmentControl}
               aria-label="Contexto de datos"
@@ -212,7 +193,7 @@ export function DashboardPage() {
                   }`}
                 onClick={() => setContexto("saas")}
               >
-                SaaS
+                ERP Corporativo
               </button>
               <button
                 type="button"
@@ -220,12 +201,22 @@ export function DashboardPage() {
                   }`}
                 onClick={() => setContexto("tienda")}
               >
-                Tienda online
+                Tienda Online
               </button>
+            </div>
+            
+            <div className={styles.userMetricsCompact} title="Usuarios y Servicio">
+              <div className={styles.userMetricItem}>
+                 <span className={styles.userMetricDot} />
+                 <strong>{data.usuariosActivos}</strong> activos
+              </div>
+              <div className={styles.userMetricDivider} />
+              <div className={styles.userMetricItem}>
+                 <strong>{data.diasRestantesMembresia}</strong> días de licencia
+              </div>
             </div>
           </div>
         </div>
-
       </header>
 
       <main className={styles.content}>
@@ -234,388 +225,224 @@ export function DashboardPage() {
             <div className={styles.card}>
               <div className={styles.cardHeader}>
                 <div>
-                  <div className={styles.cardTitle}>Tienda online</div>
+                  <div className={styles.cardTitle}>Módulo Tienda Online</div>
                   <div className={styles.cardSub}>
-                    Esta funcionalidad forma parte de un plan pago. Todavía no
-                    la tenés habilitada en tu cuenta.
+                    Esta funcionalidad forma parte de un plan extendido.
                   </div>
                 </div>
               </div>
-              <div className={styles.cardSub}>
-                Cuando actives este módulo vas a ver acá métricas de tu canal
-                online: ventas por día, carrito promedio, productos más
-                vendidos y sesiones de la tienda.
+              <div className={styles.cardSub} style={{ padding: '0 var(--space-4) var(--space-4)' }}>
+                Al activar este módulo podrás sincronizar tu catálogo físico con la web, recibir pedidos y cobrar online automáticamente.
               </div>
             </div>
           </section>
         ) : (
           <>
-            {/* Fila principal: catálogo + ingresos + cartera */}
-            <section className={styles.grid} aria-label="Métricas principales">
-              <div style={{ gridColumn: "span 4 / span 4" }}>
-                <div className={`${styles.card} ${styles.cardTall}`}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <div className={styles.cardTitle}>
-                        Productos en catálogo
-                      </div>
-                      <div className={styles.cardSub}>
-                        Total de productos activos que pueden venderse.
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.cardKpi}>{totalProductos}</div>
-                  <div className={styles.cardMiniStats}>
-                    <div className={styles.cardMiniRow}>
-                      <span className={styles.cardMiniLabel}>Nuevos hoy</span>
-                      <span className={styles.cardMiniValue}>
-                        {data.productosNuevosHoy}
-                      </span>
-                    </div>
-                    <div className={styles.cardMiniRow}>
-                      <span className={styles.cardMiniLabel}>Sin stock</span>
-                      <span className={styles.cardMiniValue}>
-                        {data.productosSinStock}
-                      </span>
-                    </div>
-                    <div className={styles.cardMiniRow}>
-                      <span className={styles.cardMiniLabel}>
-                        Stock bajo (menos de 5)
-                      </span>
-                      <span className={styles.cardMiniValue}>
-                        {data.productosStockBajo}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={styles.cardPromo}>
-                    Si querés que el catálogo esté controlado, adquirí la
-                    integración avanzada con WP: el sistema te avisa cuando el
-                    stock llega a cero y te envía un reporte.
-                  </div>
-                  <Link
-                    to="/modulos"
-                    className={styles.cardPromoBtn}
-                  >
-                    Adquirir módulo
-                  </Link>
-                </div>
+            {/* 1. Métricas Rápidas (4 columnas) */}
+            <section className={styles.gridStats}>
+              <div className={styles.cardStat}>
+                <div className={styles.cardStatTitle}>Productos Activos</div>
+                <div className={styles.cardStatValue}>{totalProductos}</div>
+                <div className={styles.cardStatTrend}>+{data.productosNuevosHoy} hoy</div>
+              </div>
+              
+              <div className={styles.cardStat}>
+                <div className={styles.cardStatTitle}>Ingresos Hoy</div>
+                <div className={styles.cardStatValue}>${totalIngresosHoy.toLocaleString("es-AR")}</div>
+                <div className={styles.cardStatTrend}>{data.metodosPagoHoy.length} formas de cobro</div>
               </div>
 
-              {StockAlertWidget && (
-                <div style={{ gridColumn: "span 4 / span 4" }}>
-                  <Suspense fallback={<div>Cargando alertas...</div>}>
-                    <StockAlertWidget />
-                  </Suspense>
-                </div>
-              )}
-
-              <div style={{ gridColumn: "span 4 / span 4" }}>
-                <div className={`${styles.card} ${styles.cardTall}`}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <div className={styles.cardTitle}>
-                        Ingresos por método de pago (hoy)
-                      </div>
-                      <div className={styles.cardSub}>
-                        Ventas confirmadas del día por forma de cobro.
-                      </div>
-                    </div>
-                    <span className={`${styles.tag} ${styles.tagPositive}`}>
-                      Hoy
-                    </span>
-                  </div>
-                  {FinancialsWidget ? (
-                    <Suspense fallback={<div>Cargando detalle...</div>}>
-                      <FinancialsWidget />
-                    </Suspense>
-                  ) : (
-                    <div className={styles.paymentDonutWrap}>
-                      <div className={styles.paymentDonut}>
-                        <svg viewBox="0 0 42 42" role="img" aria-label="Ingresos por método de pago">
-                          <circle
-                            className={styles.paymentDonutBg}
-                            cx="21"
-                            cy="21"
-                            r="15.915"
-                          />
-                          {paymentSegmentsWithOffset.map((seg) => (
-                            <circle
-                              key={seg.label}
-                              cx="21"
-                              cy="21"
-                              r="15.915"
-                              fill="none"
-                              stroke={seg.color}
-                              strokeWidth="3"
-                              strokeDasharray={`${seg.pct} ${100 - seg.pct}`}
-                              strokeDashoffset={seg.offset}
-                            />
-                          ))}
-                        </svg>
-                      </div>
-                      <div className={styles.paymentDonutTotal}>
-                        ${totalIngresosHoy.toLocaleString("es-AR")}
-                      </div>
-                      <div className={styles.paymentLegend}>
-                        {paymentSegments.map((seg) => (
-                          <div key={seg.label} className={styles.paymentLegendItem}>
-                            <div className={styles.paymentLegendLabel}>
-                              <span
-                                className={styles.paymentLegendDot}
-                                style={{ backgroundColor: seg.color }}
-                              />
-                              <span>{seg.label}</span>
-                            </div>
-                            <span className={styles.paymentLegendPct}>
-                              ${seg.amount.toLocaleString("es-AR")} ·{" "}
-                              {Math.round(seg.pct)}%
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div className={styles.cardStat}>
+                <div className={styles.cardStatTitle}>Cartera con Deuda</div>
+                <div className={styles.cardStatValue}>{data.carteraClientes.clientesConDeuda}</div>
+                <div className={styles.cardStatTrend}>${data.carteraClientes.deudaTotal.toLocaleString("es-AR")} pendiente</div>
               </div>
 
-              <div style={{ gridColumn: "span 4 / span 4" }}>
-                <div className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <div className={styles.cardTitle}>Cartera de clientes</div>
-                      <div className={styles.cardSub}>
-                        Deudas activas y dinero en la calle.
-                      </div>
-                    </div>
-                  </div>
-                  {AgingWidget ? (
-                    <Suspense fallback={<div>Cargando morosidad...</div>}>
-                      <AgingWidget />
-                    </Suspense>
-                  ) : (
-                    <div className={styles.carteraStats}>
-                      <div className={styles.carteraStatMain}>
-                        <span className={styles.carteraStatValue}>
-                          {data.carteraClientes.clientesConDeuda}
-                        </span>
-                        <span className={styles.carteraStatLabel}>
-                          clientes con saldo pendiente
-                        </span>
-                      </div>
-                      <div className={styles.carteraStatRow}>
-                        <span className={styles.carteraStatLabel}>Clientes activos</span>
-                        <span className={styles.carteraStatValueSmall}>
-                          {data.carteraClientes.clientesActivos}
-                        </span>
-                      </div>
-                      <div className={styles.carteraStatRow}>
-                        <span className={styles.carteraStatLabel}>Deuda total</span>
-                        <span className={styles.carteraStatValueSmall}>
-                          ${data.carteraClientes.deudaTotal.toLocaleString("es-AR")}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <Link to="/clientes/nuevo" className={styles.carteraBtn}>
-                    <UserPlus size={18} weight="bold" />
-                    Gestionar nuevo cliente
-                  </Link>
-                  <p className={styles.cardSub} style={{ marginTop: 10 }}>
-                    Próximamente: alta y listado de clientes.
-                  </p>
+              <div className={styles.cardStat}>
+                <div className={styles.cardStatTitle}>Stock Crítico</div>
+                <div className={`${styles.cardStatValue} ${data.productosSinStock > 0 ? styles.textDanger : ""}`}>
+                  {data.productosSinStock + data.productosStockBajo}
                 </div>
-              </div>
-
-            </section>
-
-
-            {/* Segunda fila: ventas por día + top productos */}
-            <section className={styles.grid} aria-label="Detalles de ventas">
-              <div style={{ gridColumn: "span 7 / span 7" }}>
-                <div className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <div className={styles.cardTitle}>
-                        Ventas por día (últimos 7 días)
-                      </div>
-                      <div className={styles.cardSub}>
-                        Monto facturado por día, incluyendo todos los métodos de
-                        pago.
-                      </div>
-                    </div>
-                    <div className={styles.chartLegend}>
-                      <span>
-                        <span
-                          className={styles.legendDot}
-                          style={{ backgroundColor: "#6366f1" }}
-                        />{" "}
-                        Ventas
-                      </span>
-                    </div>
-                  </div>
-                  <div className={styles.chartLineWrap}>
-                    <svg
-                      viewBox="0 0 100 40"
-                      role="img"
-                      aria-label="Gráfico de líneas de ventas por día"
-                      style={{ width: "100%", height: "100%" }}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="areaGradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.28" />
-                          <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <polyline
-                        fill="url(#areaGradient)"
-                        stroke="none"
-                        points={`${data.ventasUltimos7Dias
-                          .map((d, idx) => {
-                            const x = (idx / 6) * 100;
-                            const y = 40 - (d.valor / maxSales) * 28 - 4;
-                            return `${x},${y}`;
-                          })
-                          .join(" ")} 100,40 0,40`}
-                      />
-                      <polyline
-                        fill="none"
-                        stroke="#6366f1"
-                        strokeWidth="1.5"
-                        points={data.ventasUltimos7Dias
-                          .map((d, idx) => {
-                            const x = (idx / 6) * 100;
-                            const y = 40 - (d.valor / maxSales) * 28 - 4;
-                            return `${x},${y}`;
-                          })
-                          .join(" ")}
-                      />
-                      {data.ventasUltimos7Dias.map((d, idx) => {
-                        const x = (idx / 6) * 100;
-                        const y = 40 - (d.valor / maxSales) * 28 - 4;
-                        const isActive =
-                          idx === (selectedDayIndex ?? hoveredDayIndex ?? -1);
-                        return (
-                          <circle
-                            key={d.dia + idx}
-                            cx={x}
-                            cy={y}
-                            r={isActive ? 2.1 : 1.4}
-                            fill={isActive ? "#6366f1" : "#ffffff"}
-                            stroke="#6366f1"
-                            strokeWidth="0.6"
-                            onMouseEnter={() => setHoveredDayIndex(idx)}
-                            onMouseLeave={() => setHoveredDayIndex(null)}
-                            onClick={() =>
-                              setSelectedDayIndex((prev) =>
-                                prev === idx ? null : idx,
-                              )
-                            }
-                            style={{ cursor: "pointer" }}
-                          />
-                        );
-                      })}
-                    </svg>
-                  </div>
-                  <div className={styles.cardSub}>
-                    {(() => {
-                      const idx =
-                        selectedDayIndex != null
-                          ? selectedDayIndex
-                          : hoveredDayIndex;
-                      if (idx != null) {
-                        return (
-                          <>
-                            {data.ventasUltimos7Dias[idx].dia}: $
-                            {data.ventasUltimos7Dias[idx].valor.toLocaleString("es-AR")}
-                          </>
-                        );
-                      }
-                      const total7Dias = data.ventasUltimos7Dias.reduce((acc, v) => acc + v.valor, 0);
-                      return (
-                        <>
-                          Promedio diario: $
-                          {Math.round(total7Dias / 7).toLocaleString(
-                            "es-AR",
-                          )}
-                          .
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ gridColumn: "span 5 / span 5" }}>
-                <div className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div>
-                      <div className={styles.cardTitle}>
-                        Productos que más se vendieron
-                      </div>
-                      <div className={styles.cardSub}>
-                        Ranking según unidades vendidas en la última semana.
-                      </div>
-                    </div>
-                  </div>
-                  <div className={styles.topProductsList}>
-                    {data.topProductosSemana.length > 0 ? (
-                      data.topProductosSemana.map((p, idx) => {
-                        const maxSold = data.topProductosSemana[0].cantidadVendida;
-                        const width = Math.round((p.cantidadVendida / maxSold) * 100);
-                        return (
-                          <div key={p.nombre} className={styles.topProductRow}>
-                            <div className={styles.topProductMeta}>
-                              <span className={styles.topProductName}>
-                                {idx + 1}. {p.nombre}
-                              </span>
-                              <span className={styles.topProductSub}>
-                                {p.cantidadVendida} unidades · $
-                                {p.totalMonto.toLocaleString("es-AR")}
-                              </span>
-                            </div>
-                            <div className={styles.topProductBarOuter}>
-                              <div
-                                className={styles.topProductBarInner}
-                                style={{ width: `${width}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className={styles.cardSub}>No hay ventas registradas en los últimos 7 días.</p>
-                    )}
-                  </div>
-                </div>
+                <div className={styles.cardStatTrend}>{data.productosSinStock} agotados</div>
               </div>
             </section>
 
-            {/* Call to action hacia catálogo */}
-            <section>
+            {/* 2. Alertas Críticas (Ancho completo) */}
+            {StockAlertWidget && (
+              <section className={styles.sectionFull}>
+                <Suspense fallback={<div>Cargando alertas...</div>}>
+                  <StockAlertWidget />
+                </Suspense>
+              </section>
+            )}
+
+            {/* 3. Gráfico de Ventas (Ancho completo para mejor detalle) */}
+            <section className={styles.sectionFull}>
               <div className={styles.card}>
                 <div className={styles.cardHeader}>
                   <div>
-                    <div className={styles.cardTitle}>
-                      ¿Querés cargar nuevos productos?
-                    </div>
-                    <div className={styles.cardSub}>
-                      Andá al catálogo para crear productos con su matriz de
-                      talles y colores.
-                    </div>
+                    <div className={styles.cardTitle}>Ventas por Día (Últimos 7 días)</div>
+                    <div className={styles.cardSub}>Tendencia de facturación semanal.</div>
                   </div>
-                  <Link to="/catalogo/nuevo" className={styles.tag}>
-                    <Storefront size={14} />
-                    Ir al catálogo
-                  </Link>
+                </div>
+                <div className={styles.chartLineWrapExtended}>
+                  <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
+                    <defs>
+                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <polyline
+                      fill="url(#areaGradient)"
+                      points={`${data.ventasUltimos7Dias.map((d, idx) => {
+                        const x = (idx / 6) * 100;
+                        const y = 30 - (d.valor / maxSales) * 22 - 4;
+                        return `${x},${y}`;
+                      }).join(" ")} 100,30 0,30`}
+                    />
+                    <polyline
+                      fill="none"
+                      stroke="#4f46e5"
+                      strokeWidth="1"
+                      points={data.ventasUltimos7Dias.map((d, idx) => {
+                        const x = (idx / 6) * 100;
+                        const y = 30 - (d.valor / maxSales) * 22 - 4;
+                        return `${x},${y}`;
+                      }).join(" ")}
+                    />
+                    {data.ventasUltimos7Dias.map((d, idx) => {
+                      const x = (idx / 6) * 100;
+                      const y = 30 - (d.valor / maxSales) * 22 - 4;
+                      const isActive = idx === (selectedDayIndex ?? hoveredDayIndex ?? -1);
+                      return (
+                        <circle
+                          key={idx}
+                          cx={x} cy={y} r={isActive ? 1.5 : 0.8}
+                          fill={isActive ? "#4f46e5" : "white"}
+                          stroke="#4f46e5" strokeWidth="0.3"
+                          onMouseEnter={() => setHoveredDayIndex(idx)}
+                          onMouseLeave={() => setHoveredDayIndex(null)}
+                          onClick={() => setSelectedDayIndex(p => p === idx ? null : idx)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      );
+                    })}
+                  </svg>
+                </div>
+                <div className={styles.chartInfo}>
+                  {(() => {
+                    const idx = selectedDayIndex ?? hoveredDayIndex;
+                    if (idx != null) return <strong>{data.ventasUltimos7Dias[idx].dia}: ${data.ventasUltimos7Dias[idx].valor.toLocaleString("es-AR")}</strong>;
+                    return <span>Promedio diario: ${Math.round(data.ventasUltimos7Dias.reduce((a,b)=>a+b.valor,0)/7).toLocaleString("es-AR")}</span>;
+                  })()}
                 </div>
               </div>
             </section>
+
+            {/* 4. Trío de Reportes (3 columnas, evita el amontonamiento) */}
+            <section className={styles.gridTrio}>
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Distribución de Cobros</div>
+                </div>
+                {FinancialsWidget ? (
+                  <Suspense fallback={<div>Cargando...</div>}><FinancialsWidget /></Suspense>
+                ) : (
+                  <div className={styles.paymentDonutWrap}>
+                    <div className={styles.paymentDonutSmall}>
+                      <svg viewBox="0 0 42 42">
+                        <circle className={styles.paymentDonutBg} cx="21" cy="21" r="15.915" />
+                        {paymentSegmentsWithOffset.map((seg) => (
+                          <circle
+                            key={seg.label}
+                            cx="21" cy="21" r="15.915"
+                            fill="none" stroke={seg.color} strokeWidth="3"
+                            strokeDasharray={`${seg.pct} ${100 - seg.pct}`}
+                            strokeDashoffset={seg.offset}
+                          />
+                        ))}
+                      </svg>
+                    </div>
+                    <div className={styles.paymentLegendCompact}>
+                      {paymentSegments.slice(0, 3).map((seg) => (
+                        <div key={seg.label} className={styles.paymentLegendItem}>
+                          <span className={styles.paymentLegendDot} style={{ backgroundColor: seg.color }} />
+                          <span className={styles.truncate}>{seg.label}</span>
+                          <span className={styles.muted}>{Math.round(seg.pct)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Top de Ventas (Semana)</div>
+                </div>
+                <div className={styles.topProductsList}>
+                  {data.topProductosSemana.slice(0, 4).map((p, idx) => (
+                    <div key={idx} className={styles.topProductRowCompact}>
+                      <div className={styles.topProductInfo}>
+                        <span className={`${styles.topProductName} ${styles.truncate}`}>{p.nombre}</span>
+                        <span className={styles.topProductDetail}>{p.cantidadVendida} u.</span>
+                      </div>
+                      <div className={styles.topProductBarOuter}>
+                        <div className={styles.topProductBarInner} style={{ width: `${(p.cantidadVendida / data.topProductosSemana[0].cantidadVendida) * 100}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.card}>
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardTitle}>Cartera y Morosidad</div>
+                </div>
+                {AgingWidget ? (
+                  <Suspense fallback={<div>Cargando morosidad...</div>}><AgingWidget /></Suspense>
+                ) : (
+                  <div className={styles.carteraSummary}>
+                    <div className={styles.carteraStatRow}>
+                      <span>Clientes con deuda:</span>
+                      <strong>{data.carteraClientes.clientesConDeuda}</strong>
+                    </div>
+                    <div className={styles.carteraStatRow}>
+                      <span>Monto pendiente:</span>
+                      <strong className={styles.textWarning}>${data.carteraClientes.deudaTotal.toLocaleString("es-AR")}</strong>
+                    </div>
+                    <div className={styles.carteraStatRow}>
+                       <span>Clientes activos:</span>
+                       <span>{data.carteraClientes.clientesActivos}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* 3. Accesos Directos */}
+            <section className={styles.gridActions}>
+               <div className={styles.cardAction}>
+                  <div className={styles.cardActionIcon}><Storefront size={20} /></div>
+                  <div className={styles.cardActionText}>
+                    <h4>Gestión de Catálogo</h4>
+                    <p>Creá productos, talles y colores detallados.</p>
+                  </div>
+                  <Link to="/catalogo/nuevo" className={styles.btnAction}>Nuevo Producto</Link>
+               </div>
+               <div className={styles.cardAction}>
+                  <div className={styles.cardActionIcon}><UserPlus size={20} /></div>
+                  <div className={styles.cardActionText}>
+                    <h4>Administración CRM</h4>
+                    <p>Gestioná deudas y perfiles de clientes 360.</p>
+                  </div>
+                  <Link to="/clientes" className={styles.btnAction}>Ver Cartera</Link>
+               </div>
+            </section>
+
+
+
 
             {/* Módulos que podés adquirir (tarjetas tipo precios) */}
             <section className={styles.modulosSection} aria-label="Módulos disponibles">

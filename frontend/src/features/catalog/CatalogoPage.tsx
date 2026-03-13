@@ -25,6 +25,7 @@ import styles from "./CatalogoPage.module.css";
 import { ModalImpresionEtiquetas } from "./components/ModalImpresionEtiquetas";
 import { Button } from "../../components/ui/Button";
 import { useRubro } from "../../hooks/useRubro";
+import { Pagination } from "../../components/ui";
 
 const fmt = (n: number) =>
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
@@ -102,6 +103,10 @@ export function CatalogoPage() {
     const [etiquetasParaImprimir, setEtiquetasParaImprimir] = useState<any[] | null>(null);
     const { t, isIndumentaria } = useRubro();
 
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
+
     const cargarCatalogo = async () => {
         setLoading(true); setError(null);
         try {
@@ -141,6 +146,17 @@ export function CatalogoPage() {
         productos.filter(p => productoMatchFiltros(p, filtros)),
         [productos, filtros]
     );
+
+    // Reiniciar página al filtrar
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filtros]);
+
+    const totalPages = Math.ceil(productosFiltrados.length / itemsPerPage);
+    const productosPaginados = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return productosFiltrados.slice(start, start + itemsPerPage);
+    }, [productosFiltrados, currentPage, itemsPerPage]);
 
     const filtrosActivos = useMemo(() =>
         filtros.texto || filtros.temporada || filtros.tipo ||
@@ -403,7 +419,7 @@ export function CatalogoPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {productosFiltrados.map(p => (
+                                                {productosPaginados.map(p => (
                                                     <ProductoRow
                                                         key={p.id}
                                                         producto={p}
@@ -414,6 +430,15 @@ export function CatalogoPage() {
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    <Pagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                        itemsPerPage={itemsPerPage}
+                                        onItemsPerPageChange={setItemsPerPage}
+                                        totalItems={productosFiltrados.length}
+                                    />
                                 </>
                             )}
                         </>
