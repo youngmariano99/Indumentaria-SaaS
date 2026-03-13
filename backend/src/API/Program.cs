@@ -110,7 +110,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:3000"   // create-react-app fallback
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .WithExposedHeaders("X-Rubro-Id", "X-Rubro-Slug", "X-Rubro-Manifest");
     });
 });
 

@@ -12,7 +12,7 @@ public class IndumentariaSchemaRegistry : ISchemaRegistry
             DynamicGrid = "VariantesGrid",
             SmartDefaults = new Dictionary<string, object>
             {
-                { "tipoProducto", "Remeras" }
+                { "tipoProducto", "Ropa" }
             },
             Fields = new List<FormFieldDto>
             {

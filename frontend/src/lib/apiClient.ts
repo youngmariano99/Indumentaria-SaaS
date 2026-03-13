@@ -32,12 +32,25 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => {
         const rubroId = response.headers['x-rubro-id'];
-        const manifest = response.headers['x-rubro-manifest'];
+        const slug = response.headers['x-rubro-slug'];
+        const manifestBase64 = response.headers['x-rubro-manifest'];
 
-        if (rubroId && manifest) {
-            import('../store/rubroStore').then(({ useRubroStore }) => {
-                useRubroStore.getState().setRubro(rubroId, manifest);
-            });
+        if (rubroId && manifestBase64) {
+            try {
+                // Decodificar Base64 del manifiesto (UTF-8)
+                const binaryString = window.atob(manifestBase64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const manifestJson = new TextDecoder().decode(bytes);
+                
+                import('../store/rubroStore').then(({ useRubroStore }) => {
+                    useRubroStore.getState().setRubro(rubroId, slug || '', manifestJson);
+                });
+            } catch (e) {
+                console.error("Error decodificando X-Rubro-Manifest", e);
+            }
         }
         return response;
     },

@@ -24,9 +24,15 @@ public class DiccionarioRubroMiddleware
         {
             context.Response.Headers.Append("X-Rubro-Id", tenantResolver.RubroId.Value.ToString());
             
-            // Base64 encoding para evitar problemas con caracteres especiales en el header si fuera necesario,
-            // pero por simplicidad y tamaño enviamos el JSON directo si es corto.
-            context.Response.Headers.Append("X-Rubro-Manifest", tenantResolver.DiccionarioJson);
+            if (!string.IsNullOrEmpty(tenantResolver.RubroSlug))
+            {
+                context.Response.Headers.Append("X-Rubro-Slug", tenantResolver.RubroSlug);
+            }
+
+            // Codificamos en Base64 para evitar problemas con caracteres especiales (acentos) en los headers HTTP.
+            var jsonBytes = System.Text.Encoding.UTF8.GetBytes(tenantResolver.DiccionarioJson);
+            var base64Manifest = System.Convert.ToBase64String(jsonBytes);
+            context.Response.Headers.Append("X-Rubro-Manifest", base64Manifest);
         }
 
         await _next(context);

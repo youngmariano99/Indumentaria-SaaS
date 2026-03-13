@@ -42,6 +42,10 @@ export const TALLES_POR_TIPO: Record<string, string[]> = {
         "S", "M", "L", "XL", "XXL", "3XL",
         "38", "40", "42", "44", "46", "48", "50", "52", "54", "56", "58", "60",
     ],
+
+    Ferreteria: [
+        "Único",
+    ],
 };
 
 /** Nombre legible para mostrar en el selector del formulario */
@@ -52,6 +56,7 @@ export const NOMBRE_TIPO: Record<string, string> = {
     RopaInterior: "Ropa Interior",
     Deporte: "Deporte",
     RopaDeTrabajo: "Ropa de Trabajo",
+    Ferreteria: "Ferretería",
 };
 
 /** Lista ordenada de tipos para usar en el <select> */

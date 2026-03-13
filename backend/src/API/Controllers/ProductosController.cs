@@ -54,15 +54,15 @@ public class ProductosController : ControllerBase
     /// POST /api/productos/matrix
     /// </summary>
     [HttpPost("matrix")]
-    public async Task<IActionResult> CrearProductoConMatriz([FromBody] CrearProductoDto request)
+    public async Task<IActionResult> CrearProductoConMatriz([FromBody] CrearProductoDto dto)
     {
-        var errores = await _validadorProducto.ValidarAsync(request);
+        var errores = await _validadorProducto.ValidarAsync(dto);
         if (errores.Any())
         {
             return BadRequest(new { mensaje = "Errores de validación específicos del rubro", detalles = errores });
         }
 
-        var productId = await _mediator.Send(new CrearProductoConVariantesCommand { Payload = request });
+        var productId = await _mediator.Send(new CrearProductoConVariantesCommand { Payload = dto });
         return CreatedAtAction(nameof(GetProductoById), new { id = productId }, new { id = productId });
     }
 

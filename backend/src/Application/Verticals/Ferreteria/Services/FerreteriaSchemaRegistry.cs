@@ -12,7 +12,7 @@ public class FerreteriaSchemaRegistry : ISchemaRegistry
             DynamicGrid = "VariantesGrid", // Apuntará al VariantesGrid dummy que creamos
             SmartDefaults = new Dictionary<string, object>
             {
-                { "tipoProducto", "Tornillos" }
+                { "tipoProducto", "Ferreteria" }
             },
             Fields = new List<FormFieldDto>
             {

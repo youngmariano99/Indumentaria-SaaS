@@ -23,7 +23,7 @@ export function AjustesPage() {
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { isIndumentaria } = useRubro();
+    const { t, isIndumentaria } = useRubro();
     const [mainTab, setMainTab] = useState<"TALLES" | "DICCIONARIO">(isIndumentaria ? "TALLES" : "DICCIONARIO");
     const [activeTab, setActiveTab] = useState<string>(TIPOS_PRODUCTO[0]);
     const [inputTalle, setInputTalle] = useState("");
@@ -110,7 +110,7 @@ export function AjustesPage() {
                             className={`${styles.tab} ${mainTab === "TALLES" ? styles.tabActive : ""}`}
                             onClick={() => setMainTab("TALLES")}
                         >
-                            Talles de Indumentaria
+                            {t('ConfigurarVariantesBase', 'Variantes Base')}
                         </button>
                     )}
                     <button 
@@ -131,10 +131,9 @@ export function AjustesPage() {
                         <>
                             <div className={styles.panelHeader}>
                                 <div>
-                                    <h2 className={styles.panelTitle}>Talles predefinidos por tipo de producto</h2>
+                                    <h2 className={styles.panelTitle}>{t('VariantesPredefinidasTitulo', 'Variantes predefinidas por tipo')}</h2>
                                     <p className={styles.panelDesc}>
-                                        Estos talles se pre-cargan automáticamente en el formulario de carga de productos
-                                        al seleccionar el tipo. Podés agregar o quitar talles según los productos que vendés.
+                                        {t('VariantesPredefinidasDesc', 'Estas opciones se cargan automáticamente en el formulario al seleccionar el tipo.')}
                                     </p>
                                 </div>
                             </div>
@@ -165,7 +164,7 @@ export function AjustesPage() {
                                     <div className={styles.chipsEditor}>
                                         <div className={styles.chipsEditorHeader}>
                                             <span className={styles.chipsEditorTitle}>
-                                                Talles de&nbsp;<strong>{NOMBRE_TIPO[activeTab]}</strong>
+                                                {t('OpcionesDe', 'Opciones de')}&nbsp;<strong>{NOMBRE_TIPO[activeTab]}</strong>
                                             </span>
                                             <button
                                                 type="button"
@@ -198,7 +197,7 @@ export function AjustesPage() {
                                             <input
                                                 className={styles.addInput}
                                                 type="text"
-                                                placeholder="Nuevo talle (Enter para agregar)"
+                                                placeholder={t('NuevoValorPlaceholder', 'Nuevo valor (Enter para agregar)')}
                                                 value={inputTalle}
                                                 onChange={e => setInputTalle(e.target.value.toUpperCase())}
                                                 onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarTalle(); } }}
@@ -209,7 +208,7 @@ export function AjustesPage() {
                                         </div>
 
                                         <p className={styles.chipsHint}>
-                                            Estos talles se muestran como sugerencia en el formulario — el usuario siempre puede escribir talles personalizados adicionales.
+                                            {t('SugerenciasHint', 'Estas opciones se muestran como sugerencia — el usuario siempre puede escribir valores personalizados adicionales.')}
                                         </p>
                                     </div>
                                 </div>
@@ -251,11 +250,9 @@ export function AjustesPage() {
                     {mainTab === "DICCIONARIO" && (
                         <div style={{ padding: "1.5rem" }}>
                             <div style={{ marginBottom: "2rem" }}>
-                                <h2 className={styles.panelTitle}>Diccionario de Atributos Universales</h2>
+                                <h2 className={styles.panelTitle}>{t('DiccionarioAtributos', 'Diccionario de Atributos')}</h2>
                                 <p className={styles.panelDesc}>
-                                    Agregue las clasificaciones que utilizará para segmentar sus productos.
-                                    Esto reemplaza a los "Talles" si su negocio es de un rubro distinto a Indumentaria 
-                                    (por ejemplo: Ferretería, Pinturería).
+                                    {t('DiccionarioDesc', 'Agregue las clasificaciones que utilizará para segmentar sus productos. Esto reemplaza los términos de variantes base si su negocio es de un rubro técnico.')}
                                 </p>
                             </div>
 

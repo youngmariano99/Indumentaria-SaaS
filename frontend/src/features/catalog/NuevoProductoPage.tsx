@@ -133,6 +133,14 @@ export function NuevoProductoPage() {
 
         catalogApi.obtenerFormSchema().then(schema => {
             setFormSchema(schema);
+            // Si el schema trae Smart Defaults, aplicarlos (SOBREESCRIBEN los del hook local)
+            if (schema.smartDefaults && !isEditMode) {
+                if (schema.smartDefaults.tipoProducto) setTipoProducto(schema.smartDefaults.tipoProducto);
+                if (schema.smartDefaults.temporada) setTemporada(schema.smartDefaults.temporada);
+                if (schema.smartDefaults.metadata) {
+                    setMetadataValues(prev => ({ ...prev, ...schema.smartDefaults.metadata }));
+                }
+            }
         }).catch(() => { });
     }, []);
 

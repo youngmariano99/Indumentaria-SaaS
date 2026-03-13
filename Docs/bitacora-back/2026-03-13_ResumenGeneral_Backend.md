@@ -1,5 +1,5 @@
 # Resumen General del Sistema (Backend)
-**Rango de Fechas:** 24 de Febrero de 2026 — 10 de Marzo de 2026
+**Rango de Fechas:** 24 de Febrero de 2026 — 13 de Marzo de 2026
 **Propósito:** Proporcionar un panorama instantáneo del estado actual del sistema (API/C#/.NET 8 y PostgreSQL) a desarrolladores humanos e Inteligencias Artificiales integradas, delimitando módulos completados y su enfoque técnico.
 
 ---
@@ -13,12 +13,15 @@ El corazón de la aplicación utiliza **Clean Architecture**. Todos los comandos
 ## 🔐 2. Autenticación, Acceso y Features
 - **Subdominios Dinámicos:** Acceso segmentado por identificador de subdominio, permitiendo colisión de emails entre diferentes tenants sin conflictos.
 - **Seguridad JWT:** Emisión de tokens cifrados con `BCrypt` e inyección de Claims nativos para roles y configuración de rubro.
-- **Feature Toggles Jerárquicos (SaaS 2.0 - Sprint 3):** Resolvedor de funcionalidades con caché L1 que permite activar módulos por Usuario > Sucursal > Inquilino > Rubro.
-- **UI Mutante (SaaS 2.0 - Sprint 4):** El backend ahora provee `EsquemaMetadatosJson` durante el login, permitiendo que el frontend autoconfigure sus formularios.
+- **Multi-Rubro Nativo (Sprint 2 & 10):** Motor de localización dinámico (`DiccionarioRubroMiddleware`) que inyecta términos técnicos (ej: "Medida" vs "Talle") en los encabezados de respuesta.
+- **Robustez de Headers:** Implementación de codificación **Base64** para el transporte de diccionarios con caracteres especiales (UTF-8), garantizando estabilidad ante términos técnicos complejos.
+- **Feature Toggles Jerárquicos (Sprint 3):** Resolvedor de funcionalidades con caché L1 que permite activar módulos por Usuario > Sucursal > Inquilino > Rubro.
+- **UI Mutante (Sprint 4 & 8):** El backend provee `ISchemaRegistry` durante el flujo de trabajo, permitiendo que el frontend autoconfigure sus formularios y validaciones según la industria (Ferretería, Indumentaria, etc.).
 
 ## 🗃️ 3. Catálogo Inteligente y Carga Masiva
 - **Matriz de Stock:** Arquitectura de Producto Padre y Variantes Hijas (Talle/Color) con propiedades dinámicas JSON.
-- **Importación Batch (Sprint 4.3):** Soporte para carga masiva de hasta 500 productos por petición (`CrearProductosBatchCommand`), procesada bajo una única transacción ACID para garantizar integridad.
+- **Patrón Estrategia (Sprint 7):** Desacoplo total de la lógica de negocio mediante `ICreadorProductoStrategy` y `IValidadorProducto`, permitiendo que el Core sea agnóstico al rubro mientras las capas verticales definen el comportamiento específico.
+- **Importación Batch (Sprint 4.3):** Soporte para carga masiva de hasta 500 productos por petición, procesada bajo una única transacción ACID.
 - **Control de Calidad:** Validaciones mediante `FluentValidation` integradas en el pipeline de MediatR (HTTP 400 automático ante incoherencias).
 
 ## 🛒 4. Punto de Venta (POS) y Stock Automatizado

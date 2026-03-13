@@ -25,6 +25,7 @@ import { db } from "../../db/db";
 import { CameraScanner } from "../../components/CameraScanner";
 import { usePrinter } from "../../hooks/usePrinter";
 import { Bluetooth, Usb } from "@phosphor-icons/react";
+import { useRubro } from "../../hooks/useRubro";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
 type LineItem = {
@@ -91,6 +92,7 @@ export function PosPage() {
   const [carrito, setCarrito] = useState<LineItem[]>([]);
   const [ajusteGlobal, setAjusteGlobal] = useState("");
   const [montoRecibidoStr, setMontoRecibidoStr] = useState("");
+  const { t } = useRubro();
 
   const [loadingInitial, setLoadingInitial] = useState(true);
 
@@ -517,9 +519,9 @@ export function PosPage() {
     <div className={styles.posPage}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Punto de venta</h1>
+          <h1 className={styles.title}>{t('PuntoDeVenta', 'Punto de venta')}</h1>
           <p className={styles.subtitle}>
-            Agregá productos, asigná cliente si corresponde y cobrá.
+            {t('PosDesc', 'Agregá productos, asigná cliente si corresponde y cobrá.')}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -613,14 +615,14 @@ export function PosPage() {
                           <div className={styles.productTallesColores}>
                             {hayTalles && (
                               <>
-                                <span className={styles.productTallesColoresLabel}>Talles:</span>
+                                <span className={styles.productTallesColoresLabel}>{t('Talles', 'Talles')}:</span>
                                 <span className={styles.productTallesColoresVal}>{tallesUnicos.slice(0, 10).join(", ")}{tallesUnicos.length > 10 ? "…" : ""}</span>
                               </>
                             )}
                             {hayTalles && hayColores && <span className={styles.productTallesColoresSep}> · </span>}
                             {hayColores && (
                               <>
-                                <span className={styles.productTallesColoresLabel}>Colores:</span>
+                                <span className={styles.productTallesColoresLabel}>{t('Colores', 'Colores')}:</span>
                                 <span className={styles.productTallesColoresVal}>{coloresUnicos.slice(0, 8).join(", ")}{coloresUnicos.length > 8 ? "…" : ""}</span>
                               </>
                             )}

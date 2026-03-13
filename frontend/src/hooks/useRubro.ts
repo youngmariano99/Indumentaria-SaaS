@@ -36,7 +36,7 @@ export const useRubro = () => {
     }
     if (rubroSlug === 'ferreteria') {
       return {
-        tipoProducto: 'Herramienta',
+        tipoProducto: 'Ferreteria',
         metadata: {
           material: 'Acero'
         }

@@ -1,5 +1,5 @@
 # Resumen General del Sistema (Frontend)
-**Rango de Fechas:** 24 de Febrero de 2026 — 10 de Marzo de 2026
+**Rango de Fechas:** 24 de Febrero de 2026 — 13 de Marzo de 2026
 **Propósito:** Proporcionar un panorama instantáneo del estado actual de la interfaz de usuario (React/Vite) a desarrolladores y futuras inteligencias artificiales, delineando qué capacidades visuales e interactivas están ya operativas.
 
 ---
@@ -7,10 +7,10 @@
 ## 🎨 1. Base UI y Design System
 - **Arquitectura de Slices:** Componentes desacoplados en `frontend/src/features/` para escalabilidad.
 - **CSS Modules:** Estilización modular y aislada, utilizando una paleta de colores y tokens centralizados en `variables.css`.
-- **Iconografía:** Uso estandarizado de **Phosphor Icons**.
-- **Feature Toggles (Sprint 3):** Sistema de control de funcionalidades reactivo usando `featureStore` (Zustand) y el hook `useFeatures`.
-- **UI Mutante (Sprint 4):** Motor de renderizado dinámico `FieldFactory` que genera formularios basados en esquemas JSON recibidos del backend.
-- **UX Progresiva (Sprint 5):** Implementación de `Smart Defaults` y `Drawers` laterales para una carga de datos fluida y sin interrupciones.
+- **Aislamiento de Rubro (Sprint 10):** Implementación del hook `useRubro` y función `t()` para traducción dinámica de etiquetas (ej: de "Talles" a "Medidas") y **Visibilidad Condicional** (ej: ocultar "Temporada" en ferretería).
+- **Sincronización por Headers:** Interceptor de `apiClient` que decodifica metadatos en Base64 para actualizar el estado global del rubro sin peticiones adicionales.
+- **UI Mutante (Sprint 4 & 8):** Motor de renderizado dinámico `FieldFactory` que genera formularios basados en esquemas JSON recibidos del backend para cada industria.
+- **UX Progresiva (Sprint 5):** Implementación de `Smart Defaults` y `Drawers` laterales para una carga de datos fluida.
 
 ## 📱 2. PWA y Capacidades Nativas (Sprint 5)
 La aplicación ha trascendido el navegador para comportarse como una App Nativa:

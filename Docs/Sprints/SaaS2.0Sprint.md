@@ -78,5 +78,15 @@ Este plan se construye sobre los hitos alcanzados en la versión actual (ver Ref
     - Uso profundo de campos `JSONB` para Atributos dinámicos.
     - Índices GIN sobre atributos variables usando el Fluent API (`HasMethod("gin")`).
 
+### Sprint 10: Auditoría de Aislamiento y Refinamiento por Rubro (COMPLETADO)
+*Foco: Garantizar que cada rubro tenga su propia identidad visual y lógica, eliminando filtraciones de términos (ej: "Talles" en Ferretería).*
+- **Frontend:**
+    - **Auditoría de Modales y Grillas:** Reemplazado etiquetas estáticas por llamadas al `t()` (Diccionario dinámico) en Catálogo y POS.
+    - **Aislamiento Visual:** Ocultamiento dinámico de campos irrelevantes (ej: Temporada) según el rubro.
+- **Backend:**
+    - **Infraestructura de Headers:** Implementada codificación Base64 para el motor de localización dinámico, evitando fallos por caracteres especiales.
+    - **CORS & Seguridad:** Exposición de metadatos del rubro en los encabezados HTTP para sincronización automática con el Frontend.
+    - **Enriquecimiento de Diccionarios:** Poblado `DiccionarioJson` con términos técnicos profesionales para Ferretería.
+
 ---
-> **Regla de Oro:** Queda prohibido el uso de `if (rubro === 'X')` en todo el codebase. Toda variabilidad debe ser inyectada por el motor de metadatos.
+> **Regla de Oro:** Queda prohibido el uso de `if (rubro === 'X')` en todo el codebase. Toda variabilidad debe ser inyectada por el motor de metadatos o diccionarios dinámicos.

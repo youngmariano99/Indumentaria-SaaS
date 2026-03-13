@@ -235,14 +235,16 @@ export function CatalogoPage() {
                                     </select>
                                 </div>
 
-                                {/* Temporada */}
-                                <div className={styles.filtroField}>
-                                    <label className={styles.filtroLabel}>Temporada</label>
-                                    <select className={styles.filtroSelect} value={filtros.temporada} onChange={e => setFiltro("temporada", e.target.value)}>
-                                        <option value="">Todas</option>
-                                        {opcionesTemporada.map(t => <option key={t} value={t}>{t}</option>)}
-                                    </select>
-                                </div>
+                                {/* Temporada (Solo Indumentaria) */}
+                                {isIndumentaria && (
+                                    <div className={styles.filtroField}>
+                                        <label className={styles.filtroLabel}>{t('Temporada', 'Temporada')}</label>
+                                        <select className={styles.filtroSelect} value={filtros.temporada} onChange={e => setFiltro("temporada", e.target.value)}>
+                                            <option value="">Todas</option>
+                                            {opcionesTemporada.map(t => <option key={t} value={t}>{t}</option>)}
+                                        </select>
+                                    </div>
+                                )}
 
                                 {/* Precio mín/máx */}
                                 <div className={styles.filtroField}>
@@ -256,7 +258,7 @@ export function CatalogoPage() {
 
                                 {/* Talles chips */}
                                 <div className={styles.filtroField} style={{ gridColumn: "span 2" }}>
-                                    <label className={styles.filtroLabel}>Talles (incluye variantes con)</label>
+                                    <label className={styles.filtroLabel}>{t('Talles', 'Talles')} (incluye variantes con)</label>
                                     <div className={styles.chipInput}>
                                         {filtros.talles.map(t => (
                                             <span key={t} className={styles.filtroChip}>
@@ -277,7 +279,7 @@ export function CatalogoPage() {
 
                                 {/* Colores chips */}
                                 <div className={styles.filtroField} style={{ gridColumn: "span 2" }}>
-                                    <label className={styles.filtroLabel}>Colores (incluye variantes con)</label>
+                                    <label className={styles.filtroLabel}>{t('Colores', 'Colores')} (incluye variantes con)</label>
                                     <div className={styles.chipInput}>
                                         {filtros.colores.map(c => (
                                             <span key={c} className={`${styles.filtroChip} ${styles.filtroChipColor}`}>
@@ -390,12 +392,12 @@ export function CatalogoPage() {
                                             <thead>
                                                 <tr>
                                                     <th>{t('Producto')}</th>
-                                                    <th>{t('Tipo')}</th>
-                                                    <th>{t('Temporada')}</th>
+                                                    <th>{t('Tipo', 'Tipo')}</th>
+                                                    {isIndumentaria && <th>{t('Temporada', 'Temporada')}</th>}
                                                     <th style={{ textAlign: "right" }}>{t('PrecioBase', 'Precio base')}</th>
                                                     <th style={{ textAlign: "center" }}>{t('Variantes')}</th>
-                                                    <th>{t('Talles', 'Talles disponibles')}</th>
-                                                    <th>{t('Colores')}</th>
+                                                    <th>{t('Talle', 'Talle')}</th>
+                                                    <th>{t('Color', 'Color')}</th>
                                                     <th style={{ textAlign: "center" }}>{t('StockTotal', 'Stock total')}</th>
                                                     <th></th>
                                                 </tr>
@@ -442,6 +444,7 @@ export function CatalogoPage() {
 // Fila de la tabla
 // ──────────────────────────────────────────────────────────────────────────────
 function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoConVariantes; onClick: () => void; onDelete: () => void }) {
+    const { isIndumentaria } = useRubro();
     const tallesUnicos = [...new Set(p.variantes.map(v => v.talle))];
     const coloresUnicos = [...new Set(p.variantes.map(v => v.color))];
     const stockTotal = p.variantes.reduce((a, v) => a + (v.stockActual ?? 0), 0);
@@ -453,7 +456,7 @@ function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoCon
                 {p.descripcion && <div className={styles.cellDesc}>{p.descripcion}</div>}
             </td>
             <td><span className={styles.tipoBadge}>{NOMBRE_TIPO[p.tipoProducto] ?? p.tipoProducto}</span></td>
-            <td className={styles.cellMuted}>{p.temporada || <span style={{ color: "var(--color-gray-500)", fontStyle: "italic" }}>—</span>}</td>
+            {isIndumentaria && <td className={styles.cellMuted}>{p.temporada || <span style={{ color: "var(--color-gray-500)", fontStyle: "italic" }}>—</span>}</td>}
             <td style={{ textAlign: "right" }} className={styles.cellPrecio}>{fmt(p.precioBase)}</td>
             <td style={{ textAlign: "center" }}>
                 <span className={styles.countBadge}>{p.variantes.length}</span>
@@ -497,6 +500,7 @@ function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoCon
 // Modal de detalle
 // ──────────────────────────────────────────────────────────────────────────────
 function ProductoModal({ producto: p, onClose, onDelete, onPrint }: { producto: ProductoConVariantes; onClose: () => void; onDelete: () => void; onPrint: (etiquetas: any[]) => void }) {
+    const { t } = useRubro();
     const overlayRef = useRef<HTMLDivElement>(null);
     const [modalVariantesPage, setModalVariantesPage] = useState(1);
     const LIMIT_VARIANTES_MODAL = 5;
@@ -545,11 +549,11 @@ function ProductoModal({ producto: p, onClose, onDelete, onPrint }: { producto: 
                     </div>
                     <div className={styles.kpi}>
                         <span className={styles.kpiVal}>{tallesUnicos.length}</span>
-                        <span className={styles.kpiLabel}>Talles</span>
+                        <span className={styles.kpiLabel}>{t('Talles', 'Talles')}</span>
                     </div>
                     <div className={styles.kpi}>
                         <span className={styles.kpiVal}>{coloresUnicos.length}</span>
-                        <span className={styles.kpiLabel}>Colores</span>
+                        <span className={styles.kpiLabel}>{t('Colores', 'Colores')}</span>
                     </div>
                     <div className={styles.kpi}>
                         <span className={`${styles.kpiVal} ${stockTotal > 0 ? styles.stockOk : styles.stockEmpty}`}>{stockTotal}</span>
@@ -562,8 +566,8 @@ function ProductoModal({ producto: p, onClose, onDelete, onPrint }: { producto: 
                     <table className={styles.modalTable}>
                         <thead>
                             <tr>
-                                <th>Talle</th>
-                                <th>Color</th>
+                                <th>{t('Talle', 'Talle')}</th>
+                                <th>{t('Color', 'Color')}</th>
                                 <th>SKU</th>
                                 <th style={{ textAlign: "right" }}>Costo</th>
                                 <th style={{ textAlign: "right" }}>Precio esp.</th>
