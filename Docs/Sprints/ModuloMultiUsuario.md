@@ -15,19 +15,19 @@
 
 ---
 
-## 🟡 Etapa 2: Gestión de Colaboradores (PRÓXIMAMENTE)
+## 🟢 Etapa 2: Gestión de Colaboradores (COMPLETADO)
 *Foco: Interfaz para que el dueño invite y configure a su equipo.*
 
-- [ ] **API de Administración de Usuarios:**
-    - [ ] Endpoint para listar usuarios del mismo tenant.
-    - [ ] Endpoint para crear/editar usuarios (solo permitido para rol `Owner`).
-    - [ ] Lógica de validación: **"Límite de 1 colaborador gratis"**. Bloqueo de creación si se excede el límite del plan.
-- [ ] **Pantalla "Mi Equipo" (Frontend):**
-    - [ ] Lista de empleados con su rol y estado.
-    - [ ] Formulario de creación: Nombre, Email, Password inicial y selección de Rol.
-- [ ] **Panel de Permisos Granulares:**
-    - [ ] Selector de módulos habilitados (ej: "Puede ver Ventas", "No puede ver Informes", "Solo lectura en Catálogo").
-    - [ ] Integración con el `FeatureResolver` del backend para guardar estos permisos en el `FeaturesJson` del usuario.
+- [x] **API de Administración de Usuarios:**
+    - [x] Endpoint para listar usuarios del mismo tenant.
+    - [x] Endpoint para crear/editar usuarios (solo permitido para rol `Owner`).
+    - [x] Lógica de validación: **"Límite de 1 colaborador gratis"**. Bloqueo de creación si se excede el límite del plan.
+- [x] **Pantalla "Mi Equipo" (Frontend):**
+    - [x] Lista de empleados con su rol y estado.
+    - [x] Formulario de creación: Nombre, Email, Password inicial y selección de Rol.
+- [x] **Panel de Permisos Granulares:**
+    - [x] Selector de módulos habilitados (ej: "Puede ver Ventas", "No puede ver Informes", "Solo lectura en Catálogo").
+    - [x] Integración con el `FeatureResolver` del backend para guardar estos permisos en el `FeaturesJson` del usuario.
 
 ---
 

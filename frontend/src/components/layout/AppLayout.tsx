@@ -29,7 +29,8 @@ import styles from "./AppLayout.module.css";
  * El contenido de cada ruta se inyecta via <Outlet />.
  */
 export function AppLayout() {
-    const { logout } = useAuthStore();
+    const { logout, user } = useAuthStore();
+    const isOwner = user?.rol?.toString() === '2' || user?.rol === 'Owner' || user?.rol === 'owner';
     const { isInstallable, promptInstall } = usePWAInstall();
     const { isOnline, isSyncing, pendingCount, syncNow } = useSyncManager();
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -220,6 +221,21 @@ export function AppLayout() {
                         </span>
                         <span>Clientes y CRM</span>
                     </NavLink>
+
+                    {isOwner && (
+                        <NavLink
+                            to="/equipo"
+                            className={({ isActive }) =>
+                                `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                            }
+                            onClick={handleMobileNavClick}
+                        >
+                            <span className={styles.navItemIcon}>
+                                <Users size={20} weight="bold" />
+                            </span>
+                            <span>Mi Equipo</span>
+                        </NavLink>
+                    )}
 
                     <NavLink
                         to="/proveedores"
