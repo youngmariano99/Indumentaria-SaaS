@@ -79,6 +79,29 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         _bypassFilters = true;
     }
 
+    public override int SaveChanges()
+    {
+        SetTenantId();
+        return base.SaveChanges();
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SetTenantId();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void SetTenantId()
+    {
+        var tenantId = _tenantResolver.TenantId;
+        if (!tenantId.HasValue) return;
+
+        foreach (var entry in ChangeTracker.Entries<IMustHaveTenant>().Where(e => e.State == EntityState.Added))
+        {
+            entry.Entity.TenantId = tenantId.Value;
+        }
+    }
+
     public DbSet<Inquilino> Inquilinos => Set<Inquilino>();
     public DbSet<Rubro> Rubros => Set<Rubro>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
@@ -112,6 +135,14 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<TelemetriaUso> TelemetriasUso => Set<TelemetriaUso>();
     public DbSet<ArqueoCaja> ArqueosCaja => Set<ArqueoCaja>();
     public DbSet<ArqueoCajaDetalle> ArqueosCajaDetalle => Set<ArqueoCajaDetalle>();
+
+    // Módulo Proveedores y Cuentas por Pagar
+    public DbSet<Proveedor> Proveedores => Set<Proveedor>();
+    public DbSet<FacturaProveedor> FacturasProveedores => Set<FacturaProveedor>();
+    public DbSet<PagoProveedor> PagosProveedores => Set<PagoProveedor>();
+    public DbSet<DistribucionPagoFactura> DistribucionesPagosFacturas => Set<DistribucionPagoFactura>();
+    public DbSet<ChequeTercero> ChequesTerceros => Set<ChequeTercero>();
+    public DbSet<ProveedorProducto> ProveedoresProductos => Set<ProveedorProducto>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -217,6 +248,55 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.HasOne(i => i.VarianteProducto)
                 .WithMany()
                 .HasForeignKey(i => i.ProductVariantId);
+        });
+
+        // Configuración Módulo Proveedores
+        builder.Entity<FacturaProveedor>(entity =>
+        {
+            entity.Property(e => e.MetadatosRawJsonb).HasColumnType("jsonb");
+            entity.HasIndex(e => e.MetadatosRawJsonb).HasMethod("gin");
+            
+            entity.HasOne(e => e.Proveedor)
+                .WithMany(p => p.Facturas)
+                .HasForeignKey(e => e.ProveedorId);
+        });
+
+        builder.Entity<DistribucionPagoFactura>(entity =>
+        {
+            entity.HasOne(e => e.PagoProveedor)
+                .WithMany(p => p.DistribucionesFacturas)
+                .HasForeignKey(e => e.PagoProveedorId);
+
+            entity.HasOne(e => e.FacturaProveedor)
+                .WithMany(f => f.DistribucionesPago)
+                .HasForeignKey(e => e.FacturaProveedorId);
+        });
+
+        builder.Entity<ProveedorProducto>(entity =>
+        {
+            entity.HasOne(e => e.Proveedor)
+                .WithMany(p => p.ProductosSuministrados)
+                .HasForeignKey(e => e.ProveedorId);
+
+            entity.HasOne(e => e.Producto)
+                .WithMany()
+                .HasForeignKey(e => e.ProductoId);
+        });
+
+        builder.Entity<PagoProveedor>(entity =>
+        {
+            entity.HasOne(e => e.MetodoPago)
+                .WithMany()
+                .HasForeignKey(e => e.MetodoPagoId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ChequeTercero>(entity =>
+        {
+            entity.HasOne(e => e.PagoProveedor)
+                .WithMany(p => p.ChequesEntregados)
+                .HasForeignKey(e => e.PagoProveedorId)
+                .IsRequired(false);
         });
     }
 

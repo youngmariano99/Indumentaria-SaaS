@@ -1,5 +1,7 @@
-import type { KeyboardEvent } from "react";
+import { type KeyboardEvent } from "react";
 import { Palette, X, Rows, PlusCircle, CheckCircle, Plus, Trash, Tag } from "@phosphor-icons/react";
+import { useSmartDefaults } from "../../../shared/hooks/useSmartDefaults";
+import { Button } from "../../../shared/components/Button";
 import type { FilaVariante } from "../../../features/catalog/types";
 import type { FieldDefinition } from "../../../components/common";
 import styles from "../../../features/catalog/NuevoProductoPage.module.css";
@@ -51,19 +53,20 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
         editarFila, setModalFilaIdx, setBulkPrecio, setBulkCosto, setBulkStock,
         setBulkAtributoClave, setBulkAtributoValor, aplicarASeleccionadas, aplicarAtributoMasivo
     } = props;
+    const { translateLabel } = useSmartDefaults();
 
     return (
         <>
             <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
                 <h2 className={styles.cardTitle}>
                     <Palette size={20} weight="bold" />
-                    Generador de Variantes (Indumentaria: Talle × Color)
+                    Generador de Variantes ({translateLabel('variant', 'Talle')} × {translateLabel('variant_color', 'Color')})
                 </h2>
 
                 <div className={styles.grid2}>
                     {/* Chips de talles */}
                     <div className={styles.chipsSection}>
-                        <label className={styles.label}>Talles <span className={styles.required}>*</span></label>
+                        <label className={styles.label}>{translateLabel('variant', 'Talles')} <span className={styles.required}>*</span></label>
                         <div className={styles.chipsWrap} onClick={() => document.getElementById("inputTalle")?.focus()}>
                             {talles.map(t => (
                                 <span key={t} className={styles.chip}>
@@ -85,7 +88,7 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                                 onChange={e => setInputTalle(e.target.value.toUpperCase())}
                                 onKeyDown={onKeyTalle}
                                 onBlur={agregarTalle}
-                                placeholder={talles.length === 0 ? "S, M, L, XL…" : ""}
+                                placeholder={`Agregar ${translateLabel('variant', 'talle')}...`}
                                 disabled={loading}
                             />
                         </div>
@@ -94,7 +97,7 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
 
                     {/* Chips de colores */}
                     <div className={styles.chipsSection}>
-                        <label className={styles.label}>Colores <span className={styles.required}>*</span></label>
+                        <label className={styles.label}>{translateLabel('variant_color', 'Colores')} <span className={styles.required}>*</span></label>
                         <div className={styles.chipsWrap} onClick={() => document.getElementById("inputColor")?.focus()}>
                             {colores.map(c => (
                                 <span key={c} className={styles.chip} style={{ backgroundColor: "var(--color-success)" }}>
@@ -116,7 +119,7 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                                 onChange={e => setInputColor(e.target.value)}
                                 onKeyDown={onKeyColor}
                                 onBlur={agregarColor}
-                                placeholder={colores.length === 0 ? "Negro, Azul, Blanco…" : ""}
+                                placeholder={`Agregar ${translateLabel('variant_color', 'color')}...`}
                                 disabled={loading}
                             />
                         </div>
@@ -129,7 +132,7 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                 <div className={styles.matrixHeader}>
                     <h2 className={styles.cardTitle} style={{ margin: 0 }}>
                         <Rows size={20} weight="bold" />
-                        Matriz de Ropa
+                        Matriz de Variantes
                     </h2>
                     {filas.length > 0 && (
                         <span className={styles.matrixCount}>
@@ -147,13 +150,13 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                     <div className={styles.bulkBar}>
                         <div className={styles.bulkHeader}>
                             <span className={styles.bulkLabel}>Acción masiva ({seleccionadas.size} variantes seleccionadas)</span>
-                            <button
-                                type="button"
-                                className={styles.bulkCancelBtn}
+                            <Button 
+                                variant="ghost" 
+                                size="sm"
                                 onClick={() => setSeleccionadas(new Set())}
                             >
                                 Deseleccionar
-                            </button>
+                            </Button>
                         </div>
                         <div className={styles.bulkSection}>
                             <div className={styles.bulkGroup}>
@@ -191,14 +194,15 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                                             onChange={e => setBulkStock(e.target.value)}
                                         />
                                     </div>
-                                    <button
-                                        type="button"
-                                        className={styles.bulkApplyBtn}
+                                    <Button
+                                        size="sm"
                                         onClick={aplicarASeleccionadas}
                                         disabled={!bulkPrecio && !bulkCosto && !bulkStock}
+                                        icon={<CheckCircle size={14} weight="bold" />}
+                                        educational
                                     >
-                                        <CheckCircle size={14} weight="bold" /> Aplicar
-                                    </button>
+                                        Aplicar Valores
+                                    </Button>
                                 </div>
                             </div>
                             <div className={styles.bulkDivider}></div>
@@ -225,15 +229,16 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                                             onChange={e => setBulkAtributoValor(e.target.value)}
                                         />
                                     </div>
-                                    <button
-                                        type="button"
-                                        className={styles.bulkApplyBtn}
-                                        style={{ backgroundColor: '#6366f1' }}
+                                    <Button
+                                        size="sm"
+                                        variant="secondary"
                                         onClick={aplicarAtributoMasivo}
                                         disabled={!bulkAtributoClave.trim()}
+                                        icon={<Plus size={14} weight="bold" />}
+                                        educational
                                     >
-                                        <Plus size={14} weight="bold" /> Asignar
-                                    </button>
+                                        Asignar Detalle
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -262,8 +267,8 @@ export default function VariantesGridIndumentaria(props: VariantesGridProps) {
                                         />
                                     </th>
                                     <th style={{ width: 32 }}></th>
-                                    <th>Talle</th>
-                                    <th>Color</th>
+                                    <th>{translateLabel('variant', 'Talle')}</th>
+                                    <th>{translateLabel('variant_color', 'Color')}</th>
                                     <th>SKU (opcional)</th>
                                     <th>Costo $</th>
                                     <th>Precio especial $</th>

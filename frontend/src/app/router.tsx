@@ -19,6 +19,9 @@ import { ReportesPage } from "../features/reports/ReportesPage";
 import { ArqueoPage } from "../features/arqueo/ArqueoPage";
 import { ShareTargetPage } from "../features/catalog/ShareTargetPage";
 import { useAuthStore } from "../features/auth/store/authStore";
+import { ProveedoresPage } from "../features/providers/ProveedoresPage";
+import { CargaFacturaPage } from "../features/providers/CargaFacturaPage";
+import { KanbanAPPage } from "../features/providers/KanbanAPPage";
 
 import { AdminLayout } from "../components/layout/AdminLayout";
 import { TenantsDirectoryPage } from "../features/admin/TenantsDirectoryPage";
@@ -69,6 +72,9 @@ export const router = createBrowserRouter([
       { path: "/devoluciones", element: <DevolucionesPage /> },
       { path: "/shared-product", element: <ShareTargetPage /> },
       { path: "/arqueo", element: <ArqueoPage /> },
+      { path: "/proveedores", element: <ProveedoresPage /> },
+      { path: "/proveedores/carga-factura", element: <CargaFacturaPage /> },
+      { path: "/proveedores/kanban", element: <KanbanAPPage /> },
       {
         path: "/modulos",
         element: (

@@ -33,6 +33,9 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IStringLocalizer, RubroLocalizer>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IFeatureResolver, FeatureResolver>();
+builder.Services.AddScoped<Application.Common.Interfaces.IReconocimientoFacturaService, Infrastructure.Services.ReconocimientoFacturaDummyService>();
+builder.Services.AddScoped<Application.Common.Interfaces.IImportadorPreciosService, Infrastructure.Services.ImportadorMasivoPreciosService>();
+builder.Services.AddHostedService<Infrastructure.Workers.PuntoReordenWorker>();
 
 // 1.1 Reglas Verticales y Diccionarios
 builder.Services.AddScoped<IVerticalRules, IndumentariaRules>();

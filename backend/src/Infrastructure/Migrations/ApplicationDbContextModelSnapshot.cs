@@ -219,6 +219,55 @@ namespace Infrastructure.Migrations
                     b.ToTable("CertificadosDigitales");
                 });
 
+            modelBuilder.Entity("Core.Entities.ChequeTercero", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Banco")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Emisor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Estado")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaCobro")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaEmision")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Importe")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NumeroCheque")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("PagoProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PagoProveedorId");
+
+                    b.ToTable("ChequesTerceros");
+                });
+
             modelBuilder.Entity("Core.Entities.Cliente", b =>
                 {
                     b.Property<Guid>("Id")
@@ -351,6 +400,33 @@ namespace Infrastructure.Migrations
                     b.ToTable("Comprobantes");
                 });
 
+            modelBuilder.Entity("Core.Entities.DistribucionPagoFactura", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FacturaProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("MontoAsignado")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("PagoProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FacturaProveedorId");
+
+                    b.HasIndex("PagoProveedorId");
+
+                    b.ToTable("DistribucionesPagosFacturas");
+                });
+
             modelBuilder.Entity("Core.Entities.EstadoDispositivoPwa", b =>
                 {
                     b.Property<Guid>("Id")
@@ -381,6 +457,63 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("EstadosDispositivosPwa");
+                });
+
+            modelBuilder.Entity("Core.Entities.FacturaProveedor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DocumentoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EstadoProcesamiento")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaEmision")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaVencimiento")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MetadatosRawJsonb")
+                        .HasColumnType("jsonb");
+
+                    b.Property<decimal>("MontoTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("NumeroFactura")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Origen")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("SaldoPendiente")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetadatosRawJsonb");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("MetadatosRawJsonb"), "gin");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("FacturasProveedores");
                 });
 
             modelBuilder.Entity("Core.Entities.Inquilino", b =>
@@ -668,6 +801,45 @@ namespace Infrastructure.Migrations
                     b.ToTable("MovimientosSaldosClientes");
                 });
 
+            modelBuilder.Entity("Core.Entities.PagoProveedor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaPago")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MetodoPagoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("MontoTotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Notas")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetodoPagoId");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("PagosProveedores");
+                });
+
             modelBuilder.Entity("Core.Entities.Producto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -735,6 +907,93 @@ namespace Infrastructure.Migrations
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("MetadatosJson"), "gin");
 
                     b.ToTable("Productos");
+                });
+
+            modelBuilder.Entity("Core.Entities.Proveedor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CondicionIva")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Cuit")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("NombreFantasia")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("PorcentajeRecargo")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("RazonSocial")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Saldo")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Proveedores");
+                });
+
+            modelBuilder.Entity("Core.Entities.ProveedorProducto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Costo")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("LeadTimeDays")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProveedorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("VendorSku")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ProveedorId");
+
+                    b.ToTable("ProveedoresProductos");
                 });
 
             modelBuilder.Entity("Core.Entities.Rubro", b =>
@@ -1089,6 +1348,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("Core.Entities.ChequeTercero", b =>
+                {
+                    b.HasOne("Core.Entities.PagoProveedor", "PagoProveedor")
+                        .WithMany("ChequesEntregados")
+                        .HasForeignKey("PagoProveedorId");
+
+                    b.Navigation("PagoProveedor");
+                });
+
             modelBuilder.Entity("Core.Entities.ClientePrendaEnCurso", b =>
                 {
                     b.HasOne("Core.Entities.Cliente", "Cliente")
@@ -1104,6 +1372,36 @@ namespace Infrastructure.Migrations
                     b.Navigation("Cliente");
 
                     b.Navigation("VarianteProducto");
+                });
+
+            modelBuilder.Entity("Core.Entities.DistribucionPagoFactura", b =>
+                {
+                    b.HasOne("Core.Entities.FacturaProveedor", "FacturaProveedor")
+                        .WithMany("DistribucionesPago")
+                        .HasForeignKey("FacturaProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.PagoProveedor", "PagoProveedor")
+                        .WithMany("DistribucionesFacturas")
+                        .HasForeignKey("PagoProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FacturaProveedor");
+
+                    b.Navigation("PagoProveedor");
+                });
+
+            modelBuilder.Entity("Core.Entities.FacturaProveedor", b =>
+                {
+                    b.HasOne("Core.Entities.Proveedor", "Proveedor")
+                        .WithMany("Facturas")
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Proveedor");
                 });
 
             modelBuilder.Entity("Core.Entities.Inquilino", b =>
@@ -1171,6 +1469,24 @@ namespace Infrastructure.Migrations
                     b.Navigation("VentaAsociada");
                 });
 
+            modelBuilder.Entity("Core.Entities.PagoProveedor", b =>
+                {
+                    b.HasOne("Core.Entities.MetodoPago", "MetodoPago")
+                        .WithMany()
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Core.Entities.Proveedor", "Proveedor")
+                        .WithMany()
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MetodoPago");
+
+                    b.Navigation("Proveedor");
+                });
+
             modelBuilder.Entity("Core.Entities.Producto", b =>
                 {
                     b.HasOne("Core.Entities.Categoria", "Categoria")
@@ -1180,6 +1496,25 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Categoria");
+                });
+
+            modelBuilder.Entity("Core.Entities.ProveedorProducto", b =>
+                {
+                    b.HasOne("Core.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.Proveedor", "Proveedor")
+                        .WithMany("ProductosSuministrados")
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Producto");
+
+                    b.Navigation("Proveedor");
                 });
 
             modelBuilder.Entity("Core.Entities.VarianteProducto", b =>
@@ -1258,6 +1593,25 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Core.Entities.Comprobante", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Core.Entities.FacturaProveedor", b =>
+                {
+                    b.Navigation("DistribucionesPago");
+                });
+
+            modelBuilder.Entity("Core.Entities.PagoProveedor", b =>
+                {
+                    b.Navigation("ChequesEntregados");
+
+                    b.Navigation("DistribucionesFacturas");
+                });
+
+            modelBuilder.Entity("Core.Entities.Proveedor", b =>
+                {
+                    b.Navigation("Facturas");
+
+                    b.Navigation("ProductosSuministrados");
                 });
 
             modelBuilder.Entity("Core.Entities.Venta", b =>

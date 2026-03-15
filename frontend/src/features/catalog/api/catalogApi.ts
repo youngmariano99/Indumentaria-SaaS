@@ -80,5 +80,35 @@ export const catalogApi = {
         const response = await apiClient.get<string>(`/categorias/${categoriaId}/esquema`);
         // El servidor devuelve un string JSON (jsonb stringificado en el handler)
         return JSON.parse(response.data || "[]");
+    },
+    
+    /**
+     * Búsqueda rápida para autocompletado.
+     * Endpoint: GET /api/productos/autocomplete?search=...
+     */
+    autocompleteProducts: async (search: string): Promise<any[]> => {
+        const response = await apiClient.get<any[]>('/productos/autocomplete', {
+            params: { search }
+        });
+        return response.data;
+    },
+
+    getLowStock: async (threshold = 5): Promise<any[]> => {
+        const response = await apiClient.get<any[]>('/productos/assisted/low-stock', {
+            params: { threshold }
+        });
+        return response.data;
+    },
+
+    getNoStock: async (): Promise<any[]> => {
+        const response = await apiClient.get<any[]>('/productos/assisted/no-stock');
+        return response.data;
+    },
+
+    getTopSales: async (top = 3): Promise<any[]> => {
+        const response = await apiClient.get<any[]>('/productos/assisted/top-sales', {
+            params: { top }
+        });
+        return response.data;
     }
 };

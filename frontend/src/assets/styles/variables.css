@@ -67,4 +67,11 @@
   /* Transiciones */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
+
+  /* Zero-Training & UX Educativa Tokens */
+  --touch-target: 44px;
+  --touch-spacing: 4px;
+  --font-size-educational: 1.05rem; /* ~17px para legibilidad extrema */
+  --color-clues: var(--color-primary); /* Color para pistas educativas */
+  --bg-educational: #fdfcf7; /* Fondo sutil para zonas de aprendizaje */
 }

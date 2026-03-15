@@ -1,15 +1,12 @@
 import { useState, useEffect, type KeyboardEvent, Suspense } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
     ArrowLeft,
-    Package,
     PlusCircle,
-    CheckCircle,
-    WarningCircle,
-    X,
     Tag,
     Trash,
     Plus,
+    Package,
 } from "@phosphor-icons/react";
 import { catalogApi } from "./api/catalogApi";
 import { categoriasApi } from "./api/categoriasApi";
@@ -22,17 +19,20 @@ import { useRubroStore } from "../../store/rubroStore";
 import { FieldFactory, Drawer } from "../../components/common";
 import type { FieldDefinition } from "../../components/common";
 import { useRubro } from "../../hooks/useRubro";
+import { useFeedbackStore } from "../../shared/hooks/useFeedback";
+import { Button } from "../../shared/components/Button";
+import { Disclosure } from "../../shared/components/Disclosure";
+import { useSmartDefaults } from "../../shared/hooks/useSmartDefaults";
 
-
-
-import { useParams } from "react-router-dom";
 
 export function NuevoProductoPage() {
     const navigate = useNavigate();
     const { id } = useParams();
     const isEditMode = !!id;
-    
+
     const { getSmartDefaults, resolveComponent } = useRubro();
+    const { addToast } = useFeedbackStore();
+    const { translateLabel } = useSmartDefaults();
     // Resolución dinámica de componente vertical
     const VariantesGridDynamic = resolveComponent('VariantesGrid');
 
@@ -104,10 +104,7 @@ export function NuevoProductoPage() {
     const [newCatDesc, setNewCatDesc] = useState("");
     const [creatingCategory, setCreatingCategory] = useState(false);
 
-    // ── Estado UI ──────────────────────────────────────────────────────────────
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
 
     // ── Talles y atributos configurados por el tenant ─────────────────────────
     const [tallesConfig, setTallesConfig] = useState<Record<string, string[]>>(TALLES_POR_TIPO);
@@ -237,7 +234,7 @@ export function NuevoProductoPage() {
                 } catch { }
             }
         }).catch(() => {
-            setError("No se pudo cargar el producto para editar.");
+            addToast({ message: "No se pudo cargar el producto para editar.", type: 'error' });
         }).finally(() => setLoading(false));
     }, [isEditMode, id]);
 
@@ -436,13 +433,11 @@ export function NuevoProductoPage() {
     // ── Submit ─────────────────────────────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError(null);
-        setSuccess(null);
 
-        if (!nombre.trim()) return setError("El nombre del producto es obligatorio.");
-        if (!categoriaId) return setError("Debe seleccionar una categoría.");
-        if (!precioBase || Number(precioBase) <= 0) return setError("El precio base debe ser mayor a $0.");
-        if (filas.length === 0) return setError("Agregá al menos un talle y un color para generar las variantes.");
+        if (!nombre.trim()) return addToast({ message: "El nombre del producto es obligatorio.", type: 'warning' });
+        if (!categoriaId) return addToast({ message: "Debe seleccionar una categoría.", type: 'warning' });
+        if (!precioBase || Number(precioBase) <= 0) return addToast({ message: "El precio base debe ser mayor a $0.", type: 'warning' });
+        if (filas.length === 0) return addToast({ message: "Agregá variantes para continuar.", type: 'warning' });
 
         setLoading(true);
         try {
@@ -461,18 +456,18 @@ export function NuevoProductoPage() {
                     tipoProducto,
                     metadatosJson: JSON.stringify(metadataValues),
                     variantes: filas.map(f => ({
-                        id: f.id, 
+                        id: f.id,
                         precioCosto: f.precioCosto ? Number(f.precioCosto) : 0,
                         precioOverride: f.precioOverride ? Number(f.precioOverride) : undefined,
                         stockInicial: f.stockInicial ? Number(f.stockInicial) : 0,
                         atributos: atributosMap,
                     })).filter(f => f.id)
                 });
-                setSuccess(`Producto actulizado exitosamente.`);
+                addToast({ message: "Producto actualizado exitosamente.", type: 'success' });
                 setTimeout(() => navigate("/catalogo"), 1500);
             } else {
                 // MODO CREACIÓN
-                const resp = await catalogApi.crearProductoConVariantes({
+                await catalogApi.crearProductoConVariantes({
                     nombre: nombre.trim(),
                     descripcion: descripcion.trim(),
                     precioBase: Number(precioBase),
@@ -494,17 +489,14 @@ export function NuevoProductoPage() {
                         };
                     }),
                 });
-                setSuccess(`¡Producto creado! ID: ${resp.id} — ${filas.length} variantes guardadas.`);
-                setNombre(""); setDescripcion(""); setPrecioBase(""); setTemporada("");
-                setMetadataValues({});
-                setTalles([]); setColores([]); setFilas([]); setAtributos([]);
+                addToast({ message: "¡Producto guardado exitosamente!", type: 'success' });
+                setTimeout(() => navigate("/catalogo"), 1500);
             }
         } catch (err: unknown) {
-            const mensaje =
-                err && typeof err === "object" && "response" in err
-                    ? (err as { response?: { data?: { mensaje?: string } } }).response?.data?.mensaje
-                    : null;
-            setError(mensaje || "No se pudo crear el producto. Revisá la conexión con el servidor.");
+            const mensaje = err && typeof err === "object" && "response" in err
+                ? (err as { response?: { data?: { mensaje?: string } } }).response?.data?.mensaje
+                : null;
+            addToast({ message: mensaje || "Error al procesar el producto.", type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -522,9 +514,10 @@ export function NuevoProductoPage() {
                             {isEditMode ? "Actualizá precios y atributos del producto y sus variantes." : "Completá los datos base y generá la matriz de variantes en segundos."}
                         </p>
                     </div>
-                    <Link to="/catalogo" className={styles.backLink}>
-                        <ArrowLeft size={16} />
-                        Volver al catálogo
+                    <Link to="/catalogo">
+                        <Button variant="ghost" icon={<ArrowLeft size={16} />}>
+                            Volver al catálogo
+                        </Button>
                     </Link>
                 </div>
 
@@ -597,12 +590,12 @@ export function NuevoProductoPage() {
                                             }}
                                             value={
                                                 campo.name === 'nombre' ? nombre :
-                                                campo.name === 'descripcion' ? descripcion :
-                                                campo.name === 'precioBase' ? precioBase :
-                                                campo.name === 'ean13' ? ean13 :
-                                                campo.name === 'temporada' ? temporada :
-                                                campo.name === 'tipoProducto' ? tipoProducto :
-                                                metadataValues[campo.name]
+                                                    campo.name === 'descripcion' ? descripcion :
+                                                        campo.name === 'precioBase' ? precioBase :
+                                                            campo.name === 'ean13' ? ean13 :
+                                                                campo.name === 'temporada' ? temporada :
+                                                                    campo.name === 'tipoProducto' ? tipoProducto :
+                                                                        metadataValues[campo.name]
                                             }
                                             onChange={val => {
                                                 if (campo.name === 'nombre') setNombre(val);
@@ -626,47 +619,49 @@ export function NuevoProductoPage() {
                     {/* ── Metadatos Dinámicos (UI Mutante) ─────────────────────────────────── */}
                     {esquemaMetadatos.length > 0 && (
                         <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
-                            <h2 className={styles.cardTitle}>
-                                <Tag size={20} weight="bold" />
-                                Especificaciones del {useRubroStore.getState().translate('Producto', 'Producto')}
-                            </h2>
-
-                            <div className={styles.grid2}>
-                                {esquemaMetadatos.map(campo => (
-                                    <FieldFactory
-                                        key={campo.id}
-                                        definition={campo}
-                                        value={metadataValues[campo.id]}
-                                        onChange={(val) => handleMetadataChange(campo.id, val)}
-                                        disabled={loading}
-                                    />
-                                ))}
-                            </div>
+                            <Disclosure
+                                title={`Especificaciones del ${translateLabel('product_singular', 'Producto')}`}
+                                educationalHint="Cargá datos adicionales que ayudan a filtrar y clasificar tus productos."
+                                defaultOpen
+                            >
+                                <div className={styles.grid2} style={{ paddingTop: 'var(--space-4)' }}>
+                                    {esquemaMetadatos.map(campo => (
+                                        <FieldFactory
+                                            key={campo.id}
+                                            definition={campo}
+                                            value={metadataValues[campo.id]}
+                                            onChange={(val) => handleMetadataChange(campo.id, val)}
+                                            disabled={loading}
+                                        />
+                                    ))}
+                                </div>
+                            </Disclosure>
                         </div>
                     )}
 
                     {/* ── Atributos Requeridos por Categoría (Ferretería / Herencia) ── */}
                     {inheritedSchema.length > 0 && (
                         <div className={styles.card} style={{ marginTop: "var(--space-6)", borderLeft: "4px solid var(--color-primary)" }}>
-                            <h2 className={styles.cardTitle}>
-                                <CheckCircle size={20} weight="bold" color="var(--color-primary)" />
-                                Especificaciones Requeridas
-                                <span className={styles.chipHint} style={{ fontWeight: 400, marginLeft: 4 }}>(basado en la categoría seleccionada)</span>
-                            </h2>
-
-                            <div className={styles.grid2}>
-                                {inheritedSchema.map(campo => (
-                                    <FieldFactory
-                                        key={campo.id}
-                                        definition={campo}
-                                        value={metadataValues[campo.id]}
-                                        onChange={(val) => handleMetadataChange(campo.id, val)}
-                                        disabled={loading}
-                                    />
-                                ))}
-                            </div>
+                            <Disclosure
+                                title="Especificaciones Requeridas"
+                                educationalHint="Campos definidos por la categoría seleccionada."
+                                defaultOpen
+                            >
+                                <div className={styles.grid2} style={{ paddingTop: 'var(--space-4)' }}>
+                                    {inheritedSchema.map(campo => (
+                                        <FieldFactory
+                                            key={campo.id}
+                                            definition={campo}
+                                            value={metadataValues[campo.id]}
+                                            onChange={(val) => handleMetadataChange(campo.id, val)}
+                                            disabled={loading}
+                                        />
+                                    ))}
+                                </div>
+                            </Disclosure>
                         </div>
                     )}
+
 
                     {/* ── Generador de variantes Dinámico (Feature-Sliced Design) ── */}
                     <Suspense fallback={<div className={styles.card} style={{ marginTop: "var(--space-6)", textAlign: "center", padding: "2rem" }}>Cargando grilla del rubro...</div>}>
@@ -676,7 +671,7 @@ export function NuevoProductoPage() {
                             loading={loading} filas={filas} seleccionadas={seleccionadas}
                             bulkPrecio={bulkPrecio} bulkCosto={bulkCosto} bulkStock={bulkStock}
                             bulkAtributoClave={bulkAtributoClave} bulkAtributoValor={bulkAtributoValor}
-                            
+
                             setTalles={setTalles} setColores={setColores} setInputTalle={setInputTalle} setInputColor={setInputColor}
                             agregarTalle={agregarTalle} agregarColor={agregarColor}
                             onKeyTalle={onKeyTalle} onKeyColor={onKeyColor}
@@ -691,135 +686,87 @@ export function NuevoProductoPage() {
 
                     {/* ── Atributos adicionales ─────────────────────────────────────── */}
                     <div className={styles.card} style={{ marginTop: "var(--space-6)" }}>
-                        <h2 className={styles.cardTitle}>
-                            <Tag size={20} weight="bold" />
-                            Atributos adicionales
-                            <span className={styles.chipHint} style={{ fontWeight: 400, marginLeft: 4 }}>(opcional — se aplican a todas las variantes)</span>
-                        </h2>
-
-                        {/* Tabla de atributos existentes */}
-                        {atributos.length > 0 && (
-                            <div className={styles.atributosGrid}>
-                                {atributos.map((attr, idx) => (
-                                    <div key={idx} className={styles.atributoRow}>
-                                        <input
-                                            className={styles.atributoInput}
-                                            type="text"
-                                            placeholder="Atributo (ej: Uso)"
-                                            value={attr.clave}
-                                            onChange={e => editarAtributo(idx, "clave", e.target.value)}
-                                            disabled={loading}
-                                        />
-                                        <span className={styles.atributoSep}>:</span>
-                                        <input
-                                            className={styles.atributoInput}
-                                            type="text"
-                                            placeholder="Valor (ej: F11)"
-                                            value={attr.valor}
-                                            onChange={e => editarAtributo(idx, "valor", e.target.value)}
-                                            disabled={loading}
-                                        />
-                                        <button
-                                            type="button"
-                                            className={styles.deleteRowBtn}
-                                            onClick={() => quitarAtributo(idx)}
-                                            aria-label="Quitar atributo"
-                                        >
-                                            <X size={13} weight="bold" />
-                                        </button>
+                        <Disclosure
+                            title="Detalle técnico y atributos (Opcional)"
+                            educationalHint="Agregá información que se aplique a todas las variantes, como 'Material: Algodón' o 'Origen: Nacional'."
+                        >
+                            <div style={{ paddingTop: 'var(--space-4)' }}>
+                                {/* Tabla de atributos existentes */}
+                                {atributos.length > 0 && (
+                                    <div className={styles.atributosGrid}>
+                                        {atributos.map((attr, idx) => (
+                                            <div key={idx} className={styles.atributoRow}>
+                                                <input
+                                                    className={styles.input}
+                                                    type="text"
+                                                    placeholder="Atributo (ej: Material)"
+                                                    value={attr.clave}
+                                                    onChange={e => editarAtributo(idx, "clave", e.target.value)}
+                                                    disabled={loading}
+                                                    style={{ height: '40px', fontSize: '0.9rem' }}
+                                                />
+                                                <span className={styles.atributoSep}>:</span>
+                                                <input
+                                                    className={styles.input}
+                                                    type="text"
+                                                    placeholder="Valor (ej: Cuero)"
+                                                    value={attr.valor}
+                                                    onChange={e => editarAtributo(idx, "valor", e.target.value)}
+                                                    disabled={loading}
+                                                    style={{ height: '40px', fontSize: '0.9rem' }}
+                                                />
+                                                <Button size="sm" variant="ghost" onClick={() => quitarAtributo(idx)} icon={<Trash size={14} />} />
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                )}
 
-                        {/* Agregar nuevo atributo */}
-                        <div className={styles.atributoRow} style={{ marginTop: atributos.length > 0 ? "var(--space-2)" : 0 }}>
-                            <input
-                                className={styles.atributoInput}
-                                type="text"
-                                placeholder="Nuevo atributo (ej: Material)"
-                                value={inputAtributoClave}
-                                onChange={e => setInputAtributoClave(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarAtributo(); } }}
-                                disabled={loading}
-                            />
-                            <span className={styles.atributoSep}>:</span>
-                            <input
-                                className={styles.atributoInput}
-                                type="text"
-                                placeholder="Valor (ej: Cuero)"
-                                value={inputAtributoValor}
-                                onChange={e => setInputAtributoValor(e.target.value)}
-                                onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarAtributo(); } }}
-                                disabled={loading}
-                            />
-                            <button type="button" className={styles.addAtributoBtn} onClick={agregarAtributo}>
-                                <Plus size={14} weight="bold" /> Agregar
-                            </button>
-                        </div>
-                        <span className={styles.chipHint} style={{ marginTop: "var(--space-2)", display: "block" }}>
-                            Ej: Tipo de suelo: Sintético · Uso: F11 · Material: Cuero · Cierre: Cosido
-                        </span>
+                                {/* Agregar nuevo atributo */}
+                                <div className={styles.atributoRow} style={{ marginTop: "var(--space-4)", display: 'flex', gap: '8px' }}>
+                                    <input
+                                        className={styles.input}
+                                        type="text"
+                                        placeholder="Nueva clave..."
+                                        value={inputAtributoClave}
+                                        onChange={e => setInputAtributoClave(e.target.value)}
+                                        disabled={loading}
+                                        style={{ height: '40px', flex: 1 }}
+                                    />
+                                    <input
+                                        className={styles.input}
+                                        type="text"
+                                        placeholder="Valor..."
+                                        value={inputAtributoValor}
+                                        onChange={e => setInputAtributoValor(e.target.value)}
+                                        disabled={loading}
+                                        style={{ height: '40px', flex: 1 }}
+                                    />
+                                    <Button variant="secondary" size="sm" onClick={agregarAtributo} icon={<Plus size={16} />}>
+                                        Agregar
+                                    </Button>
+                                </div>
+                            </div>
+                        </Disclosure>
                     </div>
 
-                    {/* ── Feedback ─────────────────────────────────────────────────────── */}
-                    {error && (
-                        <div className={styles.errorAlert} style={{ marginTop: "var(--space-4)" }} role="alert">
-                            <WarningCircle size={16} style={{ marginRight: "var(--space-2)", verticalAlign: "middle" }} />
-                            {error}
-                        </div>
-                    )}
-                    {success && (
-                        <div className={styles.successAlert} style={{ marginTop: "var(--space-4)" }} role="status">
-                            <CheckCircle size={18} weight="bold" />
-                            {success}
-                        </div>
-                    )}
-
                     {/* ── Acciones ─────────────────────────────────────────────────────── */}
-                    <div className={styles.actions} style={{ marginTop: "var(--space-6)" }}>
-                        <button
-                            type="button"
-                            style={{
-                                background: "transparent",
-                                border: "1px solid var(--color-gray-600)",
-                                color: "var(--color-gray-300)",
-                                cursor: loading ? "not-allowed" : "pointer",
-                                padding: "10px 24px",
-                                borderRadius: "var(--radius-md)",
-                                fontWeight: 500,
-                                fontFamily: "var(--font-ui)",
-                                fontSize: "var(--text-base)",
-                                transition: "all var(--transition-fast)",
-                            }}
+                    <div className={styles.actions} style={{ marginTop: "var(--space-8)", display: 'flex', gap: 'var(--space-4)', justifyContent: 'flex-end' }}>
+                        <Button
+                            variant="secondary"
                             onClick={() => navigate("/catalogo")}
                             disabled={loading}
                         >
                             Cancelar
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
-                            disabled={loading || filas.length === 0}
-                            style={{
-                                background: "var(--color-primary)",
-                                border: "none",
-                                borderRadius: "var(--radius-md)",
-                                color: "white",
-                                cursor: loading || filas.length === 0 ? "not-allowed" : "pointer",
-                                fontFamily: "var(--font-ui)",
-                                fontSize: "var(--text-base)",
-                                fontWeight: 600,
-                                opacity: loading || filas.length === 0 ? 0.6 : 1,
-                                padding: "10px 28px",
-                                transition: "all var(--transition-fast)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                            }}
+                            loading={loading}
+                            disabled={filas.length === 0}
+                            icon={<PlusCircle size={20} weight="bold" />}
+                            educational
                         >
-                            <PlusCircle size={20} weight="bold" />
-                            {loading ? "Guardando…" : (isEditMode ? "Actualizar producto" : `Guardar producto ${filas.length > 0 ? `(${filas.length} variantes)` : ""}`)}
-                        </button>
+                            {isEditMode ? "Actualizar producto" : `Guardar producto (${filas.length} variantes)`}
+                        </Button>
                     </div>
 
                 </form>
@@ -833,15 +780,15 @@ export function NuevoProductoPage() {
                     <button
                         type="button"
                         onClick={() => setModalFilaIdx(null)}
-                        style={{ 
-                            width: '100%', 
-                            padding: '0.6rem', 
-                            backgroundColor: 'var(--color-primary)', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '6px', 
-                            fontWeight: 600, 
-                            cursor: 'pointer' 
+                        style={{
+                            width: '100%',
+                            padding: '0.6rem',
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            fontWeight: 600,
+                            cursor: 'pointer'
                         }}
                     >
                         Listo
@@ -963,14 +910,14 @@ export function NuevoProductoPage() {
                             }
                         }}
                         disabled={creatingCategory || !newCatName.trim()}
-                        style={{ 
-                            width: '100%', 
-                            padding: '0.75rem', 
-                            backgroundColor: 'var(--color-primary)', 
-                            color: 'white', 
-                            border: 'none', 
-                            borderRadius: '8px', 
-                            fontWeight: 600, 
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            backgroundColor: 'var(--color-primary)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontWeight: 600,
                             cursor: (creatingCategory || !newCatName.trim()) ? 'not-allowed' : 'pointer',
                             opacity: (creatingCategory || !newCatName.trim()) ? 0.6 : 1
                         }}

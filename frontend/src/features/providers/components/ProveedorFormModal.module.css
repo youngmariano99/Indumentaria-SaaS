@@ -1,0 +1,129 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    background: white;
+    width: 100%;
+    max-width: 550px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.header {
+    padding: var(--space-6);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.titleGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.titleGroup h2 {
+    font-size: var(--text-xl);
+    font-weight: 800;
+    color: var(--color-gray-900);
+    letter-spacing: -0.025em;
+}
+
+.btnClose {
+    background: var(--color-gray-50);
+    border: none;
+    color: var(--color-gray-400);
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btnClose:hover {
+    background: var(--color-error);
+    color: white;
+}
+
+.form {
+    padding: 0 var(--space-6) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field label {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    color: var(--color-gray-700);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.field input {
+    height: var(--touch-target);
+    padding: 0 var(--space-4);
+    border: 2px solid var(--color-gray-100);
+    border-radius: 12px;
+    font-size: var(--font-size-educational);
+    transition: var(--transition-normal);
+}
+
+.field input:focus {
+    border-color: var(--color-primary);
+    background: white;
+    outline: none;
+}
+
+.fieldHint {
+    font-size: var(--text-xs);
+    color: var(--color-gray-500);
+    margin: 4px 0 0;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+}
+
+.educationalSection {
+    background: var(--bg-educational);
+    border-radius: var(--radius-lg);
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-gray-100);
+}

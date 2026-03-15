@@ -12,7 +12,10 @@ import {
   Keyboard,
   Money,
   Circle,
-  Camera
+  Camera,
+  Bluetooth,
+  Usb,
+  ShoppingCart,
 } from "@phosphor-icons/react";
 import { posApi } from "./api/posApi";
 import type { MetodoPagoDto, ProductoLayerPosDto, VarianteLayerPosDto } from "./api/posApi";
@@ -24,8 +27,12 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../db/db";
 import { CameraScanner } from "../../components/CameraScanner";
 import { usePrinter } from "../../hooks/usePrinter";
-import { Bluetooth, Usb } from "@phosphor-icons/react";
 import { useRubro } from "../../hooks/useRubro";
+import { useFeedbackStore } from "../../shared/hooks/useFeedback";
+import { useSmartDefaults } from "../../shared/hooks/useSmartDefaults";
+import { Button } from "../../shared/components/Button";
+import { EmptyState } from "../../shared/components/EmptyState";
+import { Disclosure } from "../../shared/components/Disclosure";
 
 /** Ítem del carrito (en memoria; luego se sincronizará con backend/offline) */
 type LineItem = {
@@ -93,6 +100,8 @@ export function PosPage() {
   const [ajusteGlobal, setAjusteGlobal] = useState("");
   const [montoRecibidoStr, setMontoRecibidoStr] = useState("");
   const { t } = useRubro();
+  const { addToast } = useFeedbackStore();
+  const { translateLabel } = useSmartDefaults();
 
   const [loadingInitial, setLoadingInitial] = useState(true);
 
@@ -297,14 +306,20 @@ export function PosPage() {
   const agregarVarianteAlCarrito = (producto: ProductoLayerPosDto, variante: VarianteLayerPosDto) => {
     const stock = getStockActual(variante);
     if (stock <= 0) {
-      alert(`No hay stock disponible para ${producto.nombre} (${variante.sizeColor})`);
+      addToast({
+        message: `Sin stock disponible para ${producto.nombre}.`,
+        type: 'warning'
+      });
       return;
     }
 
     const existente = carrito.find((i) => i.varianteId === variante.varianteId);
     if (existente) {
       if (existente.cantidad >= stock) {
-        alert(`No podés agregar más de este producto. Stock disponible: ${stock}`);
+        addToast({
+          message: `Stock insuficiente (${stock} disponibles).`,
+          type: 'warning'
+        });
         return;
       }
       setCarrito((prev) =>
@@ -313,22 +328,26 @@ export function PosPage() {
         )
       );
     } else {
-      setCarrito((prev) => [
-        ...prev,
-        {
-          id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          productId: producto.id,
-          varianteId: variante.varianteId,
-          nombre: producto.nombre,
-          variante: variante.sizeColor,
-          precioUnitario: producto.precioBase,
-          cantidad: 1,
-          descuentoPct: 0,
-          recargoPct: 0,
-          posibleDevolucion: false,
-          esFraccionable: producto.esFraccionable
-        },
-      ]);
+      const nuevoItem = {
+        id: `line-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        productId: producto.id,
+        varianteId: variante.varianteId,
+        nombre: producto.nombre,
+        variante: variante.sizeColor,
+        precioUnitario: producto.precioBase,
+        cantidad: 1,
+        descuentoPct: 0,
+        recargoPct: 0,
+        posibleDevolucion: false,
+        esFraccionable: producto.esFraccionable
+      };
+      setCarrito((prev) => [...prev, nuevoItem]);
+
+      addToast({
+        message: `${producto.nombre} agregado al carrito.`,
+        type: 'info',
+        duration: 2000
+      });
     }
     setExpandedProductId(null);
   };
@@ -509,7 +528,7 @@ export function PosPage() {
       setTimeout(() => setCobroExitoso(null), 5000);
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || "Error al procesar la venta.");
+      addToast({ message: error.response?.data?.message || "Error al procesar la venta.", type: 'error' });
     } finally {
       setProcesandoCobro(false);
     }
@@ -525,20 +544,29 @@ export function PosPage() {
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          {!printStatus.connected ? (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button onClick={connectSerial} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Usb size={14} /> Link USB
-              </button>
-              <button onClick={connectBluetooth} style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                <Bluetooth size={14} /> BT
-              </button>
-            </div>
-          ) : (
-            <div style={{ fontSize: '0.75rem', color: '#065f46', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              🟢 {printStatus.interface} Ready
-            </div>
-          )}
+            <Disclosure 
+                title={printStatus.connected ? "🖨️ Impresora Lista" : "🖨️ Configurar Impresora"} 
+                defaultOpen={false}
+                educationalHint="Conectá una ticketera térmica (ESC/POS) vía USB o Bluetooth para auto-imprimir recibos."
+            >
+                <div style={{ padding: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    {!printStatus.connected ? (
+                        <>
+                            <Button variant="secondary" size="sm" onClick={connectSerial} icon={<Usb size={14} />}>
+                                Link USB
+                            </Button>
+                            <Button variant="secondary" size="sm" onClick={connectBluetooth} icon={<Bluetooth size={14} />}>
+                                Bluetooth (BT)
+                            </Button>
+                        </>
+                    ) : (
+                        <div style={{ fontSize: '0.85rem', color: 'var(--color-primary)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                           <CheckCircle size={18} weight="fill" /> Conectado vía {printStatus.interface}
+                           <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>Desconectar</Button>
+                        </div>
+                    )}
+                </div>
+            </Disclosure>
         </div>
       </header>
 
@@ -576,13 +604,14 @@ export function PosPage() {
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                <button
+                <Button 
+                    variant="outline"
+                    fullWidth
                     onClick={agregarItemVario}
-                    className={styles.secondaryActionBtn}
-                    style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                    icon={<Plus size={16} />}
                 >
-                    <Plus size={16} /> Ítem Vario (Mostrador)
-                </button>
+                    Ítem Vario (Mostrador)
+                </Button>
             </div>
 
             <div className={styles.productList}>
@@ -615,19 +644,19 @@ export function PosPage() {
                           <div className={styles.productTallesColores}>
                             {hayTalles && (
                               <>
-                                <span className={styles.productTallesColoresLabel}>{t('Talles', 'Talles')}:</span>
+                                <span className={styles.productTallesColoresLabel}>{translateLabel('variant', 'Talles')}:</span>
                                 <span className={styles.productTallesColoresVal}>{tallesUnicos.slice(0, 10).join(", ")}{tallesUnicos.length > 10 ? "…" : ""}</span>
                               </>
                             )}
                             {hayTalles && hayColores && <span className={styles.productTallesColoresSep}> · </span>}
                             {hayColores && (
                               <>
-                                <span className={styles.productTallesColoresLabel}>{t('Colores', 'Colores')}:</span>
+                                <span className={styles.productTallesColoresLabel}>{translateLabel('variant_color', 'Colores')}:</span>
                                 <span className={styles.productTallesColoresVal}>{coloresUnicos.slice(0, 8).join(", ")}{coloresUnicos.length > 8 ? "…" : ""}</span>
                               </>
                             )}
                             {!hayAlgo && p.variantes.length > 0 && (
-                              <span className={styles.productTallesColoresVal}>{p.variantes.length} variante{p.variantes.length !== 1 ? "s" : ""} (sin talle/color cargado)</span>
+                              <span className={styles.productTallesColoresVal}>{p.variantes.length} variante{p.variantes.length !== 1 ? "s" : ""}</span>
                             )}
                           </div>
                           <span className={styles.productPrice}>
@@ -755,7 +784,14 @@ export function PosPage() {
             {/* Ítems del carrito */}
             <div className={styles.cartItems}>
               {carrito.length === 0 ? (
-                <p className={styles.cartEmpty}>Agregá productos desde el catálogo.</p>
+                <div style={{ padding: 'var(--space-6) 0' }}>
+                    <EmptyState 
+                        illustration={<ShoppingCart size={48} weight="thin" />}
+                        title="Carrito vacío"
+                        description="Escanear o buscar productos para empezar la venta."
+                        educationalTip="Podés usar F2 para enfocar la búsqueda rápidamente."
+                    />
+                </div>
               ) : (
                 <ul className={styles.cartList}>
                   {carrito.map((line) => (

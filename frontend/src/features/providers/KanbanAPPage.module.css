@@ -1,0 +1,128 @@
+.container {
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    height: 100vh;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-size: var(--text-2xl);
+    font-weight: 800;
+}
+
+.subtitle {
+    font-size: var(--text-sm);
+    color: var(--color-gray-500);
+}
+
+.kanbanBoard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    flex: 1;
+    min-height: 0;
+}
+
+.column {
+    background: #f1f5f9;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+}
+
+.columnHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.columnHeader h3 {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    margin: 0;
+    flex: 1;
+}
+
+.badge {
+    background: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--color-gray-600);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    overflow-y: auto;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: var(--space-4);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    cursor: grab;
+    transition: transform 0.1s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.providerName {
+    font-weight: 700;
+    font-size: var(--text-sm);
+    color: var(--color-gray-900);
+}
+
+.amount {
+    font-weight: 800;
+    color: var(--color-primary);
+}
+
+.cardFooter {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.infoRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--color-gray-500);
+}
+
+.atrasoTag {
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}

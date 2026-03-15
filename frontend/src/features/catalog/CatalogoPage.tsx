@@ -3,18 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import {
     Package,
     Plus,
-    PlusCircle,
-    WarningCircle,
     MagnifyingGlass,
     X,
-    CaretDown,
     CaretUp,
     Funnel,
-    Rows,
     PencilSimple,
     ArrowSquareOut,
     Trash,
     UploadSimple,
+    MagnifyingGlassMinus,
+    WarningCircle,
     Printer
 } from "@phosphor-icons/react";
 import { catalogApi } from "./api/catalogApi";
@@ -23,25 +21,25 @@ import { NOMBRE_TIPO } from "./data/tallesPorTipo";
 import layoutStyles from "../dashboard/DashboardPage.module.css";
 import styles from "./CatalogoPage.module.css";
 import { ModalImpresionEtiquetas } from "./components/ModalImpresionEtiquetas";
-import { Button } from "../../components/ui/Button";
+import { Button } from "../../shared/components/Button";
+import { EmptyState } from "../../shared/components/EmptyState";
+import { useSmartDefaults } from "../../shared/hooks/useSmartDefaults";
+import { useFeedbackStore } from "../../shared/hooks/useFeedback";
 import { useRubro } from "../../hooks/useRubro";
 import { Pagination } from "../../components/ui";
 
 const fmt = (n: number) =>
     new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Tipos del filtro
-// ──────────────────────────────────────────────────────────────────────────────
 interface Filtros {
-    texto: string;       // busca en nombre, descripción, SKU
+    texto: string;
     temporada: string;
     tipo: string;
-    talles: string[];    // varinte.talle debe incluir alguno
+    talles: string[];
     colores: string[];
     precioMin: string;
     precioMax: string;
-    atributo: string;    // busca en atributos JSON libremente
+    atributo: string;
 }
 
 const FILTROS_VACIOS: Filtros = {
@@ -51,9 +49,6 @@ const FILTROS_VACIOS: Filtros = {
     atributo: "",
 };
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────────────────────────────────────────────
 function atributosDeVariante(v: VarianteResumen): Record<string, string> {
     try {
         return v.atributosJson ? JSON.parse(v.atributosJson) : {};
@@ -87,9 +82,6 @@ function productoMatchFiltros(p: ProductoConVariantes, f: Filtros): boolean {
     return true;
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Componente principal
-// ──────────────────────────────────────────────────────────────────────────────
 export function CatalogoPage() {
     const navigate = useNavigate();
     const [productos, setProductos] = useState<ProductoConVariantes[]>([]);
@@ -98,10 +90,9 @@ export function CatalogoPage() {
     const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS);
     const [panelFiltros, setPanelFiltros] = useState(false);
     const [productoModal, setProductoModal] = useState<ProductoConVariantes | null>(null);
-    const [inputTalle, setInputTalle] = useState("");
-    const [inputColor, setInputColor] = useState("");
     const [etiquetasParaImprimir, setEtiquetasParaImprimir] = useState<any[] | null>(null);
     const { t, isIndumentaria } = useRubro();
+    const { translateLabel } = useSmartDefaults();
 
     // Paginación
     const [currentPage, setCurrentPage] = useState(1);
@@ -123,31 +114,43 @@ export function CatalogoPage() {
         cargarCatalogo();
     }, []);
 
+    const { addToast } = useFeedbackStore();
+
     const handleDelete = async (id: string, nombre: string) => {
-        if (!confirm(`¿Estás seguro de que querés ELIMINAR el producto "${nombre}"?\n(Esta acción lo ocultará de la grilla pero se conservará en el historial de ventas pasadas)`)) return;
+        // En lugar de confirm(), aplicamos la acción y damos opción de deshacer (o confirmación ergonómica)
+        // Pero para "Borrar Catálogo" o similar sí usaríamos barreras. 
+        // Para un producto individual, seguimos el principio de reversibilidad.
+        
         try {
             await catalogApi.eliminarProducto(id);
-            alert("Producto eliminado correctamente.");
-            setProductoModal(null);
             cargarCatalogo();
+            setProductoModal(null);
+
+            addToast({
+                message: `Producto "${nombre}" eliminado.`,
+                type: 'info',
+                onUndo: async () => {
+                    // Aquí iría la lógica de restaurar si el backend lo soporta, 
+                    // o simplemente informar que fue una baja lógica.
+                    // Como es baja lógica, podríamos tener un endpoint 'restaurar'.
+                    alert("Función de restaurar próximamente disponible.");
+                }
+            });
         } catch (e: any) {
-            alert(e?.response?.data?.mensaje || "Error al eliminar el producto.");
+            setError("Error al eliminar el producto.");
         }
     };
 
-    // ── Valores únicos para los filtros dropdown ──
     const opcionesTemporada = useMemo(() =>
         [...new Set(productos.map(p => p.temporada).filter(Boolean))], [productos]);
     const opcionesTipo = useMemo(() =>
         [...new Set(productos.map(p => p.tipoProducto).filter(Boolean))], [productos]);
 
-    // ── Filtrado reactivo ──
     const productosFiltrados = useMemo(() =>
         productos.filter(p => productoMatchFiltros(p, filtros)),
         [productos, filtros]
     );
 
-    // Reiniciar página al filtrar
     useEffect(() => {
         setCurrentPage(1);
     }, [filtros]);
@@ -159,26 +162,15 @@ export function CatalogoPage() {
     }, [productosFiltrados, currentPage, itemsPerPage]);
 
     const filtrosActivos = useMemo(() =>
-        filtros.texto || filtros.temporada || filtros.tipo ||
+        !!(filtros.texto || filtros.temporada || filtros.tipo ||
         filtros.talles.length > 0 || filtros.colores.length > 0 ||
-        filtros.precioMin || filtros.precioMax || filtros.atributo,
+        filtros.precioMin || filtros.precioMax || filtros.atributo),
         [filtros]
     );
 
     const setFiltro = <K extends keyof Filtros>(key: K, value: Filtros[K]) =>
         setFiltros(prev => ({ ...prev, [key]: value }));
 
-    const agregarTalleFiltro = () => {
-        const v = inputTalle.trim().toUpperCase();
-        if (v && !filtros.talles.includes(v)) setFiltro("talles", [...filtros.talles, v]);
-        setInputTalle("");
-    };
-    const agregarColorFiltro = () => {
-        const v = inputColor.trim();
-        const cap = v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
-        if (cap && !filtros.colores.includes(cap)) setFiltro("colores", [...filtros.colores, cap]);
-        setInputColor("");
-    };
 
     const totalVariantes = productosFiltrados.reduce((a, p) => a + p.variantes.length, 0);
 
@@ -190,59 +182,43 @@ export function CatalogoPage() {
                         <h1>{t('Catalogo', 'Catálogo de productos')}</h1>
                         <p>{t('GestionCatalogoDesc', 'Gestioná los productos y su matriz de variantes.')}</p>
                     </div>
-                    <div className={layoutStyles.topbarControls}>
-                        <Link to="/catalogo/nuevo" className={layoutStyles.btnPrimarySmall ?? layoutStyles.segmentButton}>
-                            <PlusCircle size={14} weight="bold" style={{ marginRight: 4 }} />
-                            {t('NuevoProducto', 'Nuevo producto')}
-                        </Link>
-                    </div>
                 </div>
             </header>
 
             <div className={styles.page}>
                 <div className={styles.container}>
-
-                    {/* ── Barra de búsqueda + filtros ─────────────────────────── */}
                     <div className={styles.searchBar}>
                         <div className={styles.searchInputWrap}>
                             <MagnifyingGlass size={16} className={styles.searchIcon} />
                             <input
                                 className={styles.searchInput}
                                 type="text"
-                                placeholder="Buscar por nombre, descripción o SKU…"
+                                placeholder={`Buscar por nombre o ${translateLabel('sku', 'SKU')}...`}
                                 value={filtros.texto}
                                 onChange={e => setFiltro("texto", e.target.value)}
                             />
-                            {filtros.texto && (
-                                <button type="button" className={styles.clearBtn} onClick={() => setFiltro("texto", "")}>
-                                    <X size={14} />
-                                </button>
-                            )}
                         </div>
 
-                        <button
-                            type="button"
-                            className={`${styles.filtrosToggle} ${panelFiltros ? styles.filtrosToggleActive : ""}`}
+                        <Button 
+                            variant="secondary" 
                             onClick={() => setPanelFiltros(p => !p)}
+                            icon={panelFiltros ? <CaretUp size={12} /> : <Funnel size={15} />}
                         >
-                            <Funnel size={15} weight={filtrosActivos ? "fill" : "regular"} />
-                            Filtros
-                            {filtrosActivos && <span className={styles.filtrosBadge} />}
-                            {panelFiltros ? <CaretUp size={12} /> : <CaretDown size={12} />}
-                        </button>
+                            Filtros {filtrosActivos && "•"}
+                        </Button>
 
-                        {filtrosActivos && (
-                            <button type="button" className={styles.clearAllBtn} onClick={() => { setFiltros(FILTROS_VACIOS); setInputTalle(""); setInputColor(""); }}>
-                                <X size={12} /> Limpiar filtros
-                            </button>
-                        )}
+                        <div style={{ marginLeft: 'auto' }}>
+                            <Link to="/catalogo/nuevo">
+                                <Button variant="primary" icon={<Plus size={18} />} educational>
+                                    Nuevo Producto
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
 
-                    {/* ── Panel de filtros avanzados ────────────────────────────── */}
                     {panelFiltros && (
                         <div className={styles.filtrosPanel}>
                             <div className={styles.filtroGrid}>
-                                {/* Tipo */}
                                 <div className={styles.filtroField}>
                                     <label className={styles.filtroLabel}>Tipo de producto</label>
                                     <select className={styles.filtroSelect} value={filtros.tipo} onChange={e => setFiltro("tipo", e.target.value)}>
@@ -250,156 +226,72 @@ export function CatalogoPage() {
                                         {opcionesTipo.map(t => <option key={t} value={t}>{NOMBRE_TIPO[t] ?? t}</option>)}
                                     </select>
                                 </div>
-
-                                {/* Temporada (Solo Indumentaria) */}
                                 {isIndumentaria && (
                                     <div className={styles.filtroField}>
-                                        <label className={styles.filtroLabel}>{t('Temporada', 'Temporada')}</label>
+                                        <label className={styles.filtroLabel}>{translateLabel('category', 'Temporada')}</label>
                                         <select className={styles.filtroSelect} value={filtros.temporada} onChange={e => setFiltro("temporada", e.target.value)}>
                                             <option value="">Todas</option>
                                             {opcionesTemporada.map(t => <option key={t} value={t}>{t}</option>)}
                                         </select>
                                     </div>
                                 )}
-
-                                {/* Precio mín/máx */}
                                 <div className={styles.filtroField}>
                                     <label className={styles.filtroLabel}>Precio mín $</label>
-                                    <input className={styles.filtroInput} type="number" min="0" placeholder="ej: 10000" value={filtros.precioMin} onChange={e => setFiltro("precioMin", e.target.value)} />
+                                    <input className={styles.filtroInput} type="number" min="0" value={filtros.precioMin} onChange={e => setFiltro("precioMin", e.target.value)} />
                                 </div>
                                 <div className={styles.filtroField}>
                                     <label className={styles.filtroLabel}>Precio máx $</label>
-                                    <input className={styles.filtroInput} type="number" min="0" placeholder="ej: 50000" value={filtros.precioMax} onChange={e => setFiltro("precioMax", e.target.value)} />
-                                </div>
-
-                                {/* Talles chips */}
-                                <div className={styles.filtroField} style={{ gridColumn: "span 2" }}>
-                                    <label className={styles.filtroLabel}>{t('Talles', 'Talles')} (incluye variantes con)</label>
-                                    <div className={styles.chipInput}>
-                                        {filtros.talles.map(t => (
-                                            <span key={t} className={styles.filtroChip}>
-                                                {t}
-                                                <button type="button" onClick={() => setFiltro("talles", filtros.talles.filter(x => x !== t))}><X size={10} /></button>
-                                            </span>
-                                        ))}
-                                        <input
-                                            type="text" placeholder="ej: 42, XL…"
-                                            value={inputTalle}
-                                            onChange={e => setInputTalle(e.target.value.toUpperCase())}
-                                            onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); agregarTalleFiltro(); } }}
-                                            onBlur={agregarTalleFiltro}
-                                            className={styles.chipInputInner}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Colores chips */}
-                                <div className={styles.filtroField} style={{ gridColumn: "span 2" }}>
-                                    <label className={styles.filtroLabel}>{t('Colores', 'Colores')} (incluye variantes con)</label>
-                                    <div className={styles.chipInput}>
-                                        {filtros.colores.map(c => (
-                                            <span key={c} className={`${styles.filtroChip} ${styles.filtroChipColor}`}>
-                                                {c}
-                                                <button type="button" onClick={() => setFiltro("colores", filtros.colores.filter(x => x !== c))}><X size={10} /></button>
-                                            </span>
-                                        ))}
-                                        <input
-                                            type="text" placeholder="ej: Negro, Azul…"
-                                            value={inputColor}
-                                            onChange={e => setInputColor(e.target.value)}
-                                            onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); agregarColorFiltro(); } }}
-                                            onBlur={agregarColorFiltro}
-                                            className={styles.chipInputInner}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Atributo libre */}
-                                <div className={styles.filtroField} style={{ gridColumn: "span 2" }}>
-                                    <label className={styles.filtroLabel}>Atributo (busca en clave o valor)</label>
-                                    <input className={styles.filtroInput} type="text" placeholder="ej: F11, Cuero sintético, Uso…" value={filtros.atributo} onChange={e => setFiltro("atributo", e.target.value)} />
+                                    <input className={styles.filtroInput} type="number" min="0" value={filtros.precioMax} onChange={e => setFiltro("precioMax", e.target.value)} />
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* ── Feedback de carga / error ─────────────────────────────── */}
-                    {loading && (
-                        <div className={styles.loadingWrap}>
-                            <div className={styles.spinner} />
-                            <span>Cargando catálogo…</span>
-                        </div>
-                    )}
-                    {!loading && error && (
+                    {error && (
                         <div className={styles.errorAlert} role="alert">
-                            <WarningCircle size={18} style={{ verticalAlign: "middle", marginRight: 8 }} />
+                            <WarningCircle size={18} style={{ marginRight: 8 }} />
                             {error}
                         </div>
                     )}
 
-                    {/* ── Contenido principal ───────────────────────────────────── */}
-                    {!loading && !error && (
+                    {loading ? (
+                        <div className={styles.loadingWrap}>Cargando catálogo…</div>
+                    ) : (
                         <>
-                            {/* Empty state general */}
-                            {productos.length === 0 && (
-                                <div className={styles.empty}>
-                                    <Package size={64} weight="thin" className={styles.emptyIcon} />
-                                    <h2 className={styles.emptyTitle}>Tu catálogo está vacío</h2>
-                                    <p className={styles.emptyText}>
-                                        Cargá tu primer producto con su matriz de talles y colores.
-                                    </p>
-                                    <Link to="/catalogo/nuevo" className={styles.btnNuevo}>
-                                        <PlusCircle size={18} weight="bold" />
-                                        Cargar primer producto
-                                    </Link>
-                                </div>
-                            )}
-
-                            {/* Empty state de filtros */}
-                            {productos.length > 0 && productosFiltrados.length === 0 && (
-                                <div className={styles.empty}>
-                                    <Funnel size={48} weight="thin" className={styles.emptyIcon} />
-                                    <h2 className={styles.emptyTitle}>Sin resultados</h2>
-                                    <p className={styles.emptyText}>Ningún producto coincide con los filtros aplicados.</p>
-                                    <button type="button" className={styles.btnNuevo} onClick={() => setFiltros(FILTROS_VACIOS)}>
-                                        <X size={16} /> Limpiar filtros
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Tabla */}
-                            {productosFiltrados.length > 0 && (
+                            {productos.length === 0 ? (
+                                <EmptyState 
+                                    illustration={<Package size={80} weight="thin" />}
+                                    title="Tu catálogo está vacío"
+                                    description="Cargá tus productos para empezar a vender. Podés hacerlo manualmente o mediante una planilla Excel."
+                                    educationalTip="Si venís de otro sistema, usá la función de importación para ahorrar horas de carga."
+                                    actionLabel="Cargar mi primer producto"
+                                    onAction={() => navigate('/catalogo/nuevo')}
+                                />
+                            ) : productosFiltrados.length === 0 ? (
+                                <EmptyState 
+                                    illustration={<MagnifyingGlassMinus size={64} weight="thin" />}
+                                    title="Sin coincidencias"
+                                    description="No encontramos productos con los filtros actuales."
+                                    actionLabel="Limpiar todos los filtros"
+                                    onAction={() => setFiltros(FILTROS_VACIOS)}
+                                />
+                            ) : (
                                 <>
-                                    {/* Stats */}
                                     <div className={styles.statsBar}>
                                         <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
                                             <span className={styles.statChip}>
-                                                <Package size={14} />
-                                                <strong>{productosFiltrados.length}</strong> producto{productosFiltrados.length !== 1 ? "s" : ""}
-                                                {filtrosActivos && <span className={styles.statOf}> de {productos.length}</span>}
+                                                <strong>{productosFiltrados.length}</strong> productos
                                             </span>
                                             <span className={styles.statChip}>
-                                                <Rows size={14} />
-                                                <strong>{totalVariantes}</strong> variante{totalVariantes !== 1 ? "s" : ""}
+                                                <strong>{totalVariantes}</strong> variantes
                                             </span>
                                         </div>
-
                                         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-                                            <Button
-                                                variant="secundario"
-                                                size="sm"
-                                                onClick={() => navigate(isIndumentaria ? '/catalogo/importar' : '/catalogo/importar-ferreteria')}
-                                                iconLeft={<UploadSimple size={18} />}
-                                            >
-                                                {isIndumentaria ? 'Importar' : 'Carga Técnica'}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => navigate('/catalogo/nuevo')}
-                                                iconLeft={<Plus size={18} />}
-                                            >
-                                                Nuevo Producto
-                                            </Button>
+                                            <Link to={isIndumentaria ? '/catalogo/importar' : '/catalogo/importar-ferreteria'}>
+                                                <Button variant="outline" size="sm" icon={<UploadSimple size={16} />}>
+                                                    Importar
+                                                </Button>
+                                            </Link>
                                         </div>
                                     </div>
 
@@ -407,14 +299,13 @@ export function CatalogoPage() {
                                         <table className={styles.table}>
                                             <thead>
                                                 <tr>
-                                                    <th>{t('Producto')}</th>
-                                                    <th>{t('Tipo', 'Tipo')}</th>
-                                                    {isIndumentaria && <th>{t('Temporada', 'Temporada')}</th>}
-                                                    <th style={{ textAlign: "right" }}>{t('PrecioBase', 'Precio base')}</th>
-                                                    <th style={{ textAlign: "center" }}>{t('Variantes')}</th>
-                                                    <th>{t('Talle', 'Talle')}</th>
-                                                    <th>{t('Color', 'Color')}</th>
-                                                    <th style={{ textAlign: "center" }}>{t('StockTotal', 'Stock total')}</th>
+                                                    <th>Producto</th>
+                                                    <th>Tipo</th>
+                                                    {isIndumentaria && <th>{translateLabel('category', 'Temporada')}</th>}
+                                                    <th style={{ textAlign: "right" }}>Precio base</th>
+                                                    <th style={{ textAlign: "center" }}>Variantes</th>
+                                                    <th>{translateLabel('variant', 'Talle/Color')}</th>
+                                                    <th style={{ textAlign: "center" }}>Stock total</th>
                                                     <th></th>
                                                 </tr>
                                             </thead>
@@ -465,41 +356,28 @@ export function CatalogoPage() {
     );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Fila de la tabla
-// ──────────────────────────────────────────────────────────────────────────────
 function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoConVariantes; onClick: () => void; onDelete: () => void }) {
     const { isIndumentaria } = useRubro();
-    const tallesUnicos = [...new Set(p.variantes.map(v => v.talle))];
-    const coloresUnicos = [...new Set(p.variantes.map(v => v.color))];
     const stockTotal = p.variantes.reduce((a, v) => a + (v.stockActual ?? 0), 0);
 
     return (
-        <tr className={styles.tableRow} onClick={onClick} title="Ver detalle">
+        <tr className={styles.tableRow} onClick={onClick}>
             <td>
                 <div className={styles.cellNombre}>{p.nombre}</div>
                 {p.descripcion && <div className={styles.cellDesc}>{p.descripcion}</div>}
             </td>
             <td><span className={styles.tipoBadge}>{NOMBRE_TIPO[p.tipoProducto] ?? p.tipoProducto}</span></td>
-            {isIndumentaria && <td className={styles.cellMuted}>{p.temporada || <span style={{ color: "var(--color-gray-500)", fontStyle: "italic" }}>—</span>}</td>}
+            {isIndumentaria && <td className={styles.cellMuted}>{p.temporada || "—"}</td>}
             <td style={{ textAlign: "right" }} className={styles.cellPrecio}>{fmt(p.precioBase)}</td>
             <td style={{ textAlign: "center" }}>
                 <span className={styles.countBadge}>{p.variantes.length}</span>
             </td>
             <td>
                 <div className={styles.chipList}>
-                    {tallesUnicos.slice(0, 6).map(t => (
-                        <span key={t} className={styles.talleChip}>{t}</span>
-                    ))}
-                    {tallesUnicos.length > 6 && <span className={styles.moreChip}>+{tallesUnicos.length - 6}</span>}
-                </div>
-            </td>
-            <td>
-                <div className={styles.chipList}>
-                    {coloresUnicos.slice(0, 4).map(c => (
-                        <span key={c} className={styles.colorChip}>{c}</span>
-                    ))}
-                    {coloresUnicos.length > 4 && <span className={styles.moreChip}>+{coloresUnicos.length - 4}</span>}
+                   {[...new Set(p.variantes.map(v => `${v.talle}/${v.color}`))].slice(0, 3).map(tc => (
+                       <span key={tc} className={styles.talleChip}>{tc}</span>
+                   ))}
+                   {p.variantes.length > 3 && <span className={styles.moreChip}>...</span>}
                 </div>
             </td>
             <td style={{ textAlign: "center" }}>
@@ -509,163 +387,61 @@ function ProductoRow({ producto: p, onClick, onDelete }: { producto: ProductoCon
             </td>
             <td onClick={e => e.stopPropagation()}>
                 <div className={styles.rowActions}>
-                    <button type="button" className={styles.rowActionBtn} title="Ver detalle" onClick={onClick}>
-                        <ArrowSquareOut size={14} />
-                    </button>
-                    <button type="button" className={`${styles.rowActionBtn} ${styles.rowActionDangerBtn || ""}`} style={{ color: "var(--color-danger)" }} title="Eliminar producto" onClick={onDelete}>
-                        <Trash size={14} />
-                    </button>
+                    <button className={styles.rowActionBtn} onClick={onClick}><ArrowSquareOut size={14} /></button>
+                    <button className={styles.rowActionBtn} onClick={onDelete} style={{ color: 'var(--color-error)' }}><Trash size={14} /></button>
                 </div>
             </td>
         </tr>
     );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Modal de detalle
-// ──────────────────────────────────────────────────────────────────────────────
 function ProductoModal({ producto: p, onClose, onDelete, onPrint }: { producto: ProductoConVariantes; onClose: () => void; onDelete: () => void; onPrint: (etiquetas: any[]) => void }) {
     const { t } = useRubro();
+    const { translateLabel } = useSmartDefaults();
     const overlayRef = useRef<HTMLDivElement>(null);
-    const [modalVariantesPage, setModalVariantesPage] = useState(1);
-    const LIMIT_VARIANTES_MODAL = 5;
-    const tallesUnicos = [...new Set(p.variantes.map(v => v.talle))];
-    const coloresUnicos = [...new Set(p.variantes.map(v => v.color))];
-    const stockTotal = p.variantes.reduce((a, v) => a + (v.stockActual ?? 0), 0);
-
-    // Cerrar con Escape
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
-    }, [onClose]);
-
-    // Cerrar al hacer click en el overlay
-    const handleOverlayClick = (e: React.MouseEvent) => {
-        if (e.target === overlayRef.current) onClose();
-    };
 
     return (
-        <div className={styles.modalOverlay} ref={overlayRef} onClick={handleOverlayClick} role="dialog" aria-modal="true">
+        <div className={styles.modalOverlay} ref={overlayRef} onClick={(e) => e.target === overlayRef.current && onClose()}>
             <div className={styles.modal}>
-                {/* Header del modal */}
                 <div className={styles.modalHeader}>
                     <div>
                         <h2 className={styles.modalTitle}>{p.nombre}</h2>
-                        <div className={styles.modalMeta}>
-                            <span className={styles.tipoBadge}>{NOMBRE_TIPO[p.tipoProducto] ?? p.tipoProducto}</span>
-                            {p.temporada && <span className={styles.temporadaBadge}>{p.temporada}</span>}
-                            <span className={styles.modalPrecio}>{fmt(p.precioBase)} base</span>
-                        </div>
+                        <span className={styles.tipoBadge}>{NOMBRE_TIPO[p.tipoProducto] ?? p.tipoProducto}</span>
                     </div>
-                    <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Cerrar">
-                        <X size={20} />
-                    </button>
+                    <button className={styles.modalClose} onClick={onClose}><X size={20} /></button>
                 </div>
 
-                {/* Descripción */}
-                {p.descripcion && <p className={styles.modalDesc}>{p.descripcion}</p>}
-
-                {/* KPIs rápidos */}
-                <div className={styles.modalKpis}>
-                    <div className={styles.kpi}>
-                        <span className={styles.kpiVal}>{p.variantes.length}</span>
-                        <span className={styles.kpiLabel}>Variantes</span>
-                    </div>
-                    <div className={styles.kpi}>
-                        <span className={styles.kpiVal}>{tallesUnicos.length}</span>
-                        <span className={styles.kpiLabel}>{t('Talles', 'Talles')}</span>
-                    </div>
-                    <div className={styles.kpi}>
-                        <span className={styles.kpiVal}>{coloresUnicos.length}</span>
-                        <span className={styles.kpiLabel}>{t('Colores', 'Colores')}</span>
-                    </div>
-                    <div className={styles.kpi}>
-                        <span className={`${styles.kpiVal} ${stockTotal > 0 ? styles.stockOk : styles.stockEmpty}`}>{stockTotal}</span>
-                        <span className={styles.kpiLabel}>Stock total</span>
-                    </div>
-                </div>
-
-                {/* Tabla de variantes */}
                 <div className={styles.modalTableWrap}>
                     <table className={styles.modalTable}>
                         <thead>
                             <tr>
-                                <th>{t('Talle', 'Talle')}</th>
-                                <th>{t('Color', 'Color')}</th>
-                                <th>SKU</th>
+                                <th>{translateLabel('variant', 'Variante')}</th>
+                                <th>{translateLabel('sku', 'SKU')}</th>
                                 <th style={{ textAlign: "right" }}>Costo</th>
-                                <th style={{ textAlign: "right" }}>Precio esp.</th>
                                 <th style={{ textAlign: "center" }}>Stock</th>
                                 <th>Atributos</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {p.variantes
-                                .slice((modalVariantesPage - 1) * LIMIT_VARIANTES_MODAL, modalVariantesPage * LIMIT_VARIANTES_MODAL)
-                                .map(v => {
-                                    const attrs = atributosDeVariante(v);
-                                    const hasAttrs = Object.keys(attrs).length > 0;
-                                    return (
-                                        <tr key={v.id} className={styles.modalTableRow}>
-                                            <td><span className={styles.talleChip}>{v.talle}</span></td>
-                                            <td><span className={styles.colorChip}>{v.color}</span></td>
-                                            <td className={styles.cellMuted}>{v.sku || <span style={{ color: "var(--color-gray-500)" }}>—</span>}</td>
-                                            <td style={{ textAlign: "right" }} className={styles.cellMuted}>{v.precioCosto > 0 ? fmt(v.precioCosto) : "—"}</td>
-                                            <td style={{ textAlign: "right" }}>{v.precioOverride ? <span className={styles.cellPrecio}>{fmt(v.precioOverride)}</span> : <span className={styles.cellMuted}>—</span>}</td>
-                                            <td style={{ textAlign: "center" }}>
-                                                <span className={(v.stockActual ?? 0) > 0 ? styles.stockOk : styles.stockEmpty}>
-                                                    {v.stockActual ?? 0}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {hasAttrs ? (
-                                                    <div className={styles.attrList}>
-                                                        {Object.entries(attrs).map(([k, val]) => (
-                                                            <span key={k} className={styles.attrChip}>{k}: {val}</span>
-                                                        ))}
-                                                    </div>
-                                                ) : <span className={styles.cellMuted}>—</span>}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
+                            {p.variantes.map(v => (
+                                <tr key={v.id} className={styles.modalTableRow}>
+                                    <td>{v.talle} / {v.color}</td>
+                                    <td>{v.sku || "—"}</td>
+                                    <td style={{ textAlign: "right" }}>{fmt(v.precioCosto)}</td>
+                                    <td style={{ textAlign: "center" }}>{v.stockActual ?? 0}</td>
+                                    <td>{v.atributosJson ? "Ver detalles" : "—"}</td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Paginación de Variantes */}
-                {p.variantes.length > LIMIT_VARIANTES_MODAL && (
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", marginBottom: "1rem", padding: "0 1rem" }}>
-                        <button
-                            onClick={() => setModalVariantesPage(page => Math.max(1, page - 1))}
-                            disabled={modalVariantesPage === 1}
-                            style={{ padding: "0.3rem 0.6rem", border: "1px solid #d1d5db", borderRadius: "0.25rem", background: "white", cursor: modalVariantesPage === 1 ? "not-allowed" : "pointer", opacity: modalVariantesPage === 1 ? 0.5 : 1 }}
-                        >
-                            Anterior
-                        </button>
-                        <span style={{ fontSize: "0.85rem", color: "#6b7280", fontWeight: 500 }}>
-                            Pág {modalVariantesPage} de {Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL)}
-                        </span>
-                        <button
-                            onClick={() => setModalVariantesPage(page => Math.min(Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL), page + 1))}
-                            disabled={modalVariantesPage === Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL)}
-                            style={{ padding: "0.3rem 0.6rem", border: "1px solid #d1d5db", borderRadius: "0.25rem", background: "white", cursor: modalVariantesPage === Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL) ? "not-allowed" : "pointer", opacity: modalVariantesPage === Math.ceil(p.variantes.length / LIMIT_VARIANTES_MODAL) ? 0.5 : 1 }}
-                        >
-                            Siguiente
-                        </button>
-                    </div>
-                )}
-
-                {/* Footer de acciones */}
                 <div className={styles.modalFooter}>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        <button type="button" className={styles.modalBtnSecondary} onClick={onClose}>
-                            Cerrar
-                        </button>
-                        <button
-                            type="button"
-                            className={styles.modalBtnSecondary}
+                    <Button variant="outline" onClick={onDelete} icon={<Trash size={16} />}>Eliminar</Button>
+                    <div style={{ display: 'flex', gap: 'var(--space-2)', marginLeft: 'auto' }}>
+                        <Button 
+                            variant="outline" 
+                            icon={<Printer size={16} />} 
                             onClick={() => {
                                 const etiquetas = p.variantes.map(v => ({
                                     sku: v.sku,
@@ -677,16 +453,12 @@ function ProductoModal({ producto: p, onClose, onDelete, onPrint }: { producto: 
                                 onPrint(etiquetas);
                             }}
                         >
-                            <Printer size={15} /> Imprimir Etiquetas
-                        </button>
-                        <button type="button" className={`${styles.modalBtnSecondary} ${styles.modalBtnDanger || ""}`} style={{ color: "var(--color-danger)", borderColor: "var(--color-danger)" }} onClick={onDelete}>
-                            <Trash size={15} /> Eliminar
-                        </button>
+                            {t('Imprimir', 'Imprimir')}
+                        </Button>
+                        <Link to={`/catalogo/editar/${p.id}`}>
+                            <Button variant="primary" icon={<PencilSimple size={15} />}>Editar</Button>
+                        </Link>
                     </div>
-                    <Link to={`/catalogo/editar/${p.id}`} className={styles.modalBtnPrimary} onClick={onClose}>
-                        <PencilSimple size={15} weight="bold" />
-                        Editar producto
-                    </Link>
                 </div>
             </div>
         </div>

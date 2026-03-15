@@ -124,4 +124,36 @@ public class ProductosController : ControllerBase
         if (!exito) return NotFound("Producto no encontrado o inaccesible.");
         return NoContent(); // 204 No Content
     }
+
+    /// <summary>
+    /// Búsqueda rápida de productos para autocompletado (usado en carga de facturas).
+    /// GET /api/productos/autocomplete?search=...
+    /// </summary>
+    [HttpGet("autocomplete")]
+    public async Task<IActionResult> Autocomplete([FromQuery] string search)
+    {
+        var result = await _mediator.Send(new GetProductAutocompleteQuery { Search = search });
+        return Ok(result);
+    }
+
+    [HttpGet("assisted/low-stock")]
+    public async Task<IActionResult> GetLowStock([FromQuery] int threshold = 5)
+    {
+        var result = await _mediator.Send(new ObtenerProductosStockBajoQuery(threshold));
+        return Ok(result);
+    }
+
+    [HttpGet("assisted/no-stock")]
+    public async Task<IActionResult> GetNoStock()
+    {
+        var result = await _mediator.Send(new ObtenerProductosSinStockQuery());
+        return Ok(result);
+    }
+
+    [HttpGet("assisted/top-sales")]
+    public async Task<IActionResult> GetTopSales([FromQuery] int top = 3)
+    {
+        var result = await _mediator.Send(new ObtenerTopProductosSemanaQuery(top));
+        return Ok(result);
+    }
 }

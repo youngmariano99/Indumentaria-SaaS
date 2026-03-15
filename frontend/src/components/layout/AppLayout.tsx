@@ -11,7 +11,8 @@ import {
     UserCircle,
     CashRegister,
     DownloadSimple,
-    SignOut
+    SignOut,
+    Truck
 } from "@phosphor-icons/react";
 import { useAuthStore } from "../../features/auth/store/authStore";
 import { ReloadPrompt } from "../ReloadPrompt";
@@ -19,6 +20,7 @@ import { usePWAInstall } from "../../hooks/usePWAInstall";
 import { useSyncManager } from "../../hooks/useSyncManager";
 import { MobileTabBar } from "./MobileTabBar";
 import { apiClient } from "../../lib/apiClient";
+import { FeedbackOverlay } from "../../shared/components/FeedbackOverlay";
 import styles from "./AppLayout.module.css";
 
 /**
@@ -220,6 +222,19 @@ export function AppLayout() {
                     </NavLink>
 
                     <NavLink
+                        to="/proveedores"
+                        className={({ isActive }) =>
+                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
+                        }
+                        onClick={handleMobileNavClick}
+                    >
+                        <span className={styles.navItemIcon}>
+                            <Truck size={20} weight="bold" />
+                        </span>
+                        <span>Proveedores</span>
+                    </NavLink>
+
+                    <NavLink
                         to="/cuenta"
                         className={({ isActive }) =>
                             `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
@@ -322,6 +337,7 @@ export function AppLayout() {
 
                 <Outlet />
                 <ReloadPrompt />
+                <FeedbackOverlay />
             </div>
 
             <MobileTabBar onOpenDrawer={() => setMobileDrawerOpen(true)} />

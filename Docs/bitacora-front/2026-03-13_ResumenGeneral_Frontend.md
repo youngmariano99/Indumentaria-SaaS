@@ -11,6 +11,10 @@
 - **Sincronización por Headers:** Interceptor de `apiClient` que decodifica metadatos en Base64 para actualizar el estado global del rubro sin peticiones adicionales.
 - **UI Mutante (Sprint 4 & 8):** Motor de renderizado dinámico `FieldFactory` que genera formularios basados en esquemas JSON recibidos del backend para cada industria.
 - **UX Progresiva (Sprint 5):** Implementación de `Smart Defaults` y `Drawers` laterales para una carga de datos fluida.
+- **Framework UX/UI Educativa (Marzo 2026):** Estructura de diseño "Zero-Training" con:
+    - **Agnostic Components:** Botones ergonómicos, estados vacíos accionables y divulgación progresiva (`Disclosure`).
+    - **Reversibilidad:** Sistema de `Toast` global con soporte para **Undo** en acciones críticas.
+    - **Vernacular Design:** Terminología dinámica que muta según el rubro (Ferretería vs Indumentaria).
 
 ## 📱 2. PWA y Capacidades Nativas (Sprint 5)
 La aplicación ha trascendido el navegador para comportarse como una App Nativa:

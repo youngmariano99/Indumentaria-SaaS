@@ -9,6 +9,10 @@ import type { CategoriaDto } from "./api/categoriasApi";
 import layoutStyles from "../dashboard/DashboardPage.module.css";
 import baseStyles from "./CatalogoPage.module.css";
 import styles from "./CategoriasPage.module.css";
+import { useFeedbackStore } from "../../shared/hooks/useFeedback";
+import { Button } from "../../shared/components/Button";
+import { EmptyState } from "../../shared/components/EmptyState";
+import { Disclosure } from "../../shared/components/Disclosure";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utilidad: aplanar árbol para búsqueda (solo presentación)
@@ -96,6 +100,7 @@ function CategoriaNode({
 // Página Principal
 // ─────────────────────────────────────────────────────────────────────────────
 export function CategoriasPage() {
+    const { addToast } = useFeedbackStore();
     const [categorias, setCategorias] = useState<CategoriaDto[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -126,7 +131,7 @@ export function CategoriasPage() {
             setCategorias(data);
         } catch (error) {
             console.error(error);
-            alert("Error cargando categorías");
+            addToast({ message: "No se pudieron cargar las categorías.", type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -202,9 +207,10 @@ export function CategoriasPage() {
         if (!confirm(`¿Eliminar categoría "${name}" y todo su contenido?`)) return;
         try {
             await categoriasApi.eliminarCategoria(id);
+            addToast({ message: `Categoría "${name}" eliminada.`, type: 'success' });
             initLoad();
         } catch (e: any) {
-            alert(e?.response?.data?.mensaje || "No se puede eliminar la categoría.");
+            addToast({ message: e?.response?.data?.mensaje || "No se puede eliminar la categoría.", type: 'error' });
         }
     };
 
@@ -225,10 +231,11 @@ export function CategoriasPage() {
                 await categoriasApi.crearCategoria(payload);
             }
             setModalOpen(false);
+            addToast({ message: "Categoría guardada con éxito.", type: 'success' });
             initLoad();
         } catch (error) {
             console.error(error);
-            alert("Hubo un error al guardar la categoría.");
+            addToast({ message: "Hubo un error al guardar la categoría.", type: 'error' });
         }
     };
 
@@ -248,10 +255,9 @@ export function CategoriasPage() {
                         <p>Organizá tu catálogo con niveles jerárquicos y NCM.</p>
                     </div>
                     <div className={layoutStyles.topbarControls}>
-                        <button onClick={handleCreateRoot} className={layoutStyles.btnPrimarySmall ?? layoutStyles.segmentButton ?? styles.btnPrimary}>
-                            <Plus size={14} weight="bold" style={{ marginRight: 4 }} />
+                        <Button onClick={handleCreateRoot} size="sm" icon={<Plus size={14} weight="bold" />}>
                             Nueva Categoría Raíz
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </header>
@@ -331,14 +337,13 @@ export function CategoriasPage() {
                             <span>Cargando categorías...</span>
                         </div>
                     ) : categorias.length === 0 ? (
-                        <div className={baseStyles.empty}>
-                            <FolderOpen size={48} weight="thin" className={baseStyles.emptyIcon} />
-                            <h2 className={baseStyles.emptyTitle}>Tu catálogo aún no tiene categorías.</h2>
-                            <p className={baseStyles.emptyText}>Crea la primera categoría para organizar tu catálogo.</p>
-                            <button onClick={handleCreateRoot} className={baseStyles.btnNuevo}>
-                                <Plus size={18} /> Crear la primera
-                            </button>
-                        </div>
+                        <EmptyState 
+                            title="Tu catálogo aún no tiene categorías."
+                            description="Crea la primera categoría para organizar tu catálogo de forma jerárquica."
+                            icon={<FolderOpen size={48} weight="thin" />}
+                            educationalTip="Las categorías definen qué atributos heredan los productos. Ej: 'Calzado' puede pedir 'Talle' y 'Tipo de Suela'."
+                            action={<Button onClick={handleCreateRoot} icon={<Plus size={18} />}>Crear la primera</Button>}
+                        />
                     ) : (
                         <>
                             <div className={baseStyles.statsBar}>
@@ -363,14 +368,12 @@ export function CategoriasPage() {
                             </div>
 
                             {totalFiltrado === 0 ? (
-                                <div className={baseStyles.empty}>
-                                    <Funnel size={48} weight="thin" className={baseStyles.emptyIcon} />
-                                    <h2 className={baseStyles.emptyTitle}>Sin resultados</h2>
-                                    <p className={baseStyles.emptyText}>Ninguna categoría coincide con los filtros aplicados.</p>
-                                    <button type="button" className={baseStyles.btnNuevo} onClick={limpiarFiltros}>
-                                        <X size={16} /> Limpiar filtros
-                                    </button>
-                                </div>
+                                <EmptyState 
+                                    title="Sin resultados"
+                                    description="Ninguna categoría coincide con los filtros aplicados."
+                                    icon={<Funnel size={48} weight="thin" />}
+                                    action={<Button variant="secondary" onClick={limpiarFiltros} icon={<X size={16} />}>Limpiar filtros</Button>}
+                                />
                             ) : (
                                 <div className={styles.treeCard}>
                                     {vistaPlana ? (
@@ -495,14 +498,23 @@ export function CategoriasPage() {
                                 />
                             </div>
 
-                            <CategoryAttributesEditor 
-                                esquemaJson={formData.esquemaAtributosJson}
-                                onChange={(val) => setFormData({ ...formData, esquemaAtributosJson: val })}
-                            />
+                            <div style={{ marginTop: 'var(--space-6)' }}>
+                                <Disclosure 
+                                    title="Atributos Requeridos" 
+                                    educationalHint="Definí qué campos extra deberán completar los productos de esta categoría."
+                                >
+                                    <div style={{ paddingTop: 'var(--space-4)' }}>
+                                        <CategoryAttributesEditor 
+                                            esquemaJson={formData.esquemaAtributosJson}
+                                            onChange={(val) => setFormData({ ...formData, esquemaAtributosJson: val })}
+                                        />
+                                    </div>
+                                </Disclosure>
+                            </div>
 
-                            <div className={styles.modalActions}>
-                                <button type="button" className={styles.btnSecondary} onClick={() => setModalOpen(false)}>Cancelar</button>
-                                <button type="submit" className={styles.btnPrimary}>Guardar</button>
+                            <div className={styles.modalActions} style={{ marginTop: 'var(--space-8)' }}>
+                                <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
+                                <Button type="submit" educational>Guardar Categoría</Button>
                             </div>
                         </form>
                     </div>

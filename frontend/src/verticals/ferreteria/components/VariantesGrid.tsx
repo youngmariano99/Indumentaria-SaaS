@@ -1,5 +1,7 @@
 import { useState, useEffect, type KeyboardEvent } from "react";
-import { Palette, X, Rows, PlusCircle, ArrowsInLineHorizontal, ArrowsInLineVertical, Trash } from "@phosphor-icons/react";
+import { Palette, X, Rows, PlusCircle, ArrowsInLineHorizontal, ArrowsInLineVertical, Trash, CheckCircle } from "@phosphor-icons/react";
+import { useSmartDefaults } from "../../../shared/hooks/useSmartDefaults";
+import { Button } from "../../../shared/components/Button";
 import type { FilaVariante } from "../../../features/catalog/types";
 import type { FieldDefinition } from "../../../components/common";
 import styles from "../../../features/catalog/NuevoProductoPage.module.css";
@@ -51,6 +53,7 @@ export default function VariantesGridFerreteria(props: VariantesGridProps) {
         editarFila, setBulkPrecio, setBulkCosto, setBulkStock,
         aplicarASeleccionadas
     } = props;
+    const { translateLabel } = useSmartDefaults();
 
     // Estados para los ejes (FERRETERIA)
     const [ejeX, setEjeX] = useState<string>("Medida");
@@ -193,7 +196,7 @@ export default function VariantesGridFerreteria(props: VariantesGridProps) {
                 <div className={styles.matrixHeader}>
                     <h2 className={styles.cardTitle} style={{ margin: 0 }}>
                         <Rows size={20} weight="bold" />
-                        Matriz Técnica ({ejeX} × {ejeY})
+                        Matriz Técnica ({translateLabel('variant', ejeX)} × {translateLabel('variant_color', ejeY)})
                     </h2>
                     {filas.length > 0 && (
                         <span className={styles.matrixCount}>
@@ -206,7 +209,7 @@ export default function VariantesGridFerreteria(props: VariantesGridProps) {
                     <div className={styles.bulkBar}>
                         <div className={styles.bulkHeader}>
                             <span className={styles.bulkLabel}>Acción masiva ({seleccionadas.size} seleccionadas)</span>
-                            <button type="button" className={styles.bulkCancelBtn} onClick={() => setSeleccionadas(new Set())}>Deseleccionar</button>
+                            <Button variant="ghost" size="sm" onClick={() => setSeleccionadas(new Set())}>Deseleccionar</Button>
                         </div>
                         <div className={styles.bulkSection}>
                             <div className={styles.bulkGroup}>
@@ -214,7 +217,15 @@ export default function VariantesGridFerreteria(props: VariantesGridProps) {
                                     <input className={styles.tableInput} type="number" placeholder="Precio $" value={bulkPrecio} onChange={e => setBulkPrecio(e.target.value)} />
                                     <input className={styles.tableInput} type="number" placeholder="Costo $" value={bulkCosto} onChange={e => setBulkCosto(e.target.value)} />
                                     <input className={styles.tableInput} type="number" placeholder="Stock" value={bulkStock} onChange={e => setBulkStock(e.target.value)} />
-                                    <button type="button" className={styles.bulkApplyBtn} onClick={aplicarASeleccionadas} disabled={!bulkPrecio && !bulkCosto && !bulkStock}>Aplicar</button>
+                                    <Button 
+                                        size="sm" 
+                                        onClick={aplicarASeleccionadas} 
+                                        disabled={!bulkPrecio && !bulkCosto && !bulkStock} 
+                                        icon={<CheckCircle size={14} />}
+                                        educational
+                                    >
+                                        Aplicar Valores
+                                    </Button>
                                 </div>
                             </div>
                         </div>

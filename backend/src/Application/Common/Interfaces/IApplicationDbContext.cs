@@ -34,5 +34,13 @@ public interface IApplicationDbContext
     DbSet<MetodoPago> MetodosPago { get; }
     DbSet<EstadoDispositivoPwa> EstadosDispositivosPwa { get; }
 
+    // Módulo Proveedores
+    DbSet<Proveedor> Proveedores { get; }
+    DbSet<FacturaProveedor> FacturasProveedores { get; }
+    DbSet<PagoProveedor> PagosProveedores { get; }
+    DbSet<DistribucionPagoFactura> DistribucionesPagosFacturas { get; }
+    DbSet<ChequeTercero> ChequesTerceros { get; }
+    DbSet<ProveedorProducto> ProveedoresProductos { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
