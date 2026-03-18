@@ -1,0 +1,20 @@
+---
+description: Estándares para el motor Multi-Rubro y UI Mutante
+globs: ["backend/src/Core/Interfaces/IVerticalRules.cs", "backend/src/Infrastructure/Factories/**/*", "frontend/src/store/rubroStore.ts", "frontend/src/features/catalog/**/*"]
+---
+
+# Motor Multi-Rubro y UI Mutante
+
+## 🔄 Backend: Patrón Estrategia
+- **Zero Ifs**: Prohibido usar `if (rubro == 'Indumentaria')`. Utilizar `IVerticalRules` y `VerticalRulesFactory` para inyectar lógica específica.
+- **JSON Schema**: Validar payloads JSONB dinámicos contra esquemas guardados en la base de datos por rubro.
+
+## 🧪 Frontend: UI Mutante
+- **Diccionario Dinámico**: Usar la función `translate('Key')` del `rubroStore`. Los términos deben adaptarse (ej: "Talle" -> "Medida").
+- **Component Registry**: Cargar componentes pesados (ej. Grilla de variantes) mediante el registro dinámico que mapea el rubro actual a la implementación correcta.
+
+## 🏷️ Nomenclatura Vernácula
+- Ajustar el vocabulario según el rubro:
+    - **Indumentaria**: Prenda, Talle, Curva.
+    - **Ferretería**: Artículo, Medida, Unidad.
+    - **Gastronomía**: Comanda, Adicional, Anular Mesa.

@@ -19,10 +19,20 @@ Se ha implementado la infraestructura de backend para permitir que los dueños d
 ## Impacto en Multi-tenancy
 El aislamiento está garantizado por el Global Query Filter de la entidad `Usuario`. Ningún dueño puede ver o crear empleados para otros tenants. La lógica de permisos afecta directamente al `FeatureResolver`, permitiendo que el empleado solo vea los módulos que el dueño autorizó.
 
+- **Autenticación por PIN:** Se implementó `AutenticarPinCommand` que permite obtener un token JWT válido usando solo el PIN de 4 dígitos, filtrando por el tenant actual.
+- **Auditoría Automática:** Se configuró el `AuditInterceptor` para capturar el `UserId` del `ITenantResolver` en cada operación de base de datos.
+- **Endpoints:** 
+    - `POST /api/equipo/acceso-rapido`: Autenticación rápida.
+    - `PUT /api/equipo/{id}/pin`: Asignación de PIN (solo Owner).
+    - `GET /api/equipo/auditoria`: Listado de logs del tenant.
+
 ## Explicación Didáctica
 Imaginalo como si el dueño del negocio ahora tuviera un "Libro de Firmas" y un "Llavero":
 1.  **El Libro de Firmas (`CrearColaborador`)**: Permite anotar el nombre de quien va a trabajar en el local. Pero pusimos una regla: el libro solo tiene espacio para 1 empleado gratis; si querés anotar un segundo, tenés que comprar un libro más grande.
 2.  **El Llavero (`ActualizarPermisos`)**: El dueño puede elegir qué llaves entregarle a cada empleado. Si le quita la llave de "Ventas", el empleado no podrá ni abrir la puerta de ese módulo en el sistema.
+
+### Explicación Didáctica Adicional
+"Ahora el sistema no solo sabe quién entró, sino qué hizo cada uno. El PIN permite que si un cajero termina su turno, el siguiente apoye su dedo (o escriba su PIN) y el sistema ya sabe quién está cobrando sin cerrar toda la aplicación."
 
 Archivos clave:
 - `UsuariosController.cs`: El mostrador que recibe los pedidos de gestión.

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../features/auth/store/authStore';
+import { useSucursalStore } from '../store/sucursalStore';
 
 // URL Base dinámica dependiendo del entorno.
 // Idealmente esto viene de import.meta.env.VITE_API_URL
@@ -12,15 +13,21 @@ export const apiClient = axios.create({
     },
 });
 
-// Interceptor para inyectar automáticamente el JWT en cada petición
+// Interceptor para inyectar automáticamente el JWT y Sucursal en cada petición
 apiClient.interceptors.request.use(
     (config) => {
         // Obtenemos el token directamente del estado de Zustand
         const token = useAuthStore.getState().token;
+        const sucursalId = useSucursalStore.getState().sucursalId;
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        if (sucursalId) {
+            config.headers['X-Sucursal-Id'] = sucursalId;
+        }
+
         return config;
     },
     (error) => {

@@ -3,8 +3,10 @@ import { GearSix, Check, WarningCircle, Spinner, X } from "@phosphor-icons/react
 import { ajustesApi } from "./api/ajustesApi";
 import { TALLES_POR_TIPO, NOMBRE_TIPO, TIPOS_PRODUCTO } from "../catalog/data/tallesPorTipo";
 import { AttributeGroupManager } from "./components/AttributeGroupManager";
+import { SucursalesConfig } from "../sucursales/components/SucursalesConfig";
 import styles from "./AjustesPage.module.css";
 import { useRubro } from "../../hooks/useRubro";
+import { useAuthStore } from "../auth/store/authStore";
 
 /**
  * Página de Configuración.
@@ -24,7 +26,9 @@ export function AjustesPage() {
     const [saved, setSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { t, isIndumentaria } = useRubro();
-    const [mainTab, setMainTab] = useState<"TALLES" | "DICCIONARIO">(isIndumentaria ? "TALLES" : "DICCIONARIO");
+    const { user } = useAuthStore();
+    const isOwner = user?.rol?.toString() === '2' || user?.rol === 'Owner' || user?.rol === 'owner';
+    const [mainTab, setMainTab] = useState<"TALLES" | "DICCIONARIO" | "SUCURSALES">(isIndumentaria ? "TALLES" : "DICCIONARIO");
     const [activeTab, setActiveTab] = useState<string>(TIPOS_PRODUCTO[0]);
     const [inputTalle, setInputTalle] = useState("");
 
@@ -120,6 +124,15 @@ export function AjustesPage() {
                     >
                         Diccionario de Atributos (Global)
                     </button>
+                    {isOwner && (
+                        <button 
+                            type="button" 
+                            className={`${styles.tab} ${mainTab === "SUCURSALES" ? styles.tabActive : ""}`}
+                            onClick={() => setMainTab("SUCURSALES")}
+                        >
+                            Sucursales
+                        </button>
+                    )}
                     <button type="button" className={styles.tab} disabled>
                         Notificaciones <span className={styles.tabBadge}>Próximamente</span>
                     </button>
@@ -275,6 +288,8 @@ export function AjustesPage() {
                             />
                         </div>
                     )}
+
+                    {mainTab === "SUCURSALES" && <SucursalesConfig />}
                 </div>
 
             </div>

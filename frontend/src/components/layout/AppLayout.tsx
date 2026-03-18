@@ -21,30 +21,45 @@ import { useSyncManager } from "../../hooks/useSyncManager";
 import { MobileTabBar } from "./MobileTabBar";
 import { apiClient } from "../../lib/apiClient";
 import { FeedbackOverlay } from "../../shared/components/FeedbackOverlay";
+import { SelectorAccesoRapido } from "../../features/equipo/components/SelectorAccesoRapido";
+import { SelectorSucursalHeader } from "../../features/sucursales/components/SelectorSucursalHeader";
+import { useFeatureStore } from "../../store/featureStore";
 import styles from "./AppLayout.module.css";
 
 /**
  * Layout compartido para todas las rutas protegidas.
- * Contiene el sidebar/nav extraído de DashboardPage.
- * El contenido de cada ruta se inyecta via <Outlet />.
  */
 export function AppLayout() {
     const { logout, user } = useAuthStore();
     const isOwner = user?.rol?.toString() === '2' || user?.rol === 'Owner' || user?.rol === 'owner';
     const { isInstallable, promptInstall } = usePWAInstall();
-    const { isOnline, isSyncing, pendingCount, syncNow } = useSyncManager();
+    const { isOnline, pendingCount } = useSyncManager();
     const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(() => {
         if (typeof window === "undefined") return true;
-        // En mobile el sidebar arranca siempre colapsado (solo iconos)
         return window.innerWidth > 768;
     });
-    const token = useAuthStore(s => s.token); // Escuchamos al token
+    const [isSwitchingUser, setIsSwitchingUser] = useState(false);
+    const features = useFeatureStore(s => s.features);
+    
+    // Si es Owner, ve todo. Si no, consultamos el Feature Store.
+    const canSeeVentas = isOwner || !!features['Ventas'];
+    const canSeeCatalog = isOwner || !!features['Catalog'];
+    const canSeeReports = isOwner || !!features['Reports'];
+    const canSeeCRM = isOwner || !!features['CRM'];
+    const canSeeProviders = isOwner || !!features['Providers'];
+    const token = useAuthStore(s => s.token);
+    const fetchFeatures = useFeatureStore(s => s.fetchFeatures);
+    const initialized = useFeatureStore(s => s.initialized);
 
-    // --- PWA SRE HEARTBEAT ---
     useEffect(() => {
-        if (!token) return; // Si no hay usuario logueado, no reportamos.
+        if (!initialized && token) {
+            fetchFeatures();
+        }
+    }, [initialized, token, fetchFeatures]);
 
+    useEffect(() => {
+        if (!token) return;
         const pingServer = async () => {
             try {
                 let deviceId = localStorage.getItem("pwa_device_id");
@@ -52,27 +67,19 @@ export function AppLayout() {
                     deviceId = "POS-" + Math.random().toString(36).substring(2, 6).toUpperCase();
                     localStorage.setItem("pwa_device_id", deviceId);
                 }
-
                 await apiClient.post("/telemetria/pwa-ping", {
                     dispositivoId: deviceId,
                     nombreDispositivo: (navigator.userAgent.includes("Mobile") ? "Celular POS " : "PC Caja ") + deviceId,
                     appVersion: "1.2.0-SaaS",
                     itemsPendientesSubida: pendingCount
                 });
-            } catch (err) {
-                // Silencioso. Si falla (ej. sin WiFi), no se actualiza en DB
-                // y eventualmente el Dashboard Admin lo marcará como Offline.
-            }
+            } catch (err) {}
         };
-
-        pingServer(); // Primer disparo al entrar
-        const intervalId = setInterval(pingServer, 20000); // Latido cada 20 segundos
-
+        pingServer();
+        const intervalId = setInterval(pingServer, 20000);
         return () => clearInterval(intervalId);
     }, [token, pendingCount]);
 
-    // Cerrar automáticamente el sidebar cuando el viewport baja a mobile,
-    // y reabrirlo por defecto cuando vuelve a desktop.
     useEffect(() => {
         if (typeof window === "undefined") return;
         const handleResize = () => {
@@ -95,7 +102,6 @@ export function AppLayout() {
 
     return (
         <div className={`${styles.shell} ${sidebarOpen ? "" : styles.sidebarCollapsed}`}>
-            {/* Overlay para móviles */}
             <div
                 className={`${styles.mobileOverlay} ${mobileDrawerOpen ? styles.mobileOverlayActive : ""}`}
                 onClick={() => setMobileDrawerOpen(false)}
@@ -103,14 +109,11 @@ export function AppLayout() {
 
             <aside className={`${styles.sidebar} ${sidebarOpen && !mobileDrawerOpen ? "" : styles.sidebarCollapsed} ${mobileDrawerOpen ? styles.mobileDrawerOpen : ""} ${mobileDrawerOpen ? styles.forceExpanded : ""}`}>
                 <div className={styles.sidebarHeader}>
-                    {/* Logo minimal: solo usamos el espacio para el toggle, sin marca visual */}
                     <div className={styles.sidebarLogo} />
                     <button
                         type="button"
                         className={styles.sidebarToggle}
-                        aria-label={sidebarOpen ? "Colapsar menú" : "Expandir menú"}
                         onClick={() => {
-                            // En mobile no permitimos expandir el sidebar (solo iconos)
                             if (typeof window !== "undefined" && window.innerWidth <= 768) return;
                             setSidebarOpen(v => !v);
                         }}
@@ -119,244 +122,198 @@ export function AppLayout() {
                     </button>
                 </div>
 
-                <nav className={styles.nav} aria-label="Navegación principal">
-                    <NavLink
-                        to="/dashboard"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <House size={20} weight="bold" />
-                        </span>
+                <nav className={styles.nav}>
+                    <NavLink to="/dashboard" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                        <span className={styles.navItemIcon}><House size={20} weight="bold" /></span>
                         <span>Dashboard</span>
                     </NavLink>
 
-                    <NavLink
-                        to="/catalogo"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <Package size={20} weight="bold" />
-                        </span>
-                        <span>Catálogo</span>
-                    </NavLink>
+                    {canSeeCatalog && (
+                        <>
+                            <NavLink to="/catalogo" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                                <span className={styles.navItemIcon}><Package size={20} weight="bold" /></span>
+                                <span>Catálogo</span>
+                            </NavLink>
 
-                    <NavLink
-                        to="/categorias"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <Folder size={20} weight="bold" />
-                        </span>
-                        <span>Categorías</span>
-                    </NavLink>
+                            <NavLink to="/categorias" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                                <span className={styles.navItemIcon}><Folder size={20} weight="bold" /></span>
+                                <span>Categorías</span>
+                            </NavLink>
+                        </>
+                    )}
 
-                    <NavLink
-                        to="/pos"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>🛒</span>
-                        <span>Punto de venta</span>
-                    </NavLink>
+                    {canSeeVentas && (
+                        <>
+                            <NavLink to="/pos" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                                <span className={styles.navItemIcon}>🛒</span>
+                                <span>Punto de venta</span>
+                            </NavLink>
 
-                    <NavLink
-                        to="/devoluciones"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <Swap size={20} weight="bold" />
-                        </span>
-                        <span>Devoluciones</span>
-                    </NavLink>
+                            <NavLink to="/devoluciones" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                                <span className={styles.navItemIcon}><Swap size={20} weight="bold" /></span>
+                                <span>Devoluciones</span>
+                            </NavLink>
 
-                    <NavLink
-                        to="/arqueo"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <CashRegister size={20} weight="bold" />
-                        </span>
-                        <span>Arqueo de Caja</span>
-                    </NavLink>
+                            <NavLink to="/arqueo" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                                <span className={styles.navItemIcon}><CashRegister size={20} weight="bold" /></span>
+                                <span>Arqueo de Caja</span>
+                            </NavLink>
+                        </>
+                    )}
 
-                    <NavLink
-                        to="/reportes"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <ChartLine size={20} weight="bold" />
-                        </span>
-                        <span>Reportes</span>
-                    </NavLink>
+                    {canSeeReports && (
+                        <NavLink to="/reportes" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                            <span className={styles.navItemIcon}><ChartLine size={20} weight="bold" /></span>
+                            <span>Reportes</span>
+                        </NavLink>
+                    )}
 
-                    <NavLink
-                        to="/clientes"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <Users size={20} weight="bold" />
-                        </span>
-                        <span>Clientes y CRM</span>
-                    </NavLink>
+                    {canSeeCRM && (
+                        <NavLink to="/clientes" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                            <span className={styles.navItemIcon}><Users size={20} weight="bold" /></span>
+                            <span>Clientes y CRM</span>
+                        </NavLink>
+                    )}
 
                     {isOwner && (
-                        <NavLink
-                            to="/equipo"
-                            className={({ isActive }) =>
-                                `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                            }
-                            onClick={handleMobileNavClick}
-                        >
-                            <span className={styles.navItemIcon}>
-                                <Users size={20} weight="bold" />
-                            </span>
+                        <NavLink to="/equipo" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                            <span className={styles.navItemIcon}><Users size={20} weight="bold" /></span>
                             <span>Mi Equipo</span>
                         </NavLink>
                     )}
 
-                    <NavLink
-                        to="/proveedores"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <Truck size={20} weight="bold" />
-                        </span>
-                        <span>Proveedores</span>
-                    </NavLink>
+                    {canSeeProviders && (
+                        <NavLink to="/proveedores" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                            <span className={styles.navItemIcon}><Truck size={20} weight="bold" /></span>
+                            <span>Proveedores</span>
+                        </NavLink>
+                    )}
 
-                    <NavLink
-                        to="/cuenta"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
-                    >
-                        <span className={styles.navItemIcon}>
-                            <UserCircle size={20} weight="bold" />
-                        </span>
+                    <NavLink to="/cuenta" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                        <span className={styles.navItemIcon}><UserCircle size={20} weight="bold" /></span>
                         <span>Mi cuenta</span>
                     </NavLink>
 
-                    <NavLink
-                        to="/ajustes"
-                        className={({ isActive }) =>
-                            `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
-                        }
-                        onClick={handleMobileNavClick}
+                    {isOwner && (
+                        <NavLink to="/ajustes" className={({ isActive }) => `${styles.navItem} ${isActive ? styles.navItemActive : ""}`} onClick={handleMobileNavClick}>
+                            <span className={styles.navItemIcon}><GearSix size={20} weight="bold" /></span>
+                            <span>Configuración</span>
+                        </NavLink>
+                    )}
+
+                    {/* Acción de Cambio de Turno mediante PIN */}
+                    <button 
+                        className={styles.navItem} 
+                        style={{ width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', marginTop: 'auto' }}
+                        onClick={() => setIsSwitchingUser(true)}
                     >
                         <span className={styles.navItemIcon}>
-                            <GearSix size={20} weight="bold" />
+                            <Swap size={20} weight="bold" color="#ea580c" />
                         </span>
-                        <span>Configuración</span>
-                    </NavLink>
+                        <span style={{ color: '#ea580c', fontWeight: 700 }}>Cambiar Usuario</span>
+                    </button>
                 </nav>
 
                 <div className={styles.navFooter}>
                     {isInstallable && (
-                        <button
-                            onClick={promptInstall}
-                            style={{
-                                width: '100%',
-                                background: 'transparent',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                color: '#e2e8f0',
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                fontSize: '0.85rem',
-                                marginBottom: '12px',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)' }}
-                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent' }}
-                        >
+                        <button onClick={promptInstall} className={styles.pwaBtn} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#e2e8f0', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', marginBottom: '12px' }}>
                             <DownloadSimple size={18} />
                             {sidebarOpen && <span>Instalar App</span>}
                         </button>
                     )}
 
-                    <button
-                        onClick={logout}
-                        className={styles.logoutBtn}
-                        style={{
-                            width: '100%',
-                            background: 'transparent',
-                            border: '1px solid rgba(220, 38, 38, 0.3)',
-                            color: '#dc2626',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            fontSize: '0.85rem',
-                            marginBottom: '12px',
-                            transition: 'all 0.2s',
-                            justifyContent: sidebarOpen ? 'flex-start' : 'center'
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(220, 38, 38, 0.06)' }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent' }}
-                    >
+                    <button onClick={logout} style={{ width: '100%', background: 'transparent', border: '1px solid rgba(220, 38, 38, 0.3)', color: '#dc2626', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', marginBottom: '12px', justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
                         <SignOut size={18} />
                         {sidebarOpen && <span>Cerrar Sesión</span>}
                     </button>
 
-                    <div style={{ textAlign: sidebarOpen ? 'left' : 'center', width: '100%' }}>Appy Studios</div>
+                    <div style={{ fontSize: '10px', opacity: 0.5, textAlign: 'center' }}>Appy Studios v1.2</div>
                 </div>
             </aside>
 
-            <div className={styles.main}>
+            <main className={styles.shellMain}>
+                {/* Header Superior con Selector de Sucursal y Perfil */}
+                <header style={{ 
+                    height: '64px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '0 24px', 
+                    background: 'white', 
+                    borderBottom: '1px solid var(--color-gray-200)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 100
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        {!sidebarOpen && !mobileDrawerOpen && (
+                             <button
+                                type="button"
+                                className={styles.sidebarToggle}
+                                onClick={() => setSidebarOpen(true)}
+                                style={{ background: 'var(--color-gray-100)', color: 'var(--color-primary)' }}
+                            >
+                                ☰
+                            </button>
+                        )}
+                        <SelectorSucursalHeader />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {isOnline ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#16a34a', background: '#f0fdf4', padding: '4px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                                <div style={{ width: '6px', height: '6px', background: '#16a34a', borderRadius: '50%' }} />
+                                Online
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ea580c', background: '#fff7ed', padding: '4px 8px', borderRadius: '999px', fontWeight: 600 }}>
+                                <div style={{ width: '6px', height: '6px', background: '#ea580c', borderRadius: '50%' }} />
+                                Offline {pendingCount > 0 && `(${pendingCount} pend.)`}
+                            </div>
+                        )}
+
+                        <div style={{ width: '1px', height: '24px', background: 'var(--color-gray-200)', margin: '0 4px' }} />
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                                <p style={{ margin: 0, fontSize: '13px', fontWeight: 700, color: 'var(--color-gray-900)' }}>{user?.nombre}</p>
+                                <p style={{ margin: 0, fontSize: '11px', color: 'var(--color-gray-500)', fontWeight: 500 }}>{user?.rol}</p>
+                            </div>
+                            <div style={{ 
+                                width: '36px', 
+                                height: '36px', 
+                                borderRadius: '50%', 
+                                background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-focus))',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontWeight: 700,
+                                fontSize: '14px'
+                            }}>
+                                {user?.nombre?.charAt(0).toUpperCase()}
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
                 {!isOnline && (
                     <div style={{ background: '#f59e0b', color: 'white', padding: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
-                        Aviso: Estás operando sin conexión a Internet. {pendingCount > 0 && `(${pendingCount} pendientes)`}
+                        Aviso: Estás operando sin conexión a Internet. {pendingCount > 0 && `(${pendingCount} operaciones pendientes)`}
                     </div>
                 )}
-                {isOnline && isSyncing && (
-                    <div style={{ background: '#3b82f6', color: 'white', padding: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600 }}>
-                        Sincronizando {pendingCount} operaciones pendientes...
-                    </div>
-                )}
-                {isOnline && pendingCount > 0 && !isSyncing && (
-                    <div style={{ background: '#10b981', color: 'white', padding: '8px', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600, display: 'flex', justifyContent: 'center', gap: '8px', alignItems: 'center' }}>
-                        Restablecida la red local. <button onClick={syncNow} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>Sincronizar Ya ({pendingCount})</button>
-                    </div>
-                )}
+                <div className={styles.shellContent}>
+                    <Outlet />
+                </div>
+            </main>
 
-                <Outlet />
-                <ReloadPrompt />
-                <FeedbackOverlay />
-            </div>
+            {isSwitchingUser && (
+                <SelectorAccesoRapido onClose={() => setIsSwitchingUser(false)} />
+            )}
 
             <MobileTabBar onOpenDrawer={() => setMobileDrawerOpen(true)} />
+            <FeedbackOverlay />
+            <ReloadPrompt />
         </div>
     );
 }

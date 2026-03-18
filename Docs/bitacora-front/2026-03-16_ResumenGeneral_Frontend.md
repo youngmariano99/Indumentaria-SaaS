@@ -1,5 +1,5 @@
 # Resumen General del Sistema (Frontend)
-**Rango de Fechas:** 24 de Febrero de 2026 — 13 de Marzo de 2026
+**Rango de Fechas:** 24 de Febrero de 2026 — 16 de Marzo de 2026
 **Propósito:** Proporcionar un panorama instantáneo del estado actual de la interfaz de usuario (React/Vite) a desarrolladores y futuras inteligencias artificiales, delineando qué capacidades visuales e interactivas están ya operativas.
 
 ---
@@ -30,6 +30,7 @@ Lógica de impresión robusta y adaptable a cualquier hardware:
 - **Nivel 2 (Web Bluetooth):** Soporte para impresoras térmicas portátiles desde celulares.
 - **Nivel 3 (PDF Fallback):** Generación de PDFs con `jsPDF` para impresoras láser de oficina, con soporte multipágina y tamaños personalizados (40x30, 58mm, 80mm, A4).
 - **Personalización:** Selector de contenido (Solo Barras, Solo QR o Ambos) y layout optimizado para etiquetas pequeñas.
+- **Carga de Facturas Operativa:** Nueva interfaz de ingreso de mercadería con búsqueda de catálogo mediante autocompletado avanzado (`Ctrl + Space`) y navegación rápida por teclado.
 
 ## 🛍️ 4. POS y Catálogo Avanzado
 - **Terminal de Venta (POS):** Sincronizado en tiempo real con el stock del backend. Soporte para lectores de barras HID (láser) vía hooks de bajo nivel.
@@ -44,6 +45,13 @@ Lógica de impresión robusta y adaptable a cualquier hardware:
 ## 📊 6. Dashboard e Insights
 - **Datos Reales:** Gráficos y tarjetas de métricas conectados a la API de Telemetría y Salud del sistema.
 - **Filtros Temporales:** Visualización de ventas y performance del negocio por rangos de fecha.
+
+## 🏢 7. Equipo y Gestión de Sedes (Marzo 2026)
+- **Panel de Administración de Equipo:** Interfaz intuitiva para gestión de empleados con **Panel de Permisos Vernacular** (traducción de términos técnicos a acciones de negocio como "Permitir cobros").
+- **Acceso Rápido por PIN:** Implementación de un **PIN Pad táctil** integrado en el layout lateral para el cambio inmediato de operador sin re-logueo.
+- **Ecosistema Multi-Sucursal:** 
+    - **Header Dinámico:** Rediseño del encabezado global incorporando un **Selector de Sucursal** interactivo y estado de perfil de usuario.
+    - **Persistencia de Ubicación:** Implementación de un store global (Zustand) que mantiene la sede activa y coordina el header `X-Sucursal-Id` para todas las comunicaciones con la API.
 
 ---
 *(Nota para desarrolladores/IAs: La lógica de negocio reside en `frontend/src/features/`. Consultar `Docs/bitacora-front/features` para el detalle de cada implementación técnica).*

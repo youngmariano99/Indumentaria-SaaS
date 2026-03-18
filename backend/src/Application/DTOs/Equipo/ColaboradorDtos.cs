@@ -8,6 +8,7 @@ public class ColaboradorDto
     public string Nombre { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public SystemRole Rol { get; set; }
+    public bool TienePin { get; set; }
     public Dictionary<string, bool> Permisos { get; set; } = new();
 }
 
@@ -16,6 +17,7 @@ public class CrearColaboradorRequest
     public string Nombre { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string? Pin { get; set; }
     public SystemRole Rol { get; set; }
 }
 

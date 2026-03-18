@@ -57,7 +57,7 @@ public class FeatureResolver : IFeatureResolver
             rubroId = tenantRecord?.RubroId;
         }
 
-        string cacheKey = $"features_{tenantId}_{sucursalId}_{userId}_{rubroId}";
+        string cacheKey = GetCacheKey(tenantId.Value, sucursalId, userId, rubroId);
 
         if (!_cache.TryGetValue(cacheKey, out Dictionary<string, bool>? features))
         {
@@ -77,7 +77,7 @@ public class FeatureResolver : IFeatureResolver
         var sucursalId = _tenantResolver.SucursalId;
         var rubroId = _tenantResolver.RubroId;
 
-        string cacheKey = $"features_{tenantId}_{sucursalId}_{userId}_{rubroId}";
+        string cacheKey = GetCacheKey(tenantId.Value, sucursalId, userId, rubroId);
 
         if (!_cache.TryGetValue(cacheKey, out Dictionary<string, bool>? features))
         {
@@ -86,6 +86,24 @@ public class FeatureResolver : IFeatureResolver
         }
 
         return features ?? new Dictionary<string, bool>();
+    }
+
+    public void InvalidateCache(Guid tenantId, Guid? userId)
+    {
+        // Como la clave actual depende de SucursalId y RubroId (que pueden ser null), 
+        // pero el UserId es único, vamos a normalizar la clave para que sea fácil de borrar.
+        // O mejor, borramos las variaciones más probables.
+        // Por ahora, usemos la lógica de GetCacheKey.
+        var rubroId = _tenantResolver.RubroId;
+        var sucursalId = _tenantResolver.SucursalId;
+        
+        string cacheKey = GetCacheKey(tenantId, sucursalId, userId, rubroId);
+        _cache.Remove(cacheKey);
+    }
+
+    private string GetCacheKey(Guid tenantId, Guid? sucursalId, Guid? userId, Guid? rubroId)
+    {
+        return $"features_{tenantId}_{sucursalId}_{userId}_{rubroId}";
     }
 
     private async Task<Dictionary<string, bool>> LoadFeaturesAsync(Guid tenantId, Guid? sucursalId, Guid? userId, Guid? rubroId)

@@ -17,8 +17,12 @@ Se desarrolló la interfaz de usuario para que el dueño del negocio pueda admin
 ## UX Educativa
 - Se incluyó un banner informativo notificando al usuario sobre el límite de **1 colaborador gratuito**, evitando frustraciones al intentar crear más usuarios.
 - El panel de permisos utiliza un lenguaje vernacular ("Permitir realizar cobros", "Ver deudas de clientes") en lugar de términos técnicos, facilitando la comprensión para usuarios sin experiencia tecnológica.
+- **Cambio de Turno (PIN Pad):** Interfaz táctil de 4 dígitos integrada en el layout lateral para agilizar el cambio de operador sin re-logueo.
+- **Pestañas de Gestión:** Separación de "Miembros" y "Actividad Reciente" para mantener la interfaz limpia y enfocada.
+- **Feedback Visual de PIN:** Ícono de llave con color diferenciado (amarillo) si el usuario ya tiene un PIN asignado.
 
 ## Explicación Didáctica
+"Pensamos en la realidad de un local de ropa: el dueño está en la oficina configurando permisos, mientras que en el mostrador los empleados entran y salen. El botón de 'Cambiar Usuario' en el lateral es como un timbre rápido que permite al nuevo vendedor tomar el mando en 2 segundos."
 Hemos creado la "Oficina del Jefe" dentro de la web:
 1.  **Página de Equipo**: Es un tablero donde el jefe ve a todos sus empleados de un solo vistazo.
 2.  **Modal de Alta**: Es como entregarle el uniforme y la contraseña al empleado nuevo.

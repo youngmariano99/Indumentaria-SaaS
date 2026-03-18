@@ -1,0 +1,40 @@
+# APPYSTUDIOS: SAAS ERP MULTI-TODO (LLMS MANIFEST)
+
+## ARCHITECTURE_CORE
+- **Paradigm**: Clean Architecture + CQRS (MediatR).
+- **Layers**: Core (Domain/Entities), Application (Logic/Handlers), Infrastructure (Persistence/Auth), API (Controllers).
+- **Backend Stack**: .NET 8/9, EF Core, PostgreSQL 16+, MediatR, FluentValidation.
+- **Frontend Stack**: React 18+ (Vite), TypeScript, Zustand 4.x, Axios, CSS Modules.
+- **Multi-Tenancy**: Strict isolation via Row-Level Security (RLS) in PostgreSQL. Session variable `app.current_tenant` injected per request. Base schema `IMustHaveTenant` (TenantId UUID).
+- **Database Hybrid**: Relational integrity + JSONB for high-speed dynamic metadata (Verticals/Rubros). GIN Indexing on JSONB.
+
+## BUSINESS_MODEL & MULTI-VERTICAL
+- **Goal**: Industry-agnostic SaaS (Multi-Todo) starting with Apparel (Indumentaria) and Hardware (Ferretería).
+- **Dynamic Mutation**: Backend injects `X-Rubro-Manifest` (Base64 JSON) containing dictionaries and UI schemas. 
+- **Terminology mapping**: Dynamic `t()` function. Example: Apparel -> "Talle", Hardware -> "Medida".
+- **Revenue Control**: Arqueo de Caja (Blind), CRM 360 (Virtual Wallet), Stock Matrix (Parent-Variant).
+
+## MODULE_MAP
+1. **Catalog**: Variant-driven (Size/Color/Material). Dynamic metadata per vertical. Batch Import (Up to 500 items).
+2. **POS (Point of Sale)**: Real-time stock sync. Multi-payment (Cash/Transfer/Credit). ESC/POS & TSPL printing.
+3. **CRM**: Customer 360 profile. Balance management (Debt/Credit). Returns via "Balanza Mágica" motor.
+4. **Operations**: Cash desk lifecycle (Open/Audit/Close). Discrepancy reporting.
+5. **Team & Sede**: Multi-branch support (`X-Sucursal-Id`). PIN-based quick switch. RBAC via `FeaturesJson`.
+6. **Hardware Sync (PWA)**: Barcode Detector API (GPU), Web Serial/Bluetooth for Thermal printing, Web Share Target.
+
+## UX_UI_STANDARDS
+- **Zero-Training**: Actionable Empty States, Disclosure patterns (Drawers), Progressively complex forms.
+- **Mobile-First**: Touch-optimized (44px targets), Responsive layout, High-contrast Phosphor Icons.
+- **UI Mutante**: `FieldFactory` builds forms dynamically from JSON Schema. No static hardcoding of "Talle" or "Color".
+- **Undo Pattern**: Global Toast with reversibility for critical actions.
+
+## SECURITY_GUIDELINES
+- **Auth**: JWT with BCrypt. Subdomain-based tenant resolution.
+- **Isolation**: RLS ensures zero cross-tenant data leaks.
+- **Telemetry**: PWA health monitoring and Offline sync status tracking.
+- **Soft Delete**: `ISoftDelete` on critical entities to preserve financial audit trail.
+
+## DEVELOPMENT_WORKFLOW (DX)
+- **Repo Style**: Business logic in Spanish ("con cancha"), Infrastructure in English.
+- **Docs-as-Code**: Diátaxis framework mandatory. Mermaid diagrams for architecture changes.
+- **Quality**: Integration tests (WebApplicationFactory) over pure unit tests for command validation.

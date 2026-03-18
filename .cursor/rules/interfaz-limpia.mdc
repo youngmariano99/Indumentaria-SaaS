@@ -1,0 +1,20 @@
+---
+description: Estándares de navegación y menús anti-fricción
+globs: ["frontend/src/components/layout/**/*", "frontend/src/navigation/**/*"]
+---
+
+# Navegación Anti-Fricción: Menú y Sidebar
+
+## 🧭 Menú Estrictamente Plano
+- **Prohibido**: No uses sub-menús desplegables, acordeones o "nested lists" en el Sidebar.
+- **Divulgación Progresiva**: Los botones del Sidebar deben filtrarse dinámicamente por rol (`Cajero` ve minimalismo, `Admin` ve gestión).
+- **Dashboard Hubs**: Si hay sub-opciones, navega a una ruta principal que muestre tarjetas visuales gigantes (Cards) en lugar de un menú desplegable.
+
+## 🔍 Omnibar (Command Center)
+- **Shortcut**: Activar con `Ctrl+K`.
+- **Contenido**: Debe permitir navegar a cualquier parte del sistema y ejecutar acciones rápidas (ej. "Anular ticket", "Cerrar caja").
+- **UX**: Priorizar resultados de búsqueda sobre la navegación manual en el menú.
+
+## 📱 Ergonomía Táctil
+- **Touch Targets**: Botones de mínimo 44x44px.
+- **Thumb Zone**: Acciones principales en la parte inferior o centro-derecha de la pantalla.

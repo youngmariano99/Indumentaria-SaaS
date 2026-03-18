@@ -1,0 +1,24 @@
+---
+description: Reglas de optimización para escalabilidad y rendimiento
+globs: ["backend/src/**/*.cs", "frontend/src/**/*.tsx", "Infrastructure/Persistence/**/*"]
+---
+
+# Optimización y Rendimiento SaaS
+
+## 🚀 Backend (.NET & EF Core)
+- **Consultas de Lectura**: Usar `AsNoTracking()` incondicionalmente en listados.
+- **Explosión Cartesiana**: Usar `AsSplitQuery()` en Includes complejos.
+- **Caché Multiestrato**: 
+    - L1: `IMemoryCache` para configuraciones estáticas (ej. Alícuotas IVA).
+    - L2: Redis para sesiones y carritos.
+- **Background Work**: Usar `System.Threading.Channels` para auditorías asíncronas y `Hangfire` para tareas pesadas (PDFs).
+
+## ⚡ frontend (React)
+- **Virtualización**: Usar `react-window` o `react-virtuoso` en listados de más de 50 items.
+- **Estado Atómico**: Usar `Zustand` con selectores (`useShallow`) para evitar re-renders masivos.
+- **Memoización**: Aplicar `React.memo` en filas de tablas y `useMemo` en cálculos de impuestos.
+
+## 🗄️ Base de Datos (PostgreSQL)
+- **PgBouncer**: Garantizar que el pool mode esté en `transaction`.
+- **JSONB Indexing**: Usar índices GIN con `jsonb_path_ops` para búsquedas en campos multi-rubro.
+- **RLS Subqueries**: Optimizar políticas RLS extrayendo la variable de sesión en una subconsulta única.

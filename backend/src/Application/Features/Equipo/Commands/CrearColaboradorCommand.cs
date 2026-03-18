@@ -60,6 +60,7 @@ public class CrearColaboradorHandler : IRequestHandler<CrearColaboradorCommand, 
             Nombre = dto.Nombre,
             Email = dto.Email,
             PasswordHash = _passwordHasher.Hash(dto.Password),
+            PinCodeHash = string.IsNullOrEmpty(dto.Pin) ? null : _passwordHasher.Hash(dto.Pin),
             Rol = dto.Rol,
             FeaturesJson = "{}"
         };

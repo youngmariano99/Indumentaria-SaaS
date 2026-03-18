@@ -1,5 +1,5 @@
 # Resumen General del Sistema (Backend)
-**Rango de Fechas:** 24 de Febrero de 2026 — 13 de Marzo de 2026
+**Rango de Fechas:** 24 de Febrero de 2026 — 16 de Marzo de 2026
 **Propósito:** Proporcionar un panorama instantáneo del estado actual del sistema (API/C#/.NET 8 y PostgreSQL) a desarrolladores humanos e Inteligencias Artificiales integradas, delimitando módulos completados y su enfoque técnico.
 
 ---
@@ -27,6 +27,7 @@ El corazón de la aplicación utiliza **Clean Architecture**. Todos los comandos
 ## 🛒 4. Punto de Venta (POS) y Stock Automatizado
 - **Lógica Server-Side:** El servidor es la única fuente de verdad para precios y stock (`CobrarTicketCommand`). 
 - **Sincronización de Inventario:** Descuento automático de stock tras ventas exitosas y reposición inmediata en caso de devoluciones.
+- **Integración con Proveedores:** El registro de facturas de compra ahora dispara el incremento automático de stock en las variantes vinculadas y actualiza el costo de reposición de forma atómica.
 - **Persistencia Histórica:** Bloqueo de borrado (`Restrict`) para variantes con historial de ventas para preservar la integridad contable.
 
 ## 👥 5. CRM, Saldos y Devoluciones (Sprint 4.2)
@@ -40,6 +41,12 @@ El corazón de la aplicación utiliza **Clean Architecture**. Todos los comandos
 
 ## 🧪 7. Calidad y Testing
 - **Pruebas de Integración:** Suite completa con `xUnit` y `WebApplicationFactory` con base de datos en memoria para validaciones end-to-end de cada comando crítico.
+
+## 🏢 8. Gestión de Equipo y Multi-Sucursal (Marzo 2026)
+- **Administración de Colaboradores:** Implementación de `EquipoController` para gestión de personal con **validación de límites de plan** (1 empleado gratis). 
+- **Control Granular de Permisos:** Almacenamiento de permisos por módulo en `FeaturesJson` integrado con el motor de funcionalidades para restringir acceso según la asignación del Dueño.
+- **Cambio Rápido de Turno:** Sistema de autenticación por **PIN de 4 dígitos** que facilita la rotación de cajeros sin cerrar la sesión global, emitiendo tokens JWT específicos.
+- **Núcleo Multi-Sucursal:** Soporte nativo para múltiples sedes físicas vinculadas al flujo de inventario y ventas. Se implementó la validación comercial mediante el feature toggle `Multisucursal`.
 
 ---
 *(Nota para desarrolladores/IAs: Las implementaciones concretas se encuentran en `Application/Features`. Consultar `Docs/bitacora-back/features` para detalles cronológicos específicos).*

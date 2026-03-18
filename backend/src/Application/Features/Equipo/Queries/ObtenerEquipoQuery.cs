@@ -34,6 +34,7 @@ public class ObtenerEquipoHandler : IRequestHandler<ObtenerEquipoQuery, List<Col
             Nombre = u.Nombre,
             Email = u.Email,
             Rol = u.Rol,
+            TienePin = !string.IsNullOrEmpty(u.PinCodeHash),
             Permisos = DeserializarPermisos(u.FeaturesJson)
         }).ToList();
     }

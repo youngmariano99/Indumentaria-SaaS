@@ -27,6 +27,10 @@ public class ExceptionHandlingMiddleware
         {
             await HandleValidationExceptionAsync(context, ex);
         }
+        catch (Core.Exceptions.BusinessException ex)
+        {
+            await HandleBusinessExceptionAsync(context, ex);
+        }
         catch (Exception ex)
         {
             await HandleGeneralExceptionAsync(context, ex);
@@ -45,6 +49,15 @@ public class ExceptionHandlingMiddleware
         });
 
         var result = JsonSerializer.Serialize(new { mensaje = "Errores de validación", detalles = errors });
+        return context.Response.WriteAsync(result);
+    }
+
+    private static Task HandleBusinessExceptionAsync(HttpContext context, Core.Exceptions.BusinessException exception)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+
+        var result = JsonSerializer.Serialize(new { mensaje = exception.Message });
         return context.Response.WriteAsync(result);
     }
 

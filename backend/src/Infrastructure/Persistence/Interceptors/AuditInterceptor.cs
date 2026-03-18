@@ -53,11 +53,11 @@ public class AuditInterceptor : SaveChangesInterceptor
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                UserId = Guid.Empty, // TODO: Esto se obtendrá del ICurrentUserCersolver en el Sprint 4
+                UserId = _tenantResolver.UserId ?? Guid.Empty,
                 TableName = entry.Metadata.GetTableName() ?? entry.Entity.GetType().Name,
                 Action = entry.State.ToString(),
                 Timestamp = timestamp,
-                IpAddress = "127.0.0.1" // TODO: Leer del HttpContext
+                IpAddress = "127.0.0.1" // Para leer esto real se requiere IHttpContextAccessor
             };
 
             // Obtener Primary Key

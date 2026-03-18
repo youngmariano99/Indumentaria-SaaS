@@ -1,0 +1,25 @@
+---
+description: Estándares de desarrollo, nomenclatura y documentación
+globs: ["backend/src/**/*.cs", "frontend/src/**/*.tsx", "docs/**/*.md"]
+---
+
+# Estándar de Desarrollo y Colaboración
+
+## 🇦🇷 Nomenclatura "Con Cancha"
+- **Regla Oro**: Lógica de negocio en español latino (Arg), infraestructura en inglés.
+- **Ejemplos**: 
+    - ✅ `ProcesarNotaDeCredito` (Negocio)
+    - ✅ `IMediator`, `DbContext` (Infraestructura técnica)
+
+## 🏛️ Orden del Código
+- **Clean Architecture**: Respetar capas (Core, Application, Infrastructure, API).
+- **CQRS**: No poner lógica en Controllers. Todo va a `Commands` o `Queries`.
+
+## 📜 Documentación Obligatoria
+- **Bitácoras**: Cada cambio debe registrarse en `bitacora-back` o `bitacora-front` con el formato `YYYY-MM-DD_HHmm_Modulo_Descripcion.md`.
+- **Explicación Didáctica**: Todo documento técnico debe terminar con una sección de explicación simple para humanos o devs jr.
+
+## 🧪 Testing
+- **Integration Tests**: Usar `xUnit` y `WebApplicationFactory`.
+- **Base de Datos**: Los tests deben usar `InMemoryDatabase` para ser efímeros.
+- **Assertions**: Usar `FluentAssertions` para legibilidad.

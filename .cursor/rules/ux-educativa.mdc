@@ -1,0 +1,19 @@
+---
+description: Guía de UX Educativa y principios Zero-Training
+globs: ["frontend/src/**/*.tsx", "frontend/src/components/ui/**/*"]
+---
+
+# UX Educativa y Zero-Training
+
+## 🎓 Aprendizaje Justo a Tiempo
+- **Empty States**: Prohibido mostrar tablas vacías con "Sin datos". Usa ilustraciones descriptivas y un botón de acción (ej. "Aún no hay ventas. ¡Haz tu primera venta aquí!").
+- **Predictive Micro-copy**: Los botones deben ser específicos. No uses "Aceptar"; usa "Cobrar $15.400" o "Confirmar Ingreso".
+- **Undo Pattern**: Para eliminaciones en el carrito o tablas, no uses modales de confirmación. Ejecuta la acción y muestra un Toast con el botón "Deshacer".
+
+## 🛡️ Barreras Catastróficas
+- **Intencionalidad**: Para acciones críticas (borrar bases, liquidar cajas), requerir "Press & Hold" (3 seg) o tipear la palabra "ELIMINAR".
+
+## 📱 Accesibilidad
+- **Fuentes**: Mínimo 16px para textos base.
+- **Contraste**: Mínimo 4.5:1.
+- **Iconografía**: Nunca un icono solo. Siempre acompañado de texto (Labels).

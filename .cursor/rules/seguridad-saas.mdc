@@ -1,0 +1,22 @@
+---
+description: Reglas críticas de seguridad para el entorno Multi-Tenant SaaS
+globs: ["backend/src/**/*.cs", "frontend/src/lib/apiClient.ts", "frontend/src/features/auth/**/*"]
+---
+
+# Seguridad SaaS: Multi-Tenancy y Protección de Datos
+
+## 🛡️ Aislamiento Férreo (Backend)
+- **RLS Policy**: Toda conexión al pool debe ejecutar `SET LOCAL app.current_tenant = 'uuid';` para activar Row-Level Security en PostgreSQL.
+- **Tenant Resolver**: No confíes en el `TenantId` del body; extráelo siempre del JWT o del subdominio en el middleware.
+- **Zero Trust POS**: El frontend NO decide los precios. El backend debe recalcular totales basados en la DB para prevenir fraudes vía DevTools.
+
+## 🔑 Autenticación y Sesión
+- **Patrón Split Token**: 
+    - `AccessToken`: Corta vida, solo en memoria de React.
+    - `RefreshToken`: Larga vida, en Cookie `HttpOnly`, `Secure`, `SameSite=Strict`.
+- **Idempotency**: Usa `Idempotency-Key` (UUID generado en el front) para transacciones críticas (Cobros) y verifícalo en Redis.
+
+## 🚫 Protección de Entrada
+- **Rate Limiting**: Aplicar por IP y TenantId en endpoints de Auth.
+- **JSON Sanitization**: Usar `HtmlSanitizer` en campos de texto dentro de JSONB para prevenir XSS persistente.
+- **Payload Limits**: Configurar `MaxRequestBodySize` en Kestrel para prevenir DoS.

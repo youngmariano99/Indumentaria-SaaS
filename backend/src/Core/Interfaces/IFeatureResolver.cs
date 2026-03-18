@@ -18,7 +18,13 @@ public interface IFeatureResolver
     Task<bool> IsEnabledAsync(string featureKey);
 
     /// <summary>
+    /// <summary>
     /// Obtiene todas las features activas para el contexto actual. Útil para el frontend.
     /// </summary>
     Task<Dictionary<string, bool>> GetAllEnabledAsync();
+
+    /// <summary>
+    /// Remueve la caché de features para un inquilino y usuario específico.
+    /// </summary>
+    void InvalidateCache(Guid tenantId, Guid? userId);
 }

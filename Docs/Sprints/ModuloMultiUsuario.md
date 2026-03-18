@@ -31,11 +31,11 @@
 
 ---
 
-## 🟡 Etapa 3: Seguridad Operativa y Acceso Rápido (PRÓXIMAMENTE)
+## 🟢 Etapa 3: Seguridad Operativa y Acceso Rápido (COMPLETADO)
 *Foco: Agilizar el uso diario sin comprometer la seguridad.*
 
-- [ ] **PIN de Acceso Rápido:** Implementación de código de 4 dígitos para que los cajeros cambien de turno rápidamente sin re-loguearse con email/password.
-- [ ] **Logs de Auditoría por Usuario:** Visualización de qué empleado realizó cada acción crítica (ej: "Venta anulada por Juan Pérez").
+- [x] **PIN de Acceso Rápido:** Implementación de código de 4 dígitos para que los cajeros cambien de turno rápidamente sin re-loguearse con email/password.
+- [x] **Logs de Auditoría por Usuario:** Visualización de qué empleado realizó cada acción crítica (ej: "Venta anulada por Juan Pérez").
 - [ ] **Restricción de Horarios/IP:** (Opcional) Permitir acceso solo en horarios comerciales o desde la red local del local.
 
 ---

@@ -1,25 +1,35 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { apiClient } from '../../../lib/apiClient';
 
 export interface Colaborador {
     id: string;
     nombre: string;
     email: string;
     rol: string | number;
+    tienePin: boolean;
     permisos: Record<string, boolean>;
 }
 
 export const equipoApi = {
     getEquipo: async (): Promise<Colaborador[]> => {
-        const response = await axios.get(`${API_URL}/equipo`);
+        const response = await apiClient.get(`/equipo`);
         return response.data;
     },
     crearColaborador: async (data: any): Promise<string> => {
-        const response = await axios.post(`${API_URL}/equipo`, data);
+        const response = await apiClient.post(`/equipo`, data);
         return response.data;
     },
     actualizarPermisos: async (id: string, permisos: Record<string, boolean>): Promise<void> => {
-        await axios.put(`${API_URL}/equipo/${id}/permisos`, { permisos });
+        await apiClient.put(`/equipo/${id}/permisos`, { permisos });
+    },
+    actualizarPin: async (id: string, pin: string): Promise<void> => {
+        await apiClient.put(`/equipo/${id}/pin`, JSON.stringify(pin));
+    },
+    accesoRapido: async (pin: string): Promise<any> => {
+        const response = await apiClient.post(`/equipo/acceso-rapido`, JSON.stringify(pin));
+        return response.data;
+    },
+    getAuditoria: async (): Promise<any[]> => {
+        const response = await apiClient.get(`/equipo/auditoria`);
+        return response.data;
     }
 };

@@ -1,0 +1,22 @@
+# Indumentaria-SaaS ERP: LLM Context Root
+
+Este archivo sirve como punto de entrada para agentes de IA (Cursor, Copilot, ChatGPT, Claude) para entender la estructura y el propósito del proyecto.
+
+## 📌 Documentación Crítica (Estructura Diátaxis)
+
+- [README.md](docs_v2/README.md): Visión general, Quick Start y Tech Stack.
+- [Arquitectura C4](docs_v2/architecture/architecture.md): Diagramas de contexto y contenedores (Nivel 1 y 2).
+- [Manual de Agentes](AGENTS.md): Reglas de comportamiento, persona y límites para IA.
+
+## 🏗️ Contexto Tecnológico (Shortcuts)
+
+- **Backend core**: `backend/src/Core/`: Entidades de dominio y lógica pura.
+- **Application Logic**: `backend/src/Application/Features/`: Comandos y Queries (MediatR).
+- **Frontend Core**: `frontend/src/features/`: Módulos de React aislados.
+- **Data Safety**: `backend/src/Infrastructure/Persistence/`: RLS y DB Context.
+
+## 🛠️ Reglas de Oro para LLMs
+1. **Multi-Tenancy**: Siempre asume `IMustHaveTenant`. Nunca omitas el filtrado por `TenantId`.
+2. **Naming**: Usa español rioplatense para lógica de negocio ("con cancha").
+3. **Icons**: Usa `Phosphor Icons` exclusivamente en el frontend.
+4. **State**: Usa `Zustand`. Evita `Redux` o `Context API` para estados globales complejos.
